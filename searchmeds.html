@@ -1,0 +1,900 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Rx Builder + Drug List (PH FDA CSV)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root{
+    --bg:#0f172a;        /* slate-900 */
+    --panel:#111827;     /* gray-900 */
+    --muted:#94a3b8;     /* slate-400 */
+    --text:#e5e7eb;      /* gray-200 */
+    --accent:#22c55e;    /* green-500 */
+    --accent2:#38bdf8;   /* sky-400 */
+    --warn:#f59e0b;      /* amber-500 */
+    --danger:#ef4444;    /* red-500 */
+    --chip:#1f2937;      /* gray-800 */
+    --border:#1f2937;
+    --card:#0b1220;
+    --print-text:#111827;
+  }
+  html,body{height:100%}
+  body{
+    margin:0; background:linear-gradient(180deg,#0b1220, #0d1324 35%, #0b1220);
+    color:var(--text); font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased; line-height:1.35;
+  }
+  .container{max-width:1200px; margin:0 auto; padding:16px;}
+  header{
+    display:flex; gap:12px; align-items:center; justify-content:space-between; margin-bottom:12px;
+  }
+  header h1{font-size:20px; margin:0; font-weight:700; letter-spacing:.2px}
+  .badge{background:var(--chip); border:1px solid var(--border); padding:6px 10px; border-radius:999px; color:var(--muted); font-size:12px}
+  .tabs{display:flex; gap:8px; flex-wrap:wrap}
+  .tab{
+    border:1px solid var(--border); background:rgba(255,255,255,.03);
+    color:var(--text); padding:8px 12px; border-radius:10px; cursor:pointer; user-select:none;
+  }
+  .tab.active{background:var(--accent2); color:#062338; border-color:transparent; font-weight:600}
+  .grid{display:grid; grid-template-columns: 1.2fr .8fr; gap:16px}
+  @media (max-width:900px){ .grid{grid-template-columns:1fr} }
+
+  .card{
+    background:linear-gradient(180deg,#0e1628, #0c1426);
+    border:1px solid var(--border); border-radius:14px; overflow:hidden;
+  }
+  .card header{padding:12px 14px; border-bottom:1px solid var(--border)}
+  .card header h2{margin:0; font-size:16px}
+  .card .body{padding:12px}
+
+  .row{display:flex; gap:8px; flex-wrap:wrap}
+  .row > * { flex:1 1 160px }
+
+  input, select, textarea, button{
+    background:#0b1220; color:var(--text); border:1px solid var(--border);
+    padding:8px 10px; border-radius:10px; font-size:14px; outline:none;
+  }
+  input::placeholder, textarea::placeholder{color:#76839a}
+  textarea{min-height:60px; resize:vertical}
+  button{cursor:pointer}
+  button.primary{background:var(--accent); border-color:transparent; color:#063518; font-weight:700}
+  button.ghost{background:transparent}
+  button.warn{background:var(--warn); color:#3a2602; border-color:transparent; font-weight:700}
+  button.danger{background:var(--danger); color:#3d0b0b; border-color:transparent; font-weight:700}
+  .muted{color:var(--muted)}
+  .small{font-size:12px}
+
+  .toolbar{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+  .searchbar{
+    display:flex; gap:8px; flex-wrap:wrap; align-items:center; background:#0b1220; border:1px solid var(--border);
+    padding:8px; border-radius:12px;
+  }
+  .searchbar input{flex:1; min-width:200px}
+  .chips{display:flex; gap:6px; flex-wrap:wrap}
+  .chip{background:var(--chip); border:1px solid var(--border); color:var(--muted); padding:4px 8px; border-radius:999px; font-size:12px}
+  .pill{background:#042635; color:#8bdcff; border:1px solid #0c3344}
+  .stat{padding:2px 8px; border-radius:999px; border:1px solid var(--border); color:var(--muted);}
+
+  table{width:100%; border-collapse:separate; border-spacing:0}
+  thead th{
+    position:sticky; top:0; background:#0c1426; z-index:1;
+    text-align:left; font-size:12px; color:#b4c0d0; padding:10px; border-bottom:1px solid var(--border);
+    cursor:pointer; user-select:none;
+  }
+  tbody td{padding:10px; border-bottom:1px solid var(--border); vertical-align:top; font-size:13px}
+  tbody tr:hover{background:#0b1220}
+  .truncate{max-width:280px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+
+  .pagination{display:flex; gap:6px; align-items:center; justify-content:flex-end; padding:8px 0}
+  .pagination button{padding:6px 10px}
+  .hl{background:#24405e; color:#e0f2fe; border-radius:4px; padding:0 2px}
+
+  .rx-items{display:flex; flex-direction:column; gap:8px}
+  .rx-item{border:1px dashed #24405e; background:#0b1220; border-radius:12px; padding:8px}
+  .rx-item .row > * {flex:1 1 120px}
+  .rx-actions{display:flex; gap:8px; justify-content:flex-end}
+
+  .drop{border:2px dashed #27547a; background:#0b1220; padding:16px; border-radius:12px; text-align:center}
+  .drop.drag{background:#0e1b2a}
+
+  .right{display:flex; flex-direction:column; gap:16px}
+  .footer{display:flex; justify-content:space-between; align-items:center; gap:10px; margin-top:10px}
+
+  /* Print (A5 or A4 portrait) */
+  @media print{
+    body{background:#fff; color:var(--print-text)}
+    .no-print{display:none !important}
+    .rx-print{
+      display:block !important; color:var(--print-text);
+      font-size:12pt; padding:20px 24px; line-height:1.25;
+    }
+    .rx-print h3{margin:0 0 6px 0; font-size:16pt}
+    .rx-print .meta{display:flex; justify-content:space-between; gap:10px; border-top:1px solid #999; border-bottom:1px solid #999; padding:6px 0; margin:10px 0}
+    .rx-print ol{margin:8px 0 0 18px}
+    .rx-print .sig{display:flex; justify-content:space-between; margin-top:24px}
+  }
+  .rx-print{display:none}
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="no-print">
+    <h1>Prescription Builder + FDA Drug Search</h1>
+    <div class="row" style="justify-content:flex-end; align-items:center">
+      <span id="loadStatus" class="badge">CSV: not loaded</span>
+      <span class="badge">Local-first, offline</span>
+    </div>
+  </header>
+
+  <div class="no-print" style="margin-bottom:10px">
+    <div class="tabs">
+      <div class="tab active" data-tab="search">Search Drug List</div>
+      <div class="tab" data-tab="rx">Build Prescription</div>
+      <div class="tab" data-tab="about">About</div>
+    </div>
+  </div>
+
+  <div id="view-search" class="view">
+    <div class="card">
+      <header>
+        <h2>Drug Products (from ALL_DrugProducts.csv)</h2>
+      </header>
+      <div class="body">
+        <div class="toolbar">
+          <div class="searchbar" style="flex:1">
+            <input id="q" type="search" placeholder="Search by Generic, Brand, Classification, Category, Reg No., Manufacturer..." autocomplete="off">
+            <select id="fieldSelect" title="Search in">
+              <option value="all">All columns</option>
+              <option value="Generic Name">Generic</option>
+              <option value="Brand Name">Brand</option>
+              <option value="Classification">Classification</option>
+              <option value="Pharmacologic Category">Pharmacologic Category</option>
+              <option value="Registration Number">Registration Number</option>
+              <option value="Manufacturer">Manufacturer</option>
+            </select>
+            <select id="perPage">
+              <option>25</option><option selected>50</option><option>100</option><option>200</option>
+            </select>
+            <button id="clearSearch" class="ghost">Clear</button>
+          </div>
+          <div class="chips">
+            <label class="chip"><input type="checkbox" id="onlyRX"> RX only</label>
+            <label class="chip"><input type="checkbox" id="onlyHuman"> Human drugs</label>
+          </div>
+          <div class="row" style="flex:0 0 auto">
+            <button id="btnReload" class="ghost">Reload CSV</button>
+            <input id="fileInput" type="file" accept=".csv" class="no-print" style="display:none">
+            <button id="btnPick" class="ghost">Load CSV file</button>
+          </div>
+        </div>
+
+        <div id="drop" class="drop no-print" style="margin:10px 0; display:none">
+          <div>Drop ALL_DrugProducts.csv here, or click “Load CSV file”</div>
+          <div class="small muted" style="margin-top:4px">The file isn’t uploaded anywhere; it’s processed in your browser.</div>
+        </div>
+
+        <div class="row small muted" style="margin:8px 0">
+          <span id="summary" class="stat">0 records</span>
+          <span id="filterSummary" class="stat">0 shown</span>
+          <span id="updateBadge" class="stat">Updated: —</span>
+        </div>
+
+        <div class="card" style="margin-top:8px">
+          <div class="body" style="padding:0; max-height:60vh; overflow:auto">
+            <table id="tbl">
+              <thead>
+                <tr>
+                  <th data-k="Generic Name">Generic</th>
+                  <th data-k="Brand Name">Brand</th>
+                  <th data-k="Dosage Strength">Strength</th>
+                  <th data-k="Dosage Form">Form</th>
+                  <th data-k="Classification">Class</th>
+                  <th data-k="Manufacturer">Mfr</th>
+                  <th data-k="Registration Number">Reg No.</th>
+                  <th data-k="Expiry Date">Expiry</th>
+                  <th style="width:1%">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="tbody"></tbody>
+            </table>
+          </div>
+          <div class="body">
+            <div class="pagination">
+              <button id="prev">Prev</button>
+              <span id="pageInfo" class="muted">Page 1</span>
+              <button id="next">Next</button>
+              <div style="flex:1"></div>
+              <button id="toRx" class="primary">Go to Prescription Builder</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div id="view-rx" class="view" style="display:none">
+    <div class="grid">
+      <div class="card">
+        <header><h2>Prescription Builder</h2></header>
+        <div class="body">
+          <div class="row">
+            <input id="clinic" placeholder="Clinic/Facility name">
+            <input id="clinicAddr" placeholder="Clinic address">
+          </div>
+          <div class="row">
+            <input id="docName" placeholder="Prescriber name (e.g., Juan Dela Cruz, MD)">
+            <input id="prc" placeholder="PRC License No.">
+            <input id="ptr" placeholder="PTR No.">
+            <input id="s2" placeholder="S2 No. (if applicable)">
+          </div>
+          <hr style="border:0; border-top:1px solid var(--border); margin:10px 0">
+          <div class="row">
+            <input id="ptName" placeholder="Patient full name">
+            <input id="ptAge" placeholder="Age">
+            <select id="ptSex">
+              <option value="">Sex</option>
+              <option>Male</option>
+              <option>Female</option>
+            </select>
+          </div>
+          <div class="row">
+            <input id="ptAddr" placeholder="Patient address">
+            <input id="rxDate" type="date">
+          </div>
+
+          <div class="row" style="align-items:center; margin-top:6px">
+            <input id="drugQuick" placeholder="Quick add: search drug by Generic/Brand then Enter">
+            <button id="addBlank">Add custom item</button>
+            <div style="flex:1"></div>
+            <button id="clearItems" class="danger">Clear items</button>
+          </div>
+
+          <div id="rxItems" class="rx-items" style="margin-top:8px"></div>
+
+          <div class="rx-actions" style="margin-top:12px">
+            <button id="copyRx" class="ghost">Copy as text</button>
+            <button id="saveLocal" class="ghost">Save (local)</button>
+            <button id="loadLocal" class="ghost">Restore</button>
+            <button id="printRx" class="primary">Print / Save as PDF</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="right">
+        <div class="card">
+          <header><h2>Add from Search</h2></header>
+          <div class="body">
+            <div class="small muted" style="margin-bottom:6px">Pick in the table on the left (Search tab), or search here:</div>
+            <input id="sideSearch" placeholder="Search drug list...">
+            <div id="sideResults" style="max-height:50vh; overflow:auto; margin-top:8px"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <header><h2>Notes</h2></header>
+          <div class="body">
+            <textarea id="rxNotes" placeholder="Prescription notes (optional)"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer no-print">
+      <div class="muted small">Tip: Fields save to your browser’s storage when you click “Save (local)”. No data leaves your device.</div>
+      <div class="row" style="flex:0 0 auto">
+        <button class="ghost" id="backToSearch">Back to Search</button>
+        <button id="printRx2" class="primary">Print / Save as PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="view-about" class="view" style="display:none">
+    <div class="card">
+      <header><h2>About</h2></header>
+      <div class="body">
+        <ul>
+          <li>This tool reads ALL_DrugProducts.csv that you place beside this HTML file and lets you search/filter and build printable prescriptions.</li>
+          <li>If your browser blocks file access when opened directly, click “Load CSV file” and choose ALL_DrugProducts.csv, or serve the folder with a simple local server.</li>
+          <li>Example local server commands:
+            <ul>
+              <li>Python 3: python -m http.server</li>
+              <li>Node.js: npx http-server</li>
+            </ul>
+          </li>
+          <li>All processing happens locally in your browser.</li>
+        </ul>
+        <div class="small muted">Data source: FDA Philippines Verification Portal CSV export. Ensure your CSV header row includes columns like “Registration Number, Generic Name, Brand Name, Dosage Strength, Dosage Form, Classification, Pharmacologic Category, Manufacturer, Country of Origin, Application Type, Issuance Date, Expiry Date”.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Printable layout -->
+  <div class="rx-print" id="rxPrint">
+    <h3 id="pClinic">Clinic</h3>
+    <div class="small" id="pClinicAddr"></div>
+    <div class="meta">
+      <div>
+        <div><strong>Patient:</strong> <span id="pPtName"></span></div>
+        <div><strong>Age/Sex:</strong> <span id="pPtAgeSex"></span></div>
+        <div><strong>Address:</strong> <span id="pPtAddr"></span></div>
+      </div>
+      <div style="text-align:right">
+        <div><strong>Date:</strong> <span id="pDate"></span></div>
+        <div><strong>Prescriber:</strong> <span id="pDoc"></span></div>
+        <div class="small">
+          <span>PRC:</span> <span id="pPRC"></span>
+          <span style="margin-left:10px">PTR:</span> <span id="pPTR"></span>
+          <span style="margin-left:10px">S2:</span> <span id="pS2"></span>
+        </div>
+      </div>
+    </div>
+    <div><strong>Rx:</strong></div>
+    <ol id="pItems"></ol>
+    <div id="pNotes" style="margin-top:8px"></div>
+    <div class="sig">
+      <div></div>
+      <div style="text-align:center">
+        <div style="margin-top:40px; border-top:1px solid #000; padding-top:4px">
+          <div id="pDoc2"></div>
+          <div class="small">Signature over printed name</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  const state = {
+    data: [],
+    filtered: [],
+    page: 1,
+    perPage: 50,
+    sortKey: 'Generic Name',
+    sortDir: 'asc',
+    lastUpdatedText: '—',
+    searchQ: '',
+    searchField: 'all',
+    onlyRX: false,
+    onlyHuman: false
+  };
+
+  const $ = sel => document.querySelector(sel);
+  const $$ = sel => Array.from(document.querySelectorAll(sel));
+
+  // Tabs
+  $$('.tab').forEach(t => t.addEventListener('click', () => {
+    $$('.tab').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    const target = t.dataset.tab;
+    $$('.view').forEach(v => v.style.display = 'none');
+    $('#view-' + target).style.display = '';
+  }));
+  $('#toRx').addEventListener('click', ()=>$$('.tab[data-tab="rx"]')[0].click());
+  $('#backToSearch').addEventListener('click', ()=>$$('.tab[data-tab="search"]')[0].click());
+
+  // CSV loading
+  const loadStatus = $('#loadStatus');
+  const summary = $('#summary'), filterSummary = $('#filterSummary'), updateBadge = $('#updateBadge');
+  const drop = $('#drop'); const fileInput = $('#fileInput'); const btnPick = $('#btnPick'); const btnReload = $('#btnReload');
+
+  btnPick.addEventListener('click', ()=>fileInput.click());
+  fileInput.addEventListener('change', e=>{
+    const f = e.target.files[0]; if (f) readFile(f);
+  });
+
+  ;['dragenter','dragover'].forEach(evt=>drop.addEventListener(evt, e=>{e.preventDefault(); drop.classList.add('drag')}));
+  ;['dragleave','drop'].forEach(evt=>drop.addEventListener(evt, e=>{e.preventDefault(); drop.classList.remove('drag')}));
+  drop.addEventListener('drop', e=>{
+    const f = e.dataTransfer.files[0]; if (f) readFile(f);
+  });
+
+  btnReload.addEventListener('click', tryAutoLoad);
+
+  function setStatus(text, ok){
+    loadStatus.textContent = text;
+    loadStatus.style.background = ok ? '#063518' : '#3a0a0a';
+    loadStatus.style.color = ok ? '#9ff0c5' : '#f7caca';
+    loadStatus.style.border = '1px solid ' + (ok ? '#155b37' : '#6b1212');
+  }
+
+  function tryAutoLoad(){
+    setStatus('Loading ALL_DrugProducts.csv…', true);
+    fetch('ALL_DrugProducts.csv')
+      .then(r=>{
+        if(!r.ok) throw new Error('HTTP '+r.status);
+        return r.text();
+      })
+      .then(text => {
+        parseAndLoadCSV(text, 'auto');
+      })
+      .catch(err=>{
+        setStatus('Auto-load failed. Use “Load CSV file”.', false);
+        drop.style.display = '';
+      });
+  }
+
+  function readFile(file){
+    setStatus('Reading '+file.name+'…', true);
+    const reader = new FileReader();
+    reader.onload = () => parseAndLoadCSV(reader.result, 'manual');
+    reader.onerror = () => setStatus('Failed to read file.', false);
+    reader.readAsText(file);
+  }
+
+  function parseAndLoadCSV(text, mode){
+    const rows = CSVToArray(text);
+    if (!rows.length){ setStatus('CSV appears empty.', false); return; }
+    // Header
+    const headers = rows[0].map(h=>h.trim());
+    const idx = Object.fromEntries(headers.map((h,i)=>[h,i]));
+    const reqCols = ["Registration Number","Generic Name","Brand Name","Dosage Strength","Dosage Form","Classification","Pharmacologic Category","Manufacturer","Country of Origin","Application Type","Issuance Date","Expiry Date"];
+    const missing = reqCols.filter(c=>idx[c]===undefined);
+    if(missing.length){
+      // Proceed anyway but warn
+      console.warn('Missing columns:', missing);
+    }
+    const data = [];
+    for(let i=1;i<rows.length;i++){
+      const r = rows[i]; if (!r || r.length===0) continue;
+      const obj = {};
+      headers.forEach((h, j)=> obj[h]= (r[j] ?? '').trim());
+      data.push(obj);
+    }
+    state.data = data;
+    state.page = 1;
+    setStatus(`Loaded ${data.length.toLocaleString()} records`, true);
+    summary.textContent = `${data.length.toLocaleString()} records`;
+    // Try to infer "Updated as of" if present at top lines or file name pattern
+    const m = text.match(/Updated\s+as\s+of\s+([^\r\n]+)/i);
+    state.lastUpdatedText = m ? m[1].trim() : '—';
+    updateBadge.textContent = 'Updated: ' + state.lastUpdatedText;
+    drop.style.display = 'none';
+    filterAndRender();
+    // Build quick index for side search
+    buildQuickIndex();
+  }
+
+  // Simple CSV parser (handles quoted fields)
+  function CSVToArray(strData, strDelimiter) {
+    strDelimiter = (strDelimiter || ",");
+    const objPattern = new RegExp(
+      (
+        "(\\"
+        + strDelimiter
+        + "|\\r?\\n|\\r|^)"
+        + "(?:\"([^\"]*(?:\"\"[^\"]*)*)\"|"
+        + "([^\"\\"
+        + strDelimiter
+        + "\\r\\n]*))"
+      ), "gi");
+    const arrData = [[]];
+    let arrMatches = null;
+    while (arrMatches = objPattern.exec(strData)){
+      const strMatchedDelimiter = arrMatches[1];
+      if (strMatchedDelimiter.length && strMatchedDelimiter !== strDelimiter){
+        arrData.push([]);
+      }
+      let strMatchedValue;
+      if (arrMatches[2]){
+        strMatchedValue = arrMatches[2].replace(/""/g, "\"");
+      } else {
+        strMatchedValue = arrMatches[3];
+      }
+      arrData[arrData.length - 1].push(strMatchedValue);
+    }
+    // Remove empty trailing row
+    if (arrData.length && arrData[arrData.length-1].length===1 && arrData[arrData.length-1][0]==="") arrData.pop();
+    return arrData;
+  }
+
+  // Searching and rendering
+  const q = $('#q'), fieldSelect = $('#fieldSelect'), perPage = $('#perPage'), onlyRX = $('#onlyRX'), onlyHuman = $('#onlyHuman');
+  const tbody = $('#tbody'), pageInfo = $('#pageInfo'), prev = $('#prev'), next = $('#next');
+
+  q.addEventListener('input', debounce(()=>{ state.searchQ = q.value.trim(); state.page=1; filterAndRender(); }, 120));
+  $('#clearSearch').addEventListener('click', ()=>{ q.value=''; state.searchQ=''; state.page=1; filterAndRender(); });
+  fieldSelect.addEventListener('change', ()=>{ state.searchField = fieldSelect.value; state.page=1; filterAndRender(); });
+  perPage.addEventListener('change', ()=>{ state.perPage = +perPage.value; state.page=1; renderTable(); });
+  onlyRX.addEventListener('change', ()=>{ state.onlyRX = onlyRX.checked; state.page=1; filterAndRender(); });
+  onlyHuman.addEventListener('change', ()=>{ state.onlyHuman = onlyHuman.checked; state.page=1; filterAndRender(); });
+
+  $$('#tbl thead th[data-k]').forEach(th=>{
+    th.addEventListener('click', ()=>{
+      const k = th.dataset.k;
+      if (state.sortKey===k){ state.sortDir = (state.sortDir==='asc'?'desc':'asc'); }
+      else { state.sortKey = k; state.sortDir = 'asc'; }
+      renderTable();
+    });
+  });
+
+  prev.addEventListener('click', ()=>{ if (state.page>1){ state.page--; renderTable(); }});
+  next.addEventListener('click', ()=>{ const pages = Math.max(1, Math.ceil(state.filtered.length/state.perPage)); if (state.page<pages){ state.page++; renderTable(); }});
+
+  function filterAndRender(){
+    const q = state.searchQ.toLowerCase();
+    const f = state.searchField;
+    const isHuman = (row) => {
+      // Heuristic: Application Type or Classification might contain 'Veterinary' vs 'Human'
+      // If CSV has "Human Drugs" info, user can tighten this; here we attempt via Category/Classification
+      const gen = (row['Pharmacologic Category']||'').toLowerCase();
+      const cls = (row['Classification']||'').toLowerCase();
+      const dn = (row['Dosage Form']||'').toLowerCase();
+      const brand = (row['Brand Name']||'').toLowerCase();
+      // If it mentions veterinary explicitly, exclude
+      if (gen.includes('veterinary') || cls.includes('veterinary') || brand.includes('vet')) return false;
+      return true;
+    };
+    state.filtered = state.data.filter(row=>{
+      if (state.onlyRX){
+        if (!String(row['Classification']||'').toLowerCase().includes('prescription')) return false;
+      }
+      if (state.onlyHuman){
+        if (!isHuman(row)) return false;
+      }
+      if (!q) return true;
+      if (f==='all'){
+        return ['Generic Name','Brand Name','Classification','Pharmacologic Category','Registration Number','Manufacturer','Dosage Form','Dosage Strength']
+          .some(k => String(row[k]||'').toLowerCase().includes(q));
+      } else {
+        return String(row[f]||'').toLowerCase().includes(q);
+      }
+    });
+    state.page = 1;
+    renderTable();
+  }
+
+  function renderTable(){
+    // Sort
+    const k = state.sortKey, dir = state.sortDir;
+    const data = state.filtered.slice().sort((a,b)=>{
+      const av = (a[k]||'').toString().toLowerCase();
+      const bv = (b[k]||'').toString().toLowerCase();
+      if (av<bv) return dir==='asc'?-1:1;
+      if (av>bv) return dir==='asc'?1:-1;
+      return 0;
+    });
+    // Paging
+    const total = data.length;
+    const pages = Math.max(1, Math.ceil(total/state.perPage));
+    state.page = Math.min(state.page, pages);
+    const start = (state.page-1)*state.perPage;
+    const rows = data.slice(start, start+state.perPage);
+
+    // Render
+    tbody.innerHTML = rows.map(r=> rowHTML(r)).join('');
+    pageInfo.textContent = `Page ${state.page} of ${pages}`;
+    filterSummary.textContent = `${total.toLocaleString()} shown`;
+    // Wire add buttons
+    $$('#tbody .addRx').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const idx = +btn.dataset.idx;
+        const record = rows[idx];
+        addRxFromRecord(record);
+        // Switch to RX tab
+        $$('.tab[data-tab="rx"]')[0].click();
+      });
+    });
+  }
+
+  function rowHTML(r){
+    const textQ = state.searchQ.trim().toLowerCase();
+    const h = (s)=> highlight(String(s||''), textQ);
+    const expiry = (r['Expiry Date']||'').split(' ')[0];
+    const cells = [
+      h(r['Generic Name']),
+      h(r['Brand Name']),
+      h(r['Dosage Strength']),
+      h(r['Dosage Form']),
+      h(r['Classification']),
+      h(r['Manufacturer']),
+      h(r['Registration Number']),
+      h(expiry)
+    ];
+    return `<tr>
+      <td class="truncate" title="${escapeHTML(r['Generic Name']||'')}">${cells[0]}</td>
+      <td class="truncate" title="${escapeHTML(r['Brand Name']||'')}">${cells[1]}</td>
+      <td>${cells[2]}</td>
+      <td>${cells[3]}</td>
+      <td>${cells[4]}</td>
+      <td class="truncate" title="${escapeHTML(r['Manufacturer']||'')}">${cells[5]}</td>
+      <td>${cells[6]}</td>
+      <td>${cells[7]}</td>
+      <td><button class="addRx" data-idx="${rowsIndex(r)}">Add</button></td>
+    </tr>`;
+  }
+  // Helper to preserve index within current page slice
+  function rowsIndex(r){ return 0; } // replaced dynamically in renderTable
+  // Overwrite rowsIndex by closure trick in renderTable
+  (function(){
+    const oldRender = renderTable;
+    renderTable = function(){
+      // capture rows array inside renderTable for index mapping
+      const k = state.sortKey, dir = state.sortDir;
+      const data = state.filtered.slice().sort((a,b)=>{
+        const av = (a[k]||'').toString().toLowerCase();
+        const bv = (b[k]||'').toString().toLowerCase();
+        if (av<bv) return dir==='asc'?-1:1;
+        if (av>bv) return dir==='asc'?1:-1;
+        return 0;
+      });
+      const total = data.length;
+      const pages = Math.max(1, Math.ceil(total/state.perPage));
+      state.page = Math.min(state.page, pages);
+      const start = (state.page-1)*state.perPage;
+      const pageRows = data.slice(start, start+state.perPage);
+      // redefine rowsIndex to map to index within pageRows
+      window.__pageRows = pageRows;
+      window.rowsIndex = (r)=> pageRows.indexOf(r);
+      tbody.innerHTML = pageRows.map(r=> rowHTML(r)).join('');
+      pageInfo.textContent = `Page ${state.page} of ${pages}`;
+      filterSummary.textContent = `${total.toLocaleString()} shown`;
+      $$('#tbody .addRx').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          const idx = +btn.dataset.idx;
+          const record = pageRows[idx];
+          addRxFromRecord(record);
+          $$('.tab[data-tab="rx"]')[0].click();
+        });
+      });
+    }
+  })();
+
+  function highlight(text, q){
+    if (!q) return escapeHTML(text);
+    const idx = text.toLowerCase().indexOf(q);
+    if (idx<0) return escapeHTML(text);
+    return escapeHTML(text.slice(0,idx)) + '<span class="hl">' + escapeHTML(text.slice(idx, idx+q.length)) + '</span>' + escapeHTML(text.slice(idx+q.length));
+  }
+  function escapeHTML(s){ return s.replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
+
+  function debounce(fn, ms){
+    let t; return (...a)=>{ clearTimeout(t); t = setTimeout(()=>fn(...a), ms); }
+  }
+
+  // Quick index for side search
+  let quickIndex = [];
+  function buildQuickIndex(){
+    quickIndex = state.data.map((r,i)=>({
+      i,
+      t: [
+        r['Generic Name'], r['Brand Name'], r['Classification'],
+        r['Pharmacologic Category'], r['Registration Number'], r['Manufacturer'], r['Dosage Form'], r['Dosage Strength']
+      ].map(x=>String(x||'').toLowerCase()).join(' | ')
+    }));
+  }
+
+  // Side search (in RX view)
+  const sideSearch = $('#sideSearch'), sideResults = $('#sideResults');
+  sideSearch.addEventListener('input', debounce(()=>{
+    const q = sideSearch.value.trim().toLowerCase();
+    if (!q){ sideResults.innerHTML = ''; return; }
+    const hits = quickIndex.filter(x=>x.t.includes(q)).slice(0,50);
+    sideResults.innerHTML = hits.map(h=>{
+      const r = state.data[h.i];
+      return cardForRecord(r, q);
+    }).join('');
+    // Wire buttons
+    sideResults.querySelectorAll('.addFromSide').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const idx = +btn.dataset.i;
+        addRxFromRecord(state.data[idx]);
+      });
+    });
+  }, 150));
+
+  function cardForRecord(r, q){
+    const h = (s)=> highlight(String(s||''), q);
+    const idx = state.data.indexOf(r);
+    return `<div style="border:1px solid var(--border); border-radius:10px; padding:8px; margin-bottom:6px; background:#0b1220">
+      <div><strong>${h(r['Generic Name'])}</strong> — ${h(r['Brand Name'])}</div>
+      <div class="small muted">${h(r['Dosage Strength'])} • ${h(r['Dosage Form'])}</div>
+      <div class="small muted">Reg: ${h(r['Registration Number'])} • Exp: ${h((r['Expiry Date']||'').split(' ')[0])}</div>
+      <div style="text-align:right; margin-top:6px"><button class="addFromSide" data-i="${idx}">Add to Rx</button></div>
+    </div>`;
+  }
+
+  // RX Builder
+  const rxItemsEl = $('#rxItems');
+  const fields = {
+    clinic: $('#clinic'), clinicAddr: $('#clinicAddr'),
+    docName: $('#docName'), prc: $('#prc'), ptr: $('#ptr'), s2: $('#s2'),
+    ptName: $('#ptName'), ptAge: $('#ptAge'), ptSex: $('#ptSex'), ptAddr: $('#ptAddr'),
+    rxDate: $('#rxDate'), rxNotes: $('#rxNotes')
+  };
+
+  // Default date today
+  if (!fields.rxDate.value){
+    fields.rxDate.valueAsNumber = Date.now() - (new Date()).getTimezoneOffset()*60000;
+  }
+
+  $('#addBlank').addEventListener('click', ()=>addRxItem({}));
+  $('#clearItems').addEventListener('click', ()=>{ if(confirm('Remove all items?')) rxItemsEl.innerHTML=''; });
+
+  // Quick add by typing and pressing Enter picks first match
+  const drugQuick = $('#drugQuick');
+  drugQuick.addEventListener('keydown', e=>{
+    if (e.key==='Enter'){
+      const q = drugQuick.value.trim().toLowerCase();
+      if (!q) return;
+      const idx = quickIndex.find(x=>x.t.includes(q));
+      if (idx){
+        addRxFromRecord(state.data[idx.i]);
+        drugQuick.value = '';
+      } else {
+        // create custom with name as typed
+        addRxItem({ name: drugQuick.value.trim() });
+        drugQuick.value = '';
+      }
+    }
+  });
+
+  function addRxFromRecord(r){
+    const name = `${r['Generic Name']||''} — ${r['Brand Name']||''}`.replace(/\s+—\s+$/,'');
+    const form = r['Dosage Form']||'';
+    const strength = r['Dosage Strength']||'';
+    const reg = r['Registration Number']||'';
+    addRxItem({
+      name, strength, form, reg
+    });
+  }
+
+  function addRxItem({name='', strength='', form='', reg=''}){
+    const id = 'rx_' + Math.random().toString(36).slice(2,9);
+    const div = document.createElement('div');
+    div.className = 'rx-item';
+    div.innerHTML = `
+      <div class="row">
+        <input class="rx-name" value="${escapeHTML(name)}" placeholder="Drug (Generic — Brand)">
+        <input class="rx-strength" value="${escapeHTML(strength)}" placeholder="Strength (e.g., 500 mg)">
+        <input class="rx-form" value="${escapeHTML(form)}" placeholder="Form (e.g., tablet)">
+        <input class="rx-qty" placeholder="Qty">
+      </div>
+      <div class="row">
+        <input class="rx-sig" placeholder="Sig (e.g., 1 tab PO BID)">
+        <input class="rx-duration" placeholder="Duration (e.g., 7 days)">
+        <input class="rx-refills" placeholder="Refills">
+      </div>
+      <div class="row">
+        <input class="rx-notes" placeholder="Instructions / Notes (optional)">
+        <input class="rx-reg" value="${escapeHTML(reg)}" placeholder="FDA Reg No. (optional)">
+      </div>
+      <div class="rx-actions">
+        <button class="ghost up">↑</button>
+        <button class="ghost down">↓</button>
+        <button class="ghost dup">Duplicate</button>
+        <button class="danger del">Remove</button>
+      </div>
+    `;
+    rxItemsEl.appendChild(div);
+    // Wire actions
+    div.querySelector('.del').addEventListener('click', ()=> div.remove());
+    div.querySelector('.dup').addEventListener('click', ()=>{
+      const vals = collectItem(div);
+      addRxItem(vals);
+    });
+    div.querySelector('.up').addEventListener('click', ()=>{
+      if (div.previousElementSibling) div.parentNode.insertBefore(div, div.previousElementSibling);
+    });
+    div.querySelector('.down').addEventListener('click', ()=>{
+      if (div.nextElementSibling) div.parentNode.insertBefore(div.nextElementSibling, div);
+    });
+    // Focus first field
+    div.querySelector('.rx-name').focus();
+  }
+
+  function collectItem(div){
+    return {
+      name: div.querySelector('.rx-name').value.trim(),
+      strength: div.querySelector('.rx-strength').value.trim(),
+      form: div.querySelector('.rx-form').value.trim(),
+      qty: div.querySelector('.rx-qty').value.trim(),
+      sig: div.querySelector('.rx-sig').value.trim(),
+      duration: div.querySelector('.rx-duration').value.trim(),
+      refills: div.querySelector('.rx-refills').value.trim(),
+      notes: div.querySelector('.rx-notes').value.trim(),
+      reg: div.querySelector('.rx-reg').value.trim()
+    };
+  }
+
+  // Print
+  function fillPrint(){
+    $('#pClinic').textContent = fields.clinic.value || 'Clinic';
+    $('#pClinicAddr').textContent = fields.clinicAddr.value || '';
+    $('#pPtName').textContent = fields.ptName.value || '';
+    const ageSex = [fields.ptAge.value, fields.ptSex.value].filter(Boolean).join(' / ');
+    $('#pPtAgeSex').textContent = ageSex;
+    $('#pPtAddr').textContent = fields.ptAddr.value || '';
+    $('#pDate').textContent = fields.rxDate.value || new Date().toISOString().slice(0,10);
+    $('#pDoc').textContent = fields.docName.value || '';
+    $('#pDoc2').textContent = fields.docName.value || '';
+    $('#pPRC').textContent = fields.prc.value || '';
+    $('#pPTR').textContent = fields.ptr.value || '';
+    $('#pS2').textContent = fields.s2.value || '';
+    const ol = $('#pItems'); ol.innerHTML = '';
+    const items = Array.from(rxItemsEl.children).map(div=>collectItem(div));
+    for(const it of items){
+      const line = [
+        [it.name, it.strength].filter(Boolean).join(', '),
+        it.form,
+        it.sig,
+        it.duration ? `for ${it.duration}` : '',
+        it.qty ? `Qty: ${it.qty}` : '',
+        it.refills ? `Refills: ${it.refills}` : '',
+        it.reg ? `Reg: ${it.reg}` : ''
+      ].filter(Boolean).join(' • ');
+      const li = document.createElement('li');
+      li.textContent = line;
+      ol.appendChild(li);
+      if (it.notes){
+        const n = document.createElement('div'); n.style.marginLeft='8px'; n.style.fontSize='10pt'; n.textContent = '— ' + it.notes;
+        ol.appendChild(n);
+      }
+    }
+    const notes = fields.rxNotes.value.trim();
+    $('#pNotes').textContent = notes ? 'Notes: ' + notes : '';
+  }
+  function printNow(){ fillPrint(); window.print(); }
+  $('#printRx').addEventListener('click', printNow);
+  $('#printRx2').addEventListener('click', printNow);
+
+  // Copy as text
+  $('#copyRx').addEventListener('click', ()=>{
+    const items = Array.from(rxItemsEl.children).map(div=>collectItem(div));
+    const lines = items.map((it,i)=>{
+      const parts = [
+        `${i+1}. ${[it.name, it.strength].filter(Boolean).join(', ')}`,
+        it.form,
+        it.sig,
+        it.duration ? `for ${it.duration}` : '',
+        it.qty ? `Qty: ${it.qty}` : '',
+        it.refills ? `Refills: ${it.refills}` : '',
+        it.notes ? `Notes: ${it.notes}` : '',
+        it.reg ? `Reg: ${it.reg}` : ''
+      ].filter(Boolean);
+      return parts.join(' | ');
+    });
+    const header = [
+      `Patient: ${fields.ptName.value} (${[fields.ptAge.value, fields.ptSex.value].filter(Boolean).join('/')})`,
+      `Date: ${fields.rxDate.value || new Date().toISOString().slice(0,10)}`,
+      `Prescriber: ${fields.docName.value} PRC:${fields.prc.value} PTR:${fields.ptr.value} S2:${fields.s2.value}`
+    ].join('\n');
+    const text = `${header}\n\nRx:\n` + lines.join('\n') + (fields.rxNotes.value ? `\n\nNotes: ${fields.rxNotes.value}` : '');
+    navigator.clipboard.writeText(text).then(()=> alert('Copied to clipboard')).catch(()=> alert('Copy failed'));
+  });
+
+  // Local save/load
+  $('#saveLocal').addEventListener('click', ()=>{
+    const items = Array.from(rxItemsEl.children).map(div=>collectItem(div));
+    const payload = {
+      meta: Object.fromEntries(Object.entries(fields).map(([k,el])=>[k, el.value])),
+      items
+    };
+    localStorage.setItem('rxBuilderSave', JSON.stringify(payload));
+    alert('Saved locally.');
+  });
+  $('#loadLocal').addEventListener('click', ()=>{
+    const s = localStorage.getItem('rxBuilderSave');
+    if (!s) return alert('No saved data found.');
+    try{
+      const data = JSON.parse(s);
+      Object.entries(data.meta||{}).forEach(([k,v])=>{ if(fields[k]) fields[k].value = v; });
+      rxItemsEl.innerHTML = '';
+      (data.items||[]).forEach(it=> addRxItem(it));
+      alert('Restored.');
+    }catch(e){ alert('Failed to restore.'); }
+  });
+
+  // Initialize
+  tryAutoLoad();
+  // Show drop area if auto-load fails
+  setTimeout(()=>{
+    if (!state.data.length){ drop.style.display=''; }
+  }, 1200);
+
+})();
+</script>
+</body>
+</html>
