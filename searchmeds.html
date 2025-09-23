@@ -118,6 +118,7 @@
 </style>
 </head>
 <body>
+<!-- CSV_INJECT_HERE -->
 <div class="container">
   <header class="no-print">
     <h1>Prescription Builder + FDA Drug Search</h1>
@@ -888,11 +889,16 @@
   });
 
   // Initialize
-  tryAutoLoad();
-  // Show drop area if auto-load fails
-  setTimeout(()=>{
-    if (!state.data.length){ drop.style.display=''; }
-  }, 1200);
+  // Auto-load CSV if embedded (for index.html)
+  if (window.CSV_DATA && typeof window.CSV_DATA === 'string') {
+    parseAndLoadCSV(window.CSV_DATA, 'embedded');
+  } else {
+    tryAutoLoad();
+    // Show drop area if auto-load fails
+    setTimeout(()=>{
+      if (!state.data.length){ drop.style.display=''; }
+    }, 1200);
+  }
 
 })();
 </script>
