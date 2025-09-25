@@ -2,7 +2,11 @@
   "name": "searchmeds",
   "private": true,
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "@types/node": "^24.5.2",
+    "playwright": "^1.55.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.2"
   },
   "peerDependencies": {
     "typescript": "^5"
