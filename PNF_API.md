@@ -1,5 +1,10 @@
 PNF API — notes and usage
 
+IMPORTANT NOTE — ACCESS RESTRICTIONS
+- During investigation this documenter was repeatedly blocked by Cloudflare/CAPTCHA when attempting direct requests to the DOH PNF API. As a result, this document is based on observed frontend traffic and limited server-side testing only.
+- The DOH PNF API is not a public/open API; it is protected and may refuse requests from non-authorized origins or IPs. Expect 403s or CAPTCHA challenges for direct browser requests.
+- Recommended approach remains server-side requests from a stable backend, but be aware some data may be inaccessible or rate-limited.
+
 Summary
 - Discovered endpoints used by the PNF site (https://pnf.doh.gov.ph):
   - GET https://pnf-api.doh.gov.ph/api/home
