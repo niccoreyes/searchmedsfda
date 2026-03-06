@@ -845,24 +845,28 @@
   $('#copyRx').addEventListener('click', ()=>{
     const items = Array.from(rxItemsEl.children).map(div=>collectItem(div));
     const lines = items.map((it,i)=>{
-      const parts = [
-        `${i+1}. ${[it.name, it.strength].filter(Boolean).join(', ')}`,
-        it.form,
-        it.sig,
-        it.duration ? `for ${it.duration}` : '',
-        it.qty ? `Qty: ${it.qty}` : '',
-        it.refills ? `Refills: ${it.refills}` : '',
-        it.notes ? `Notes: ${it.notes}` : '',
-        it.reg ? `Reg: ${it.reg}` : ''
-      ].filter(Boolean);
-      return parts.join(' | ');
+      // Parse name field: "Generic — Brand" or just "Generic"
+      let generic = it.name || '';
+      let brand = '';
+      const dashIdx = generic.indexOf(' — ');
+      if (dashIdx > -1) {
+        brand = generic.slice(dashIdx + 3).trim();
+        generic = generic.slice(0, dashIdx).trim();
+      }
+      
+      // Format: 1. Desonide (Desowen) 500 mcg/g (0.05%) Lotion #1
+      const namePart = brand ? `${generic} (${brand})` : generic;
+      const strengthPart = it.strength || '';
+      const formPart = it.form || '';
+      const qtyPart = it.qty ? ` #${it.qty}` : '';
+      const line1 = `${i+1}. ${namePart} ${strengthPart} ${formPart}${qtyPart}`.trim();
+      
+      // Format: Sig. Apply on the affected area, (AM & PM)
+      const line2 = it.sig ? `Sig. ${it.sig}` : '';
+      
+      return [line1, line2].filter(Boolean).join('\n');
     });
-    const header = [
-      `Patient: ${fields.ptName.value} (${[fields.ptAge.value, fields.ptSex.value].filter(Boolean).join('/')})`,
-      `Date: ${fields.rxDate.value || new Date().toISOString().slice(0,10)}`,
-      `Prescriber: ${fields.docName.value} PRC:${fields.prc.value} PTR:${fields.ptr.value} S2:${fields.s2.value}`
-    ].join('\n');
-    const text = `${header}\n\nRx:\n` + lines.join('\n') + (fields.rxNotes.value ? `\n\nNotes: ${fields.rxNotes.value}` : '');
+    const text = lines.join('\n\n');
     navigator.clipboard.writeText(text).then(()=> alert('Copied to clipboard')).catch(()=> alert('Copy failed'));
   });
 
