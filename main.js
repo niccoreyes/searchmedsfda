@@ -48,9 +48,7 @@
 
   function setStatus(text, ok){
     loadStatus.textContent = text;
-    loadStatus.style.background = ok ? '#063518' : '#3a0a0a';
-    loadStatus.style.color = ok ? '#9ff0c5' : '#f7caca';
-    loadStatus.style.border = '1px solid ' + (ok ? '#155b37' : '#6b1212');
+    loadStatus.className = 'badge ' + (ok ? 'status-success' : 'status-error');
   }
 
   function tryAutoLoad(){
@@ -378,7 +376,7 @@
   function cardForRecord(r, q){
     const h = (s)=> highlight(String(s||''), q);
     const idx = state.data.indexOf(r);
-    return `<div style="border:1px solid var(--border); border-radius:10px; padding:8px; margin-bottom:6px; background:#0b1220">
+    return `<div class="side-card">
       <div><strong>${h(r['Generic Name'])}</strong> — ${h(r['Brand Name'])}</div>
       <div class="small muted">${h(r['Dosage Strength'])} • ${h(r['Dosage Form'])}</div>
       <div class="small muted">Reg: ${h(r['Registration Number'])} • Exp: ${h((r['Expiry Date']||'').split(' ')[0])}</div>
@@ -531,7 +529,7 @@
       li.textContent = line;
       ol.appendChild(li);
       if (it.notes){
-        const n = document.createElement('div'); n.style.marginLeft='8px'; n.style.fontSize='10pt'; n.textContent = '— ' + it.notes;
+        const n = document.createElement('div'); n.className='print-note'; n.textContent = '— ' + it.notes;
         ol.appendChild(n);
       }
     }
