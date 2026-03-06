@@ -166,8 +166,12 @@
   next.addEventListener('click', ()=>{ const pages = Math.max(1, Math.ceil(state.filtered.length/state.perPage)); if (state.page<pages){ state.page++; renderTable(); }});
 
   function filterAndRender(){
-    const q = state.searchQ.toLowerCase();
+    const q = state.searchQ.toLowerCase().trim();
     const f = state.searchField;
+
+    // Split query into terms for cross-field matching (handles "Metho Epri" matching "Methoprene + ... + Eprinomectin")
+    const terms = q ? q.split(/\s+/).filter(t => t.length > 0) : [];
+
     const isHuman = (row) => {
       // Heuristic: Application Type or Classification might contain 'Veterinary' vs 'Human'
       // If CSV has "Human Drugs" info, user can tighten this; here we attempt via Category/Classification
@@ -179,6 +183,10 @@
       if (gen.includes('veterinary') || cls.includes('veterinary') || brand.includes('vet')) return false;
       return true;
     };
+
+    // Fields to search for cross-field matching (excludes Registration No, Expiry, Class as requested)
+    const searchableFields = ['Generic Name','Brand Name','Pharmacologic Category','Manufacturer','Dosage Form','Dosage Strength'];
+
     state.filtered = state.data.filter(row=>{
       if (state.onlyRX){
         if (!String(row['Classification']||'').toLowerCase().includes('prescription')) return false;
@@ -187,11 +195,16 @@
         if (!isHuman(row)) return false;
       }
       if (!q) return true;
+
       if (f==='all'){
-        return ['Generic Name','Brand Name','Classification','Pharmacologic Category','Registration Number','Manufacturer','Dosage Form','Dosage Strength']
-          .some(k => String(row[k]||'').toLowerCase().includes(q));
+        // Cross-field search: each term must match at least one field
+        // This allows "Amlo Exfo" to match Generic="Amlodipine..." and Brand="Exforge..."
+        const rowText = searchableFields.map(k => String(row[k]||'').toLowerCase()).join(' ');
+        return terms.every(term => rowText.includes(term));
       } else {
-        return String(row[f]||'').toLowerCase().includes(q);
+        // Field-specific search: all terms must match within the selected field
+        const fieldValue = String(row[f]||'').toLowerCase();
+        return terms.every(term => fieldValue.includes(term));
       }
     });
     state.page = 1;
@@ -295,9 +308,50 @@
 
   function highlight(text, q){
     if (!q) return escapeHTML(text);
-    const idx = text.toLowerCase().indexOf(q);
-    if (idx<0) return escapeHTML(text);
-    return escapeHTML(text.slice(0,idx)) + '<span class="hl">' + escapeHTML(text.slice(idx, idx+q.length)) + '</span>' + escapeHTML(text.slice(idx+q.length));
+    // Split query into terms for highlighting
+    const terms = q.toLowerCase().trim().split(/\s+/).filter(t => t.length > 0);
+    if (terms.length === 0) return escapeHTML(text);
+
+    // Sort terms by length (longest first) to avoid partial matches issues
+    const sortedTerms = [...terms].sort((a, b) => b.length - a.length);
+
+    let result = text;
+    const highlights = [];
+
+    // Find all matches for all terms
+    sortedTerms.forEach(term => {
+      let idx = result.toLowerCase().indexOf(term);
+      while (idx >= 0) {
+        // Check if this position is already highlighted
+        const isAlreadyHighlighted = highlights.some(h =>
+          (idx >= h.start && idx < h.end) ||
+          (idx + term.length > h.start && idx + term.length <= h.end)
+        );
+
+        if (!isAlreadyHighlighted) {
+          highlights.push({ start: idx, end: idx + term.length, term: result.slice(idx, idx + term.length) });
+        }
+
+        idx = result.toLowerCase().indexOf(term, idx + 1);
+      }
+    });
+
+    if (highlights.length === 0) return escapeHTML(text);
+
+    // Sort by position
+    highlights.sort((a, b) => a.start - b.start);
+
+    // Build result with highlights
+    let output = '';
+    let lastEnd = 0;
+    highlights.forEach(h => {
+      output += escapeHTML(result.slice(lastEnd, h.start));
+      output += '<span class="hl">' + escapeHTML(h.term) + '</span>';
+      lastEnd = h.end;
+    });
+    output += escapeHTML(result.slice(lastEnd));
+
+    return output;
   }
   function escapeHTML(s){ return s.replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
 
@@ -322,14 +376,14 @@
     }, 3000);
   }
 
-  // Quick index for side search
+  // Quick index for side search (excludes Registration Number and Classification)
   let quickIndex = [];
   function buildQuickIndex(){
     quickIndex = state.data.map((r,i)=>({
       i,
       t: [
-        r['Generic Name'], r['Brand Name'], r['Classification'],
-        r['Pharmacologic Category'], r['Registration Number'], r['Manufacturer'], r['Dosage Form'], r['Dosage Strength']
+        r['Generic Name'], r['Brand Name'],
+        r['Pharmacologic Category'], r['Manufacturer'], r['Dosage Form'], r['Dosage Strength']
       ].map(x=>String(x||'').toLowerCase()).join(' | ')
     }));
   }
@@ -339,7 +393,9 @@
   sideSearch.addEventListener('input', debounce(()=>{
     const q = sideSearch.value.trim().toLowerCase();
     if (!q){ sideResults.innerHTML = ''; return; }
-    const hits = quickIndex.filter(x=>x.t.includes(q)).slice(0,50);
+    // Split query into terms for cross-field matching
+    const terms = q.split(/\s+/).filter(t => t.length > 0);
+    const hits = quickIndex.filter(x => terms.every(term => x.t.includes(term))).slice(0,50);
     sideResults.innerHTML = hits.map(h=>{
       const r = state.data[h.i];
       return cardForRecord(r, q);
@@ -387,7 +443,9 @@
     if (e.key==='Enter'){
       const q = drugQuick.value.trim().toLowerCase();
       if (!q) return;
-      const idx = quickIndex.find(x=>x.t.includes(q));
+      // Split query into terms for cross-field matching
+      const terms = q.split(/\s+/).filter(t => t.length > 0);
+      const idx = quickIndex.find(x => terms.every(term => x.t.includes(term)));
       if (idx){
         addRxFromRecord(state.data[idx.i]);
         drugQuick.value = '';
