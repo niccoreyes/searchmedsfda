@@ -10,7 +10,8 @@
     searchQ: '',
     searchField: 'all',
     onlyRX: false,
-    onlyHuman: false
+    onlyHuman: false,
+    pageRows: []
   };
 
   const $ = sel => document.querySelector(sel);
@@ -226,17 +227,17 @@
     const pages = Math.max(1, Math.ceil(total/state.perPage));
     state.page = Math.min(state.page, pages);
     const start = (state.page-1)*state.perPage;
-    const rows = data.slice(start, start+state.perPage);
+    state.pageRows = data.slice(start, start+state.perPage);
 
     // Render
-    tbody.innerHTML = rows.map(r=> rowHTML(r)).join('');
+    tbody.innerHTML = state.pageRows.map((r, idx)=> rowHTML(r, idx)).join('');
     pageInfo.textContent = `Page ${state.page} of ${pages}`;
     filterSummary.textContent = `${total.toLocaleString()} shown`;
     // Wire add buttons
     $$('#tbody .addRx').forEach(btn=>{
       btn.addEventListener('click', ()=>{
         const idx = +btn.dataset.idx;
-        const record = rows[idx];
+        const record = state.pageRows[idx];
         addRxFromRecord(record);
         // Switch to RX tab
         $$('.tab[data-tab="rx"]')[0].click();
@@ -244,7 +245,7 @@
     });
   }
 
-  function rowHTML(r){
+  function rowHTML(r, idx){
     const textQ = state.searchQ.trim().toLowerCase();
     const h = (s)=> highlight(String(s||''), textQ);
     const expiry = (r['Expiry Date']||'').split(' ')[0];
@@ -267,44 +268,9 @@
       <td class="truncate" title="${escapeHTML(r['Manufacturer']||'')}">${cells[5]}</td>
       <td>${cells[6]}</td>
       <td>${cells[7]}</td>
-      <td><button class="addRx" data-idx="${rowsIndex(r)}">Add</button></td>
+      <td><button class="addRx" data-idx="${idx}">Add</button></td>
     </tr>`;
   }
-  // Helper to preserve index within current page slice
-  function rowsIndex(){ return 0; } // replaced dynamically in renderTable
-  // Overwrite rowsIndex by closure trick in renderTable
-  (function(){
-    renderTable = function(){
-      // capture rows array inside renderTable for index mapping
-      const k = state.sortKey, dir = state.sortDir;
-      const data = state.filtered.slice().sort((a,b)=>{
-        const av = (a[k]||'').toString().toLowerCase();
-        const bv = (b[k]||'').toString().toLowerCase();
-        if (av<bv) return dir==='asc'?-1:1;
-        if (av>bv) return dir==='asc'?1:-1;
-        return 0;
-      });
-      const total = data.length;
-      const pages = Math.max(1, Math.ceil(total/state.perPage));
-      state.page = Math.min(state.page, pages);
-      const start = (state.page-1)*state.perPage;
-      const pageRows = data.slice(start, start+state.perPage);
-      // redefine rowsIndex to map to index within pageRows
-      window.__pageRows = pageRows;
-      window.rowsIndex = (r)=> pageRows.indexOf(r);
-      tbody.innerHTML = pageRows.map(r=> rowHTML(r)).join('');
-      pageInfo.textContent = `Page ${state.page} of ${pages}`;
-      filterSummary.textContent = `${total.toLocaleString()} shown`;
-      $$('#tbody .addRx').forEach(btn=>{
-        btn.addEventListener('click', ()=>{
-          const idx = +btn.dataset.idx;
-          const record = pageRows[idx];
-          addRxFromRecord(record);
-          $$('.tab[data-tab="rx"]')[0].click();
-        });
-      });
-    }
-  })();
 
   function highlight(text, q){
     if (!q) return escapeHTML(text);
