@@ -1,242 +1,423 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<title>Rx Builder + Drug List (PH FDA CSV)</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="stylesheet" href="styles.css">
+  <meta charset="utf-8">
+  <title>Rx Builder + FDA Drug Search</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0f766e">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<div class="container">
-  <header class="no-print">
-    <h1>Prescription Builder + FDA Drug Search</h1>
-    <div class="row" style="justify-content:flex-end; align-items:center">
-      <span id="loadStatus" class="badge">CSV: not loaded</span>
-      <span class="badge">Local-first, offline</span>
+  <!-- Mobile Header -->
+  <header class="app-header">
+    <div class="header-content">
+      <div class="logo">
+        <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M8 21h8a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2z"/>
+          <path d="M12 11v6M9 14h6"/>
+        </svg>
+        <span class="logo-text">Rx Builder</span>
+      </div>
+      <div class="header-badges">
+        <span id="loadStatus" class="status-badge loading">Loading...</span>
+        <span class="status-badge offline">Offline</span>
+      </div>
     </div>
   </header>
 
-  <div class="no-print" style="margin-bottom:10px">
-    <div class="tabs">
-      <div class="tab active" data-tab="search">Search Drug List</div>
-      <div class="tab" data-tab="rx">Build Prescription</div>
-      <div class="tab" data-tab="about">About</div>
-    </div>
-  </div>
+  <!-- Main Content -->
+  <main class="app-main">
+    <!-- Tab: Search -->
+    <section id="view-search" class="view active">
+      <!-- CSV Upload Area (shown when no data) -->
+      <div id="uploadArea" class="upload-card">
+        <div class="upload-content">
+          <div class="upload-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+            </svg>
+          </div>
+          <h2>Load Drug Database</h2>
+          <p>Upload the FDA Philippines ALL_DrugProducts.csv file</p>
+          <div class="upload-actions">
+            <button id="btnPick" class="btn btn-primary btn-lg">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                <polyline points="22,6 12,13 2,6"/>
+              </svg>
+              Select CSV File
+            </button>
+            <button id="btnReload" class="btn btn-secondary">Auto-Load from Folder</button>
+          </div>
+          <div class="upload-hint">
+            <p>Or drop your CSV file anywhere on this page</p>
+            <p class="text-muted">All processing happens locally in your browser. No data is uploaded.</p>
+          </div>
+        </div>
+      </div>
 
-  <div id="view-search" class="view">
-    <div class="card">
-      <header>
-        <h2>Drug Products (from ALL_DrugProducts.csv)</h2>
-      </header>
-      <div class="body">
-        <div class="toolbar">
-          <div class="searchbar" style="flex:1">
-            <input id="q" type="search" placeholder="Search by Generic, Brand, Classification, Category, Reg No., Manufacturer..." autocomplete="off">
-            <select id="fieldSelect" title="Search in">
-              <option value="all">All columns</option>
-              <option value="Generic Name">Generic</option>
-              <option value="Brand Name">Brand</option>
+      <!-- Search Interface (shown when data loaded) -->
+      <div id="searchInterface" class="search-container" style="display:none">
+        <!-- Search Bar -->
+        <div class="search-bar-card">
+          <div class="search-input-wrap">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/>
+              <path d="m21 21-4.35-4.35"/>
+            </svg>
+            <input id="q" type="search" placeholder="Search drugs (e.g., 'Amlo Exfo' for cross-field search)..." autocomplete="off">
+            <button id="clearSearch" class="clear-btn" title="Clear search">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+
+          <div class="search-filters">
+            <select id="fieldSelect" class="filter-select">
+              <option value="all">All Fields</option>
+              <option value="Generic Name">Generic Name</option>
+              <option value="Brand Name">Brand Name</option>
               <option value="Classification">Classification</option>
-              <option value="Pharmacologic Category">Pharmacologic Category</option>
-              <option value="Registration Number">Registration Number</option>
+              <option value="Pharmacologic Category">Category</option>
               <option value="Manufacturer">Manufacturer</option>
             </select>
-            <select id="perPage">
-              <option>25</option><option selected>50</option><option>100</option><option>200</option>
-            </select>
-            <button id="clearSearch" class="ghost">Clear</button>
-          </div>
-          <div class="chips">
-            <label class="chip"><input type="checkbox" id="onlyRX"> RX only</label>
-            <label class="chip"><input type="checkbox" id="onlyHuman"> Human drugs</label>
-          </div>
-          <div class="row" style="flex:0 0 auto">
-            <button id="btnReload" class="ghost">Reload CSV</button>
-            <input id="fileInput" type="file" accept=".csv" class="no-print" style="display:none">
-            <button id="btnPick" class="ghost">Load CSV file</button>
-          </div>
-        </div>
 
-        <div id="drop" class="drop no-print" style="margin:10px 0; display:none">
-          <div>Drop ALL_DrugProducts.csv here, or click "Load CSV file"</div>
-          <div class="small muted" style="margin-top:4px">The file isn't uploaded anywhere; it's processed in your browser.</div>
-        </div>
-
-        <div class="row small muted" style="margin:8px 0">
-          <span id="summary" class="stat">0 records</span>
-          <span id="filterSummary" class="stat">0 shown</span>
-          <span id="updateBadge" class="stat">Updated: —</span>
-        </div>
-
-        <div class="card" style="margin-top:8px">
-          <div class="body" style="padding:0; max-height:60vh; overflow:auto">
-            <table id="tbl">
-              <thead>
-                <tr>
-                  <th data-k="Generic Name">Generic</th>
-                  <th data-k="Brand Name">Brand</th>
-                  <th data-k="Dosage Strength">Strength</th>
-                  <th data-k="Dosage Form">Form</th>
-                  <th data-k="Classification">Class</th>
-                  <th data-k="Manufacturer">Mfr</th>
-                  <th data-k="Registration Number">Reg No.</th>
-                  <th data-k="Expiry Date">Expiry</th>
-                  <th style="width:1%">Actions</th>
-                </tr>
-              </thead>
-              <tbody id="tbody"></tbody>
-            </table>
-          </div>
-          <div class="body">
-            <div class="pagination">
-              <button id="prev">Prev</button>
-              <span id="pageInfo" class="muted">Page 1</span>
-              <button id="next">Next</button>
-              <div style="flex:1"></div>
-              <button id="toRx" class="primary">Go to Prescription Builder</button>
+            <div class="filter-chips">
+              <label class="chip-toggle">
+                <input type="checkbox" id="onlyRX">
+                <span>Rx Only</span>
+              </label>
+              <label class="chip-toggle">
+                <input type="checkbox" id="onlyHuman">
+                <span>Human</span>
+              </label>
             </div>
+
+            <select id="perPage" class="per-page-select">
+              <option value="25">25</option>
+              <option value="50" selected>50</option>
+              <option value="100">100</option>
+              <option value="200">200</option>
+            </select>
           </div>
         </div>
 
-      </div>
-    </div>
-  </div>
+        <!-- Results Summary -->
+        <div class="results-summary">
+          <span id="summary" class="summary-text">0 drugs</span>
+          <span id="filterSummary" class="summary-badge">0 shown</span>
+          <span id="updateBadge" class="update-badge">Updated: —</span>
+        </div>
 
-  <div id="view-rx" class="view" style="display:none">
-    <div class="grid">
-      <div class="card">
-        <header><h2>Prescription Builder</h2></header>
-        <div class="body">
-          <div class="row">
-            <input id="clinic" placeholder="Clinic/Facility name">
-            <input id="clinicAddr" placeholder="Clinic address">
+        <!-- Results List -->
+        <div class="results-container">
+          <div id="resultsList" class="drug-list"></div>
+
+          <!-- Empty State -->
+          <div id="emptyState" class="empty-state" style="display:none">
+            <div class="empty-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="11" cy="11" r="8"/>
+                <path d="m21 21-4.35-4.35"/>
+              </svg>
+            </div>
+            <p>No drugs found matching your search</p>
+            <button id="clearFilters" class="btn btn-secondary">Clear Filters</button>
           </div>
-          <div class="row">
-            <input id="docName" placeholder="Prescriber name (e.g., Juan Dela Cruz, MD)">
-            <input id="prc" placeholder="PRC License No.">
-            <input id="ptr" placeholder="PTR No.">
-            <input id="s2" placeholder="S2 No. (if applicable)">
+
+          <!-- Pagination -->
+          <div class="pagination">
+            <button id="prev" class="btn btn-ghost" disabled>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="15,18 9,12 15,6"/>
+              </svg>
+              Prev
+            </button>
+            <span id="pageInfo" class="page-info">Page 1 of 1</span>
+            <button id="next" class="btn btn-ghost">
+              Next
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="9,18 15,12 9,6"/>
+              </svg>
+            </button>
           </div>
-          <hr style="border:0; border-top:1px solid var(--border); margin:10px 0">
-          <div class="row">
-            <input id="ptName" placeholder="Patient full name">
-            <input id="ptAge" placeholder="Age">
+        </div>
+      </div>
+    </section>
+
+    <!-- Tab: Prescription -->
+    <section id="view-rx" class="view">
+      <!-- Prescription Header Info -->
+      <div class="rx-section">
+        <h3 class="section-title">Prescriber Information</h3>
+        <div class="form-grid">
+          <div class="form-field">
+            <label>Clinic / Facility</label>
+            <input id="clinic" type="text" placeholder="Clinic name">
+          </div>
+          <div class="form-field">
+            <label>Clinic Address</label>
+            <input id="clinicAddr" type="text" placeholder="Address">
+          </div>
+          <div class="form-field">
+            <label>Prescriber Name</label>
+            <input id="docName" type="text" placeholder="Dr. Juan Dela Cruz, MD">
+          </div>
+          <div class="form-field small">
+            <label>PRC No.</label>
+            <input id="prc" type="text" placeholder="PRC license">
+          </div>
+          <div class="form-field small">
+            <label>PTR No.</label>
+            <input id="ptr" type="text" placeholder="PTR number">
+          </div>
+          <div class="form-field small">
+            <label>S2 No.</label>
+            <input id="s2" type="text" placeholder="If applicable">
+          </div>
+        </div>
+      </div>
+
+      <!-- Patient Info -->
+      <div class="rx-section">
+        <h3 class="section-title">Patient Information</h3>
+        <div class="form-grid">
+          <div class="form-field">
+            <label>Patient Name</label>
+            <input id="ptName" type="text" placeholder="Full name">
+          </div>
+          <div class="form-field xs">
+            <label>Age</label>
+            <input id="ptAge" type="text" placeholder="Age">
+          </div>
+          <div class="form-field xs">
+            <label>Sex</label>
             <select id="ptSex">
-              <option value="">Sex</option>
+              <option value="">—</option>
               <option>Male</option>
               <option>Female</option>
             </select>
           </div>
-          <div class="row">
-            <input id="ptAddr" placeholder="Patient address">
+          <div class="form-field">
+            <label>Address</label>
+            <input id="ptAddr" type="text" placeholder="Patient address">
+          </div>
+          <div class="form-field small">
+            <label>Date</label>
             <input id="rxDate" type="date">
           </div>
+        </div>
+      </div>
 
-          <div class="row" style="align-items:center; margin-top:6px">
-            <input id="drugQuick" placeholder="Quick add: search drug by Generic/Brand then Enter">
-            <button id="addBlank">Add custom item</button>
-            <div style="flex:1"></div>
-            <button id="clearItems" class="danger">Clear items</button>
+      <!-- Quick Add -->
+      <div class="rx-section">
+        <h3 class="section-title">Add Medication</h3>
+        <div class="quick-add">
+          <div class="quick-add-input">
+            <input id="drugQuick" type="text" placeholder="Search drug by generic or brand name, then press Enter...">
+            <button id="addBlank" class="btn btn-secondary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              Custom
+            </button>
           </div>
 
-          <div id="rxItems" class="rx-items" style="margin-top:8px"></div>
+          <!-- Side Search Results -->
+          <div id="sideResults" class="side-results"></div>
+        </div>
+      </div>
 
-          <div class="rx-actions" style="margin-top:12px">
-            <button id="copyRx" class="ghost">Copy as text</button>
-            <button id="saveLocal" class="ghost">Save (local)</button>
-            <button id="loadLocal" class="ghost">Restore</button>
-            <button id="printRx" class="primary">Print / Save as PDF</button>
+      <!-- Prescription Items -->
+      <div class="rx-section">
+        <div class="section-header">
+          <h3 class="section-title">Prescription Items</h3>
+          <button id="clearItems" class="btn btn-danger-ghost btn-sm">Clear All</button>
+        </div>
+
+        <div id="rxItems" class="rx-items">
+          <div class="empty-rx">
+            <div class="empty-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M8 21h8a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2z"/>
+                <path d="M12 11v6M9 14h6"/>
+              </svg>
+            </div>
+            <p>No medications added yet</p>
+            <p class="text-muted">Search above or add a custom item</p>
           </div>
         </div>
       </div>
 
-      <div class="right">
-        <div class="card">
-          <header><h2>Add from Search</h2></header>
-          <div class="body">
-            <div class="small muted" style="margin-bottom:6px">Pick in the table on the left (Search tab), or search here:</div>
-            <input id="sideSearch" placeholder="Search drug list...">
-            <div id="sideResults" style="max-height:50vh; overflow:auto; margin-top:8px"></div>
-          </div>
+      <!-- Notes -->
+      <div class="rx-section">
+        <h3 class="section-title">Additional Notes</h3>
+        <textarea id="rxNotes" rows="3" placeholder="Enter any additional prescription notes..."></textarea>
+      </div>
+
+      <!-- Actions -->
+      <div class="rx-actions-bar">
+        <button id="saveLocal" class="btn btn-secondary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+            <polyline points="17,21 17,13 7,13 7,21"/>
+            <polyline points="7,3 7,8 15,8"/>
+          </svg>
+          Save Draft
+        </button>
+        <button id="loadLocal" class="btn btn-secondary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 17v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3"/>
+            <polyline points="7,11 12,16 17,11"/>
+            <line x1="12" y1="16" x2="12" y2="4"/>
+          </svg>
+          Load Draft
+        </button>
+        <button id="copyRx" class="btn btn-secondary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+          </svg>
+          Copy
+        </button>
+        <button id="printRx" class="btn btn-primary btn-lg">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6,9 6,2 18,2 18,9"/>
+            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+            <rect x="6" y="14" width="12" height="8"/>
+          </svg>
+          Print / PDF
+        </button>
+      </div>
+    </section>
+
+    <!-- Tab: About -->
+    <section id="view-about" class="view">
+      <div class="about-card">
+        <div class="about-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 16v-4M12 8h.01"/>
+          </svg>
+        </div>
+        <h2>About Rx Builder</h2>
+        <p>A local-first, offline prescription builder with FDA Philippines drug search.</p>
+
+        <div class="about-section">
+          <h3>How to Use</h3>
+          <ol>
+            <li>Download the <strong>ALL_DrugProducts.csv</strong> from FDA Philippines Verification Portal</li>
+            <li>Load the CSV file using the "Select CSV File" button</li>
+            <li>Search for drugs using the search tab</li>
+            <li>Build prescriptions in the Rx tab</li>
+            <li>Print or save as PDF when done</li>
+          </ol>
         </div>
 
-        <div class="card">
-          <header><h2>Notes</h2></header>
-          <div class="body">
-            <textarea id="rxNotes" placeholder="Prescription notes (optional)"></textarea>
-          </div>
+        <div class="about-section">
+          <h3>Privacy</h3>
+          <p>All processing happens locally in your browser. No data is ever uploaded to any server. Your prescriptions are saved to your browser's local storage only.</p>
+        </div>
+
+        <div class="about-section">
+          <h3>Tips</h3>
+          <ul>
+            <li>Use <strong>cross-field search</strong>: type "Amlo Exfo" to find Amlodipine (generic) + Exforge (brand)</li>
+            <li>Save drafts locally before printing</li>
+            <li>Works completely offline after loading the CSV</li>
+          </ul>
+        </div>
+
+        <div class="about-footer">
+          <p class="text-muted">Data source: FDA Philippines Drug Products Database</p>
         </div>
       </div>
-    </div>
-    <div class="footer no-print">
-      <div class="muted small">Tip: Fields save to your browser's storage when you click "Save (local)". No data leaves your device.</div>
-      <div class="row" style="flex:0 0 auto">
-        <button class="ghost" id="backToSearch">Back to Search</button>
-        <button id="printRx2" class="primary">Print / Save as PDF</button>
-      </div>
+    </section>
+  </main>
+
+  <!-- Bottom Navigation (Mobile) -->
+  <nav class="bottom-nav no-print">
+    <button class="nav-item active" data-tab="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/>
+        <path d="m21 21-4.35-4.35"/>
+      </svg>
+      <span>Search</span>
+    </button>
+    <button class="nav-item" data-tab="rx">
+      <div class="nav-badge" id="rxBadge" style="display:none">0</div>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M8 21h8a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2z"/>
+        <path d="M12 11v6M9 14h6"/>
+      </svg>
+      <span>Rx</span>
+    </button>
+    <button class="nav-item" data-tab="about">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M12 16v-4M12 8h.01"/>
+      </svg>
+      <span>About</span>
+    </button>
+  </nav>
+
+  <!-- File Input Hidden -->
+  <input id="fileInput" type="file" accept=".csv" style="display:none">
+
+  <!-- Drop Zone Overlay -->
+  <div id="dropOverlay" class="drop-overlay">
+    <div class="drop-content">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+      </svg>
+      <p>Drop CSV file here</p>
     </div>
   </div>
 
-  <div id="view-about" class="view" style="display:none">
-    <div class="card">
-      <header><h2>About</h2></header>
-      <div class="body">
-        <ul>
-          <li>This tool reads ALL_DrugProducts.csv that you place beside this HTML file and lets you search/filter and build printable prescriptions.</li>
-          <li>If your browser blocks file access when opened directly, click "Load CSV file" and choose ALL_DrugProducts.csv, or serve the folder with a simple local server.</li>
-          <li>Example local server commands:
-            <ul>
-              <li>Python 3: python -m http.server</li>
-              <li>Node.js: npx http-server</li>
-            </ul>
-          </li>
-          <li>All processing happens locally in your browser.</li>
-        </ul>
-        <div class="small muted">Data source: FDA Philippines Verification Portal CSV export. Ensure your CSV header row includes columns like "Registration Number, Generic Name, Brand Name, Dosage Strength, Dosage Form, Classification, Pharmacologic Category, Manufacturer, Country of Origin, Application Type, Issuance Date, Expiry Date".</div>
-      </div>
-    </div>
-  </div>
+  <!-- Toast Container -->
+  <div id="toastContainer" class="toast-container"></div>
 
-  <!-- Printable layout -->
+  <!-- Print Template -->
   <div class="rx-print" id="rxPrint">
-    <h3 id="pClinic">Clinic</h3>
-    <div class="small" id="pClinicAddr"></div>
-    <div class="meta">
-      <div>
-        <div><strong>Patient:</strong> <span id="pPtName"></span></div>
-        <div><strong>Age/Sex:</strong> <span id="pPtAgeSex"></span></div>
-        <div><strong>Address:</strong> <span id="pPtAddr"></span></div>
+    <div class="print-header">
+      <h2 id="pClinic">Clinic Name</h2>
+      <p id="pClinicAddr"></p>
+    </div>
+
+    <div class="print-patient">
+      <div class="print-col">
+        <p><strong>Patient:</strong> <span id="pPtName"></span></p>
+        <p><strong>Age/Sex:</strong> <span id="pPtAgeSex"></span></p>
+        <p><strong>Address:</strong> <span id="pPtAddr"></span></p>
       </div>
-      <div style="text-align:right">
-        <div><strong>Date:</strong> <span id="pDate"></span></div>
-        <div><strong>Prescriber:</strong> <span id="pDoc"></span></div>
-        <div class="small">
-          <span>PRC:</span> <span id="pPRC"></span>
-          <span style="margin-left:10px">PTR:</span> <span id="pPTR"></span>
-          <span style="margin-left:10px">S2:</span> <span id="pS2"></span>
-        </div>
+      <div class="print-col right">
+        <p><strong>Date:</strong> <span id="pDate"></span></p>
+        <p><strong>Physician:</strong> <span id="pDoc"></span></p>
+        <p class="print-licenses">
+          <span>PRC: <span id="pPRC"></span></span>
+          <span>PTR: <span id="pPTR"></span></span>
+          <span>S2: <span id="pS2"></span></span>
+        </p>
       </div>
     </div>
-    <div><strong>Rx:</strong></div>
-    <ol id="pItems"></ol>
-    <div id="pNotes" style="margin-top:8px"></div>
-    <div class="sig">
-      <div></div>
-      <div style="text-align:center">
-        <div style="margin-top:40px; border-top:1px solid #000; padding-top:4px">
-          <div id="pDoc2"></div>
-          <div class="small">Signature over printed name</div>
-        </div>
+
+    <div class="print-rx">
+      <p class="rx-label">Rx</p>
+      <ol id="pItems"></ol>
+      <p id="pNotes" class="print-notes"></p>
+    </div>
+
+    <div class="print-signature">
+      <div class="signature-line">
+        <p id="pDoc2"></p>
+        <p class="signature-label">License No. / Signature</p>
       </div>
     </div>
   </div>
 
-</div>
-
-<!-- Toast container -->
-<div id="toastContainer" class="toast-container"></div>
-
-<script src="main.js"></script>
+  <script src="main.js"></script>
 </body>
 </html>
