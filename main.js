@@ -428,13 +428,12 @@
     const brandName = r['Brand Name']||'';
     const form = r['Dosage Form']||'';
     const strength = r['Dosage Strength']||'';
-    const reg = r['Registration Number']||'';
     addRxItem({
-      genericName, brandName, strength, form, reg
+      genericName, brandName, strength, form
     });
   }
 
-  function addRxItem({genericName='', brandName='', name='', strength='', form='', reg=''}){
+  function addRxItem({genericName='', brandName='', name='', strength='', form=''}){
     // Support legacy 'name' field for backwards compatibility
     const gen = genericName || name || '';
     const div = document.createElement('div');
@@ -454,7 +453,6 @@
       </div>
       <div class="row">
         <input class="rx-notes" placeholder="Instructions / Notes (optional)">
-        <input class="rx-reg" value="${escapeHTML(reg)}" placeholder="FDA Reg No. (optional)">
       </div>
       <div class="rx-actions">
         <button class="ghost up">↑</button>
@@ -490,8 +488,7 @@
       sig: div.querySelector('.rx-sig').value.trim(),
       duration: div.querySelector('.rx-duration').value.trim(),
       refills: div.querySelector('.rx-refills').value.trim(),
-      notes: div.querySelector('.rx-notes').value.trim(),
-      reg: div.querySelector('.rx-reg').value.trim()
+      notes: div.querySelector('.rx-notes').value.trim()
     };
   }
 
@@ -528,8 +525,7 @@
         it.sig,
         it.duration ? `for ${it.duration}` : '',
         it.qty ? `Qty: ${it.qty}` : '',
-        it.refills ? `Refills: ${it.refills}` : '',
-        it.reg ? `Reg: ${it.reg}` : ''
+        it.refills ? `Refills: ${it.refills}` : ''
       ].filter(Boolean).join(' • ');
       const li = document.createElement('li');
       li.textContent = line;
