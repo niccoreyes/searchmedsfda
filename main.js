@@ -424,21 +424,25 @@
   });
 
   function addRxFromRecord(r){
-    const name = `${r['Generic Name']||''} — ${r['Brand Name']||''}`.replace(/\s+—\s+$/,'');
+    const genericName = r['Generic Name']||'';
+    const brandName = r['Brand Name']||'';
     const form = r['Dosage Form']||'';
     const strength = r['Dosage Strength']||'';
     const reg = r['Registration Number']||'';
     addRxItem({
-      name, strength, form, reg
+      genericName, brandName, strength, form, reg
     });
   }
 
-  function addRxItem({name='', strength='', form='', reg=''}){
+  function addRxItem({genericName='', brandName='', name='', strength='', form='', reg=''}){
+    // Support legacy 'name' field for backwards compatibility
+    const gen = genericName || name || '';
     const div = document.createElement('div');
     div.className = 'rx-item';
     div.innerHTML = `
       <div class="row">
-        <input class="rx-name" value="${escapeHTML(name)}" placeholder="Drug (Generic — Brand)">
+        <input class="rx-generic" value="${escapeHTML(gen)}" placeholder="Generic Name">
+        <input class="rx-brand" value="${escapeHTML(brandName)}" placeholder="Brand Name">
         <input class="rx-strength" value="${escapeHTML(strength)}" placeholder="Strength (e.g., 500 mg)">
         <input class="rx-form" value="${escapeHTML(form)}" placeholder="Form (e.g., tablet)">
         <input class="rx-qty" placeholder="Qty">
@@ -473,12 +477,13 @@
       if (div.nextElementSibling) div.parentNode.insertBefore(div.nextElementSibling, div);
     });
     // Focus first field
-    div.querySelector('.rx-name').focus();
+    div.querySelector('.rx-generic').focus();
   }
 
   function collectItem(div){
     return {
-      name: div.querySelector('.rx-name').value.trim(),
+      genericName: div.querySelector('.rx-generic').value.trim(),
+      brandName: div.querySelector('.rx-brand').value.trim(),
       strength: div.querySelector('.rx-strength').value.trim(),
       form: div.querySelector('.rx-form').value.trim(),
       qty: div.querySelector('.rx-qty').value.trim(),
@@ -507,8 +512,18 @@
     const ol = $('#pItems'); ol.innerHTML = '';
     const items = Array.from(rxItemsEl.children).map(div=>collectItem(div));
     for(const it of items){
+      // Build display name from separate generic/brand fields (with backwards compat for legacy 'name' field)
+      let displayName = '';
+      if (it.genericName && it.brandName) {
+        displayName = `${it.genericName} — ${it.brandName}`;
+      } else if (it.genericName) {
+        displayName = it.genericName;
+      } else if (it.name) {
+        // Legacy fallback for old saved data
+        displayName = it.name;
+      }
       const line = [
-        [it.name, it.strength].filter(Boolean).join(', '),
+        [displayName, it.strength].filter(Boolean).join(', '),
         it.form,
         it.sig,
         it.duration ? `for ${it.duration}` : '',
@@ -535,13 +550,19 @@
   $('#copyRx').addEventListener('click', ()=>{
     const items = Array.from(rxItemsEl.children).map(div=>collectItem(div));
     const lines = items.map((it,i)=>{
-      // Parse name field: "Generic — Brand" or just "Generic"
-      let generic = it.name || '';
-      let brand = '';
-      const dashIdx = generic.indexOf(' — ');
-      if (dashIdx > -1) {
-        brand = generic.slice(dashIdx + 3).trim();
-        generic = generic.slice(0, dashIdx).trim();
+      // Use dedicated fields (with backwards compat for legacy 'name' field)
+      let generic = it.genericName || '';
+      let brand = it.brandName || '';
+
+      // Legacy fallback: if no separate fields, try to parse from old 'name' field
+      if (!generic && !brand && it.name) {
+        const dashIdx = it.name.indexOf(' — ');
+        if (dashIdx > -1) {
+          generic = it.name.slice(0, dashIdx).trim();
+          brand = it.name.slice(dashIdx + 3).trim();
+        } else {
+          generic = it.name;
+        }
       }
 
       // Format: 1. Desonide (Desowen) 500 mcg/g (0.05%) Lotion #1
