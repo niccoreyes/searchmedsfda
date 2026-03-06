@@ -536,6 +536,200 @@ p {
   margin-left: auto;
 }
 
+.results-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* View Toggle (Segmented Control) */
+.view-toggle {
+  display: flex;
+  align-items: center;
+  background: var(--slate-100);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 2px;
+  margin: 0 auto;
+}
+
+.view-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-3);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.view-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.view-btn:hover {
+  color: var(--text-primary);
+}
+
+.view-btn.active {
+  background: var(--surface);
+  color: var(--primary-700);
+  box-shadow: var(--shadow-sm);
+}
+
+.view-btn span {
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .view-btn span {
+    display: inline;
+  }
+}
+
+/* Table View */
+.table-container {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-scroll::-webkit-scrollbar {
+  height: 8px;
+}
+
+.table-scroll::-webkit-scrollbar-track {
+  background: var(--slate-100);
+}
+
+.table-scroll::-webkit-scrollbar-thumb {
+  background: var(--slate-300);
+  border-radius: var(--radius-full);
+}
+
+.results-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  min-width: 900px;
+}
+
+.results-table th,
+.results-table td {
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.results-table th {
+  background: var(--slate-50);
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.results-table th.sortable {
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.results-table th.sortable:hover {
+  background: var(--slate-100);
+  color: var(--text-primary);
+}
+
+.results-table th.sortable::after {
+  content: '↕';
+  margin-left: var(--space-1);
+  font-size: 0.75rem;
+  opacity: 0.5;
+}
+
+.results-table th.sort-asc::after {
+  content: '↑';
+  opacity: 1;
+  color: var(--primary-600);
+}
+
+.results-table th.sort-desc::after {
+  content: '↓';
+  opacity: 1;
+  color: var(--primary-600);
+}
+
+.results-table th.actions {
+  width: 80px;
+  text-align: center;
+}
+
+.results-table tbody tr {
+  transition: background var(--transition-fast);
+}
+
+.results-table tbody tr:hover {
+  background: var(--slate-50);
+}
+
+.results-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.results-table td {
+  color: var(--text-primary);
+  vertical-align: middle;
+}
+
+.results-table td.truncate {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.results-table td.actions {
+  text-align: center;
+}
+
+.results-table .add-table-btn {
+  padding: var(--space-1) var(--space-2);
+  font-size: 0.75rem;
+}
+
+.results-table .rx-badge {
+  display: inline-block;
+  padding: 2px 6px;
+  background: var(--amber-100);
+  color: var(--amber-600);
+  border-radius: var(--radius-sm);
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.results-table .expired {
+  color: var(--red-500);
+}
+
+.results-table .expiring-soon {
+  color: var(--amber-600);
+}
+
 /* Drug List */
 .drug-list {
   display: flex;

@@ -21,7 +21,8 @@
     pageRows: [],
     quickIndex: [],
     isDataLoaded: false,
-    rxItemCount: 0
+    rxItemCount: 0,
+    viewMode: 'cards' // 'cards' or 'table'
   };
 
   // DOM helpers
@@ -356,6 +357,73 @@
         scrollToResults();
       }
     });
+
+    // View toggle (cards vs table)
+    $$('.view-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const view = btn.dataset.view;
+        if (view === state.viewMode) return;
+
+        state.viewMode = view;
+
+        // Update active state on buttons
+        $$('.view-btn').forEach((b) => b.classList.toggle('active', b.dataset.view === view));
+
+        // Toggle visibility
+        const listEl = $('#resultsList');
+        const tableContainer = $('#tableContainer');
+
+        if (view === 'cards') {
+          listEl.style.display = '';
+          tableContainer.style.display = 'none';
+        } else {
+          listEl.style.display = 'none';
+          tableContainer.style.display = '';
+        }
+
+        renderResults();
+      });
+    });
+
+    // Table column sorting
+    $$('#resultsTable th[data-sort]').forEach((th) => {
+      th.addEventListener('click', () => {
+        const key = th.dataset.sort;
+        if (state.sortKey === key) {
+          state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc';
+        } else {
+          state.sortKey = key;
+          state.sortDir = 'asc';
+        }
+
+        // Update sort indicators
+        $$('#resultsTable th').forEach((header) => {
+          header.classList.remove('sort-asc', 'sort-desc');
+          if (header.dataset.sort === state.sortKey) {
+            header.classList.add(state.sortDir === 'asc' ? 'sort-asc' : 'sort-desc');
+          }
+        });
+
+        renderResults();
+      });
+    });
+
+    // Set initial sort indicator
+    const initialSortHeader = $(`#resultsTable th[data-sort="${state.sortKey}"]`);
+    if (initialSortHeader) {
+      initialSortHeader.classList.add(state.sortDir === 'asc' ? 'sort-asc' : 'sort-desc');
+    }
+
+    // Set initial view visibility
+    const listEl = $('#resultsList');
+    const tableContainer = $('#tableContainer');
+    if (state.viewMode === 'cards') {
+      listEl.style.display = '';
+      tableContainer.style.display = 'none';
+    } else {
+      listEl.style.display = 'none';
+      tableContainer.style.display = '';
+    }
   }
 
   function scrollToResults() {
@@ -437,39 +505,61 @@
     const start = (state.page - 1) * state.perPage;
     state.pageRows = sorted.slice(start, start + state.perPage);
 
-    // Update UI
+    // Update UI based on view mode
     const listEl = $('#resultsList');
+    const tableBody = $('#tableBody');
+    const tableContainer = $('#tableContainer');
     const emptyEl = $('#emptyState');
 
     if (state.pageRows.length === 0) {
       listEl.innerHTML = '';
+      if (tableBody) tableBody.innerHTML = '';
       emptyEl.style.display = 'block';
     } else {
       emptyEl.style.display = 'none';
-      listEl.innerHTML = state.pageRows.map((r, idx) => drugCardHTML(r, idx)).join('');
 
-      // Wire up add buttons
-      $$('.drug-card').forEach((card) => {
-        card.addEventListener('click', (e) => {
-          // Don't trigger if clicking the button directly
-          if (e.target.closest('.add-rx-btn')) return;
+      if (state.viewMode === 'cards') {
+        // Card view
+        listEl.style.display = '';
+        tableContainer.style.display = 'none';
+        listEl.innerHTML = state.pageRows.map((r, idx) => drugCardHTML(r, idx)).join('');
 
-          const idx = +card.dataset.idx;
-          const record = state.pageRows[idx];
-          addRxFromRecord(record);
-          showToast('Added to prescription', 'success');
+        // Wire up card clicks
+        $$('.drug-card').forEach((card) => {
+          card.addEventListener('click', (e) => {
+            if (e.target.closest('.add-rx-btn')) return;
+            const idx = +card.dataset.idx;
+            const record = state.pageRows[idx];
+            addRxFromRecord(record);
+            showToast('Added to prescription', 'success');
+          });
         });
-      });
 
-      $$('.add-rx-btn').forEach((btn) => {
-        btn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const idx = +btn.dataset.idx;
-          const record = state.pageRows[idx];
-          addRxFromRecord(record);
-          showToast('Added to prescription', 'success');
+        $$('.add-rx-btn').forEach((btn) => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const idx = +btn.dataset.idx;
+            const record = state.pageRows[idx];
+            addRxFromRecord(record);
+            showToast('Added to prescription', 'success');
+          });
         });
-      });
+      } else {
+        // Table view
+        listEl.style.display = 'none';
+        tableContainer.style.display = '';
+        tableBody.innerHTML = state.pageRows.map((r, idx) => drugTableRowHTML(r, idx)).join('');
+
+        // Wire up table add buttons
+        $$('.add-table-btn').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const idx = +btn.dataset.idx;
+            const record = state.pageRows[idx];
+            addRxFromRecord(record);
+            showToast('Added to prescription', 'success');
+          });
+        });
+      }
     }
 
     // Update pagination
@@ -521,6 +611,44 @@
           </button>
         </div>
       </div>
+    `;
+  }
+
+  function drugTableRowHTML(r, idx) {
+    const textQ = state.searchQ.trim().toLowerCase();
+    const h = (s) => highlight(String(s || ''), textQ);
+
+    const generic = r['Generic Name'] || '';
+    const brand = r['Brand Name'] || '';
+    const strength = r['Dosage Strength'] || '';
+    const form = r['Dosage Form'] || '';
+    const classification = r['Classification'] || '';
+    const manufacturer = r['Manufacturer'] || '';
+    const regNo = r['Registration Number'] || '';
+    const expiry = (r['Expiry Date'] || '').split(' ')[0];
+
+    const isRx = classification.toLowerCase().includes('prescription');
+    const expiryStatus = getExpiryStatus(r['Expiry Date']);
+
+    return `
+      <tr data-idx="${idx}">
+        <td class="truncate" title="${escapeHTML(generic)}">${h(generic)}</td>
+        <td class="truncate" title="${escapeHTML(brand)}">${h(brand)}</td>
+        <td>${h(strength)}</td>
+        <td>${h(form)}</td>
+        <td>
+          ${isRx
+            ? '<span class="rx-badge">Rx</span>'
+            : escapeHTML(classification.slice(0, 20))
+          }
+        </td>
+        <td class="truncate" title="${escapeHTML(manufacturer)}">${h(manufacturer)}</td>
+        <td>${h(regNo)}</td>
+        <td class="${expiryStatus.class}">${h(expiry) || '—'}</td>
+        <td class="actions">
+          <button class="btn btn-primary btn-sm add-table-btn" data-idx="${idx}">Add</button>
+        </td>
+      </tr>
     `;
   }
 
