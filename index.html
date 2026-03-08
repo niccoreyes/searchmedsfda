@@ -20,7 +20,7 @@
       </div>
       <div class="header-badges">
         <span id="loadStatus" class="status-badge loading">Loading...</span>
-        <span class="status-badge offline">Offline</span>
+        <span id="dataSourceBadge" class="status-badge offline">Offline</span>
       </div>
     </div>
   </header>
@@ -38,20 +38,31 @@
             </svg>
           </div>
           <h2>Load Drug Database</h2>
-          <p>Upload the FDA Philippines ALL_DrugProducts.csv file</p>
+          <p>Load from FHIR terminology server or upload CSV file</p>
           <div class="upload-actions">
-            <button id="btnPick" class="btn btn-primary btn-lg">
+            <button id="btnReload" class="btn btn-primary btn-lg">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+              </svg>
+              Load from FHIR Server
+            </button>
+            <button id="btnLoadCSV" class="btn btn-secondary">Load Local CSV</button>
+          </div>
+          <div class="upload-divider">
+            <span>or upload file</span>
+          </div>
+          <div class="upload-actions">
+            <button id="btnPick" class="btn btn-ghost">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
                 <polyline points="22,6 12,13 2,6"/>
               </svg>
               Select CSV File
             </button>
-            <button id="btnReload" class="btn btn-secondary">Auto-Load from Folder</button>
           </div>
           <div class="upload-hint">
             <p>Or drop your CSV file anywhere on this page</p>
-            <p class="text-muted">All processing happens locally in your browser. No data is uploaded.</p>
+            <p class="text-muted">FHIR server loads latest data. CSV works offline.</p>
           </div>
         </div>
       </div>

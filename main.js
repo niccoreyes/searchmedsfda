@@ -22,7 +22,8 @@
     quickIndex: [],
     isDataLoaded: false,
     rxItemCount: 0,
-    viewMode: 'cards' // 'cards' or 'table'
+    viewMode: 'cards', // 'cards' or 'table'
+    dataSource: null // 'fhir' or 'csv'
   };
 
   // DOM helpers
@@ -92,6 +93,18 @@
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
+  // ==================== FHIR Configuration ====================
+
+  const FHIR_CONFIG = {
+    baseUrl: 'https://tx.fhirlab.net/fhir',
+    codeSystemId: 'TestPHFDACPRCS', // CodeSystem has all the properties
+    valueSetId: 'TestPHFDACPRVS',
+    // Use large count to get more results per request
+    count: 1000,
+    // Maximum total entries to load (safety limit)
+    maxTotal: 50000
+  };
+
   // ==================== CSV Loading ====================
 
   function initCSVLoading() {
@@ -102,7 +115,11 @@
 
     // Button click handlers
     btnPick?.addEventListener('click', () => fileInput?.click());
-    btnReload?.addEventListener('click', tryAutoLoad);
+    btnReload?.addEventListener('click', tryFHIRLoad);
+
+    // CSV fallback button
+    const btnLoadCSV = $('#btnLoadCSV');
+    btnLoadCSV?.addEventListener('click', tryAutoLoad);
 
     // File input change
     fileInput?.addEventListener('change', (e) => {
@@ -135,8 +152,8 @@
       }
     });
 
-    // Try auto-load on init
-    setTimeout(tryAutoLoad, 500);
+    // Try auto-load on init - use FHIR first, fallback to CSV
+    setTimeout(tryFHIRLoad, 500);
   }
 
   function setStatus(text, type = 'loading') {
@@ -147,8 +164,175 @@
     statusEl.className = `status-badge ${type}`;
   }
 
+  function updateDataSourceBadge() {
+    const badgeEl = $('#dataSourceBadge');
+    if (!badgeEl) return;
+
+    const source = state.dataSource;
+    if (source === 'fhir') {
+      badgeEl.textContent = 'FHIR Online';
+      badgeEl.className = 'status-badge online';
+    } else if (source === 'csv') {
+      badgeEl.textContent = 'CSV Offline';
+      badgeEl.className = 'status-badge offline';
+    } else {
+      badgeEl.textContent = 'Offline';
+      badgeEl.className = 'status-badge offline';
+    }
+  }
+
+  // ==================== FHIR ValueSet Loading ====================
+
+  async function tryFHIRLoad() {
+    setStatus('Loading from FHIR...', 'loading');
+    showToast('Connecting to FHIR terminology server...', 'info');
+
+    try {
+      const allConcepts = await fetchAllValueSetConcepts();
+
+      if (allConcepts.length === 0) {
+        throw new Error('No concepts returned from FHIR server');
+      }
+
+      // Convert FHIR concepts to the same format as CSV data
+      const data = convertFHIRConceptsToData(allConcepts);
+
+      state.data = data;
+      state.page = 1;
+      state.isDataLoaded = true;
+      state.dataSource = 'fhir';
+      updateDataSourceBadge();
+
+      setStatus(`${data.length.toLocaleString()} records (FHIR)`, 'loaded');
+      $('#summary').textContent = `${data.length.toLocaleString()} drugs`;
+
+      // FHIR data doesn't have a CSV update date, use current date
+      state.lastUpdatedText = new Date().toLocaleDateString();
+      $('#updateBadge').textContent = `Updated: ${state.lastUpdatedText}`;
+
+      // Show search UI
+      showSearchUI();
+
+      // Build index and render
+      buildQuickIndex();
+      filterAndRender();
+
+      showToast(`Loaded ${data.length.toLocaleString()} drugs from FHIR server`, 'success');
+    } catch (error) {
+      console.error('FHIR load failed:', error);
+      setStatus('FHIR failed, trying CSV...', 'loading');
+      showToast('FHIR server unavailable, falling back to CSV', 'error');
+
+      // Fall back to CSV
+      setTimeout(tryAutoLoad, 500);
+    }
+  }
+
+  /**
+   * Fetch all concepts from FHIR CodeSystem
+   * CodeSystem contains all concept properties (generic name, strength, etc.)
+   * The server returns all ~34,000 concepts at once (~28MB)
+   */
+  async function fetchAllValueSetConcepts() {
+    // Create abort controller for timeout - 2 minutes for large data
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 120000);
+
+    try {
+      showToast('Downloading drug database (this may take a moment)...', 'info', 10000);
+
+      // Fetch the entire CodeSystem - it contains all properties
+      const url = `${FHIR_CONFIG.baseUrl}/CodeSystem/${FHIR_CONFIG.codeSystemId}`;
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/fhir+json'
+        },
+        signal: controller.signal,
+        mode: 'cors'
+      });
+
+      if (!response.ok) {
+        throw new Error(`FHIR request failed: HTTP ${response.status}`);
+      }
+
+      const codeSystem = await response.json();
+
+      if (codeSystem.resourceType !== 'CodeSystem') {
+        throw new Error('Invalid FHIR response: expected CodeSystem');
+      }
+
+      // Get total count from CodeSystem
+      const total = codeSystem.count || 0;
+      console.log(`FHIR CodeSystem total concepts: ${total}`);
+
+      // Extract concepts from CodeSystem
+      const concepts = codeSystem.concept || [];
+
+      console.log(`Total FHIR concepts loaded: ${concepts.length}`);
+      return concepts;
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  }
+
+  /**
+   * Convert FHIR ValueSet concepts to the application's data format
+   * FHIR CodeSystem/ValueSet structure:
+   * - code: Registration Number
+   * - display: Brand Name
+   * - property[]: Array of {code, valueString} objects
+   */
+  function convertFHIRConceptsToData(concepts) {
+    return concepts.map((concept) => {
+      // code = Registration Number, display = Brand Name
+      const regNo = concept.code || '';
+      const brandName = concept.display || '';
+
+      // Extract properties from the concept.property array
+      // Each property has {code: 'propertyName', valueString: 'value'}
+      const properties = {};
+      const propArray = concept.property || [];
+
+      propArray.forEach(prop => {
+        if (prop.code && prop.valueString !== undefined) {
+          properties[prop.code] = prop.valueString;
+        }
+      });
+
+      // Map FHIR properties to app field names
+      const genericName = properties.genericName || '';
+      const strength = properties.dosageStrength || '';
+      const form = properties.dosageForm || '';
+      const classification = properties.classification || '';
+      const manufacturer = properties.manufacturer || '';
+      const category = properties.pharmacologicCategory || '';
+      const expiryDate = properties.expiryDate || '';
+
+      // Skip entries without required fields
+      if (!genericName && !brandName) {
+        return null;
+      }
+
+      return {
+        'Generic Name': genericName || brandName, // Fallback to brand if no generic
+        'Brand Name': brandName,
+        'Dosage Strength': strength,
+        'Dosage Form': form,
+        'Classification': classification,
+        'Pharmacologic Category': category,
+        'Manufacturer': manufacturer,
+        'Registration Number': regNo,
+        'Expiry Date': expiryDate,
+        // Store original FHIR data for reference
+        _fhirConcept: concept
+      };
+    }).filter(item => item !== null); // Remove null entries
+  }
+
   function tryAutoLoad() {
-    setStatus('Loading...', 'loading');
+    setStatus('Loading CSV...', 'loading');
 
     fetch('ALL_DrugProducts.csv')
       .then((r) => {
@@ -205,8 +389,10 @@
     state.data = data;
     state.page = 1;
     state.isDataLoaded = true;
+    state.dataSource = 'csv';
+    updateDataSourceBadge();
 
-    setStatus(`${data.length.toLocaleString()} records`, 'loaded');
+    setStatus(`${data.length.toLocaleString()} records (CSV)`, 'loaded');
     $('#summary').textContent = `${data.length.toLocaleString()} drugs`;
 
     // Try to extract update date from CSV
