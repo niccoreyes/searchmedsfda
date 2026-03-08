@@ -1036,6 +1036,7 @@
           `;
           state.rxItemCount = 0;
           updateRxBadge();
+          updateRxPreview();
           showToast('All items cleared', 'info');
         }
       }
@@ -1136,6 +1137,7 @@
         state.rxItemCount = 0;
         updateRxBadge();
       }
+      updateRxPreview();
     });
 
     div.querySelector('.duplicate').addEventListener('click', () => {
@@ -1147,6 +1149,7 @@
       if (div.previousElementSibling) {
         div.parentNode.insertBefore(div, div.previousElementSibling);
         renumberItems();
+        updateRxPreview();
       }
     });
 
@@ -1154,7 +1157,14 @@
       if (div.nextElementSibling) {
         div.parentNode.insertBefore(div.nextElementSibling, div);
         renumberItems();
+        updateRxPreview();
       }
+    });
+
+    // Wire up live preview updates for all inputs in this item
+    const inputs = div.querySelectorAll('input');
+    inputs.forEach((input) => {
+      input.addEventListener('input', updateRxPreview);
     });
 
     // Focus first field
@@ -1164,6 +1174,9 @@
     if (window.innerWidth < 640) {
       div.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
+
+    // Update the live preview
+    updateRxPreview();
   }
 
   function renumberItems() {
@@ -1265,6 +1278,7 @@
 
       (data.items || []).forEach((item) => addRxItem(item));
 
+      updateRxPreview();
       showToast('Draft restored', 'success');
     } catch (e) {
       showToast('Failed to restore draft', 'error');
@@ -1299,6 +1313,33 @@
       .writeText(text)
       .then(() => showToast('Copied to clipboard', 'success'))
       .catch(() => showToast('Copy failed', 'error'));
+  }
+
+  function updateRxPreview() {
+    const previewEl = $('#rxPreview');
+    if (!previewEl) return;
+
+    const items = Array.from($('#rxItems').children)
+      .filter((child) => child.classList.contains('rx-item'))
+      .map((div) => collectItem(div));
+
+    if (items.length === 0) {
+      previewEl.innerHTML = '<div class="rx-preview-empty">No medications added yet</div>';
+      return;
+    }
+
+    const html = items.map((it, i) => {
+      const namePart = it.brandName
+        ? `${it.genericName} (${it.brandName})`
+        : it.genericName;
+      const strengthPart = it.strength || '';
+      const formPart = it.form || '';
+      const qtyPart = it.qty ? ` #${it.qty}` : '';
+      const sigLine = it.sig ? `<div class="rx-preview-sig">Sig. ${escapeHTML(it.sig)}</div>` : '';
+      return `<div class="rx-preview-item"><span class="rx-preview-number">${i + 1}.</span> ${escapeHTML(namePart)} ${escapeHTML(strengthPart)} ${escapeHTML(formPart)}${qtyPart}${sigLine}</div>`;
+    }).join('');
+
+    previewEl.innerHTML = html;
   }
 
   function printRx() {
