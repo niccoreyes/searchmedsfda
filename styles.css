@@ -966,12 +966,15 @@ p {
 .form-field input,
 .form-field select,
 .form-field textarea {
+  width: 100%;
   padding: var(--space-3);
   font-size: 1rem;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   background: var(--slate-50);
   transition: all var(--transition-fast);
+  font-family: inherit;
+  resize: vertical;
 }
 
 .form-field input:focus,
