@@ -32,6 +32,12 @@
 
   // ==================== Toast Notifications ====================
 
+  function clearToasts() {
+    const container = $('#toastContainer');
+    if (!container) return;
+    container.innerHTML = '';
+  }
+
   function showToast(message, type = 'info', duration = 3000) {
     const container = $('#toastContainer');
     if (!container) return;
@@ -217,6 +223,7 @@
       buildQuickIndex();
       filterAndRender();
 
+      clearToasts();
       showToast(`Loaded ${data.length.toLocaleString()} drugs from FHIR server`, 'success');
     } catch (error) {
       console.error('FHIR load failed:', error);
