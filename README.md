@@ -1,4 +1,4 @@
-# searchmeds
+# Rx Builder
 
 A lightweight, **client‑side web app** for exploring the Philippine FDA drug list and for composing simple prescriptions (Rx). It remains a single static HTML page (`index.html`) with the dataset embedded so the whole experience works offline and can be hosted directly on GitHub Pages or any static-file server.
 
@@ -35,7 +35,6 @@ If you want to update the CSV that powers the page, replace the CSV content insi
 - `inject-csv.ts` — Utility TypeScript script that injects CSV content into `index.html` (the `/* CSV_INJECT_HERE */` placeholder). Use this to rebuild `index.html` with a new CSV.
 - `pnf-fetch.ts` and `pnf-playwright-fetch.ts` — Scripts related to fetching product information (PNF). See `PNF_API.md` for notes about the PNF API and how these scripts are intended to be used.
 - `PNF_API.md` — Documentation and notes about the PNF API used by the fetch scripts.
-- `searchmeds.html` — A secondary or alternate HTML view (kept for experimentation or alternate UI).
 - `package.json` / `bun.lock` — Project manifest and lockfile for Bun. Check `package.json` for available Bun scripts.
 - `tsconfig.json` — TypeScript configuration for the helper scripts.
 
