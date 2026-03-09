@@ -1,8 +1,20 @@
 # searchmeds
 
-A small client-side app for exploring a Philippine FDA drug CSV and building simple prescriptions (Rx). The project is designed to run as a static HTML page (`index.html`) that contains an injected CSV dataset for offline/fast browsing and demoing on GitHub Pages.
+A lightweight, **client‑side web app** for exploring the Philippine FDA drug list and for composing simple prescriptions (Rx). It remains a single static HTML page (`index.html`) with the dataset embedded so the whole experience works offline and can be hosted directly on GitHub Pages or any static-file server.
+
+Below is a quick look at the current UI – search results on the left, prescription builder on the right:
+
+<table border="0">
+  <tr>
+    <td><img src="images/medication_search.png" alt="Medication search" width="400"></td>
+    <td><img src="images/prescription.png" alt="Prescription builder" width="400"></td>
+  </tr>
+</table>
+
 
 ## Quickstart
+
+> **Status:** this repo is currently a simple, static demo. The CSV data may not reflect the latest FDA listings; you can swap in a new dataset by rerunning the helper script described below.
 
 
 
