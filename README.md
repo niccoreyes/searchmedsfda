@@ -1,8 +1,6 @@
 # Rx Builder
 
-A lightweight, **client‑side web app** for exploring the Philippine FDA drug list and for composing simple prescriptions (Rx). It remains a single static HTML page (`index.html`) with the dataset embedded so the whole experience works offline and can be hosted directly on GitHub Pages or any static-file server.
-
-Below is a quick look at the current UI – search results on the left, prescription builder on the right:
+A modern, **mobile-first prescription builder** with integrated Philippine FDA drug search. Built with pure vanilla JavaScript — no frameworks, no build step, no backend required. Designed for healthcare professionals who need fast, offline-capable drug lookup and prescription generation.
 
 <table border="0">
   <tr>
@@ -11,55 +9,245 @@ Below is a quick look at the current UI – search results on the left, prescrip
   </tr>
 </table>
 
+## Features
 
-## Quickstart
+- **Dual Data Sources**: Load from FHIR terminology server (online) or local CSV (offline)
+- **Smart Search**: Cross-field search (e.g., "Amlo Exfo" finds Amlodipine + Exforge)
+- **Prescription Builder**: Add medications, set quantities, directions, notes
+- **Live Preview**: See formatted prescription as you build
+- **Print/PDF Ready**: Optimized print stylesheet for professional output
+- **Draft Save/Load**: Persist prescriptions to browser localStorage
+- **Mobile Optimized**: Bottom navigation, responsive cards, touch-friendly UI
+- **Privacy First**: All processing happens client-side; no data leaves your device
 
-> **Status:** this repo is currently a simple, static demo. The CSV data may not reflect the latest FDA listings; you can swap in a new dataset by rerunning the helper script described below.
+## Quick Start
 
+Open `index.html` in any modern browser, or deploy to GitHub Pages/Netlify for instant access.
 
+```bash
+# Optional: Install dependencies for FHIR terminology tools
+bun install
 
-Open `index.html` in a browser — or publish the repository to GitHub Pages to serve the page at `<username>.github.io/<repo>`.
-
-## What `index.html` does
-
-- `index.html` is the single-page UI for browsing and searching the PH FDA drug list and for composing a small prescription (Rx builder).
-- The CSV drug data is embedded in the HTML inside a `<script id="csv-data">` block (see the placeholder comment `/* CSV_INJECT_HERE */` used during build). Embedding the CSV makes the page self-contained so it can be opened locally or hosted as a static page without a separate server.
-- The page contains client-side JavaScript and CSS to parse and render the CSV, perform search/filter operations, and present a simple Rx composition UI.
-
-If you want to update the CSV that powers the page, replace the CSV content inside the `index.html` script block or run the helper script described below.
-
-## Important files
-
-- `index.html` — Main static app. Contains the injected CSV under a `<script id="csv-data">` node and the UI for searching and building Rx.
-- `ALL_DrugProducts.csv` — Original/downloaded CSV (if present). Can be used as the source of truth to update the embedded CSV inside `index.html`.
-- `inject-csv.ts` — Utility TypeScript script that injects CSV content into `index.html` (the `/* CSV_INJECT_HERE */` placeholder). Use this to rebuild `index.html` with a new CSV.
-- `pnf-fetch.ts` and `pnf-playwright-fetch.ts` — Scripts related to fetching product information (PNF). See `PNF_API.md` for notes about the PNF API and how these scripts are intended to be used.
-- `PNF_API.md` — Documentation and notes about the PNF API used by the fetch scripts.
-- `package.json` / `bun.lock` — Project manifest and lockfile for Bun. Check `package.json` for available Bun scripts.
-- `tsconfig.json` — TypeScript configuration for the helper scripts.
-
-## Development notes
-
-- This repo is intentionally small and client-side-first. The main interaction is purely in the browser with the embedded CSV; that keeps hosting simple (GitHub Pages, Netlify, etc.).
-- If you add or update dependencies, use `bun add <pkg>` (e.g., `bun add axios`) and commit the changes.
-- To refresh the embedded CSV, run the `inject-csv.ts` script (or manually copy the CSV contents into the `index.html` `<script id="csv-data">` block). If you need help running the TypeScript helper, transpile or run it with Bun:
-
-```powershell
-# example: run a TS helper with bun
-bun run tsx inject-csv.ts
+# Generate FHIR terminology files from CSV
+bun run generate-fhir-terminology.ts
 ```
 
-(adjust the command to the scripts defined in `package.json`)
+## Architecture
 
-## GitHub Pages
+Rx Builder follows a **deliberately minimal, client-only architecture** with zero external runtime dependencies. The entire application runs in a single HTML file with vanilla JavaScript and CSS.
 
-- Because `index.html` is fully self-contained (CSV embedded), you can publish the `main` branch to GitHub Pages (or use the `gh-pages` branch) and the page will work as a static site.
-- After publishing, the site will be reachable at `https://<github-username>.github.io/<repo-name>/` (or the custom URL configured for the repo).
+### Module Relationships
+
+```
+┌────────────────────────────────────────────────────────────────────┐
+│                        index.html                                  │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐     │
+│  │  View: Search   │  │   View: Rx      │  │  View: About    │     │
+│  │  ─────────────  │  │   ──────────    │  │  ────────────   │     │
+│  │                 │  │                 │  │                 │     │
+│  │ • Upload Area   │  │ • Prescriber    │  │ • How It Works  │     │
+│  │ • Search Bar    │  │   Info Form     │  │ • FHIR Server   │     │
+│  │ • Filters       │  │ • Patient Form  │  │   Details       │     │
+│  │ • Results List  │  │ • Quick Add     │  │ • Privacy Info  │     │
+│  │ • Pagination    │  │ • Rx Items List │  │                 │     │
+│  │                 │  │ • Live Preview  │  │                 │     │
+│  │                 │  │ • Print Actions │  │                 │     │
+│  └────────┬────────┘  └────────┬────────┘  └─────────────────┘     │
+│           │                    │                                   │
+│           └────────────────────┘                                   │
+│                     │                                              │
+│                     ▼                                              │
+│           ┌─────────────────────┐                                  │
+│           │  Bottom Navigation  │                                  │
+│           │  (switchTab)        │                                  │
+│           └────────┬────────────┘                                  │
+│                    │                                               │
+└────────────────────┼───────────────────────────────────────────────┘
+                     │
+                     ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                        main.js                                      │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  ┌──────────────────────────────────────────────────────────────┐   │
+│  │                    CORE MODULES                              │   │
+│  │                                                              │   │
+│  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐        │   │
+│  │  │ Data Loading │  │ Search/Index │  │  Rx Manager  │        │   │
+│  │  │ ──────────── │  │ ──────────── │  │ ──────────── │        │   │
+│  │  │              │  │              │  │              │        │   │
+│  │  │ initCSVLoad()│  │ initSearch() │  │ initRxForm() │        │   │
+│  │  │ tryFHIRLoad()│  │ buildQuick   │  │ addRxItem()  │        │   │
+│  │  │ parseAndLoad │  │   Index()    │  │ removeItem() │        │   │
+│  │  │   CSV()      │  │ filterAnd    │  │ updateQty()  │        │   │
+│  │  │ convertFHIR  │  │   Render()   │  │ updateDir()  │        │   │
+│  │  │   Concepts.. │  │ sortResults()│  │ saveDraft()  │        │   │
+│  │  │              │  │ renderCards()│  │ loadDraft()  │        │   │
+│  │  │              │  │ renderTable()│  │ clearItems() │        │   │
+│  │  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘        │   │
+│  │         │                 │                 │                │   │
+│  │         └─────────────────┼─────────────────┘                │   │
+│  │                           │                                  │   │
+│  │                           ▼                                  │   │
+│  │                  ┌─────────────────┐                         │   │
+│  │                  │  SHARED STATE   │                         │   │
+│  │                  │  (state object) │                         │   │
+│  │                  └─────────────────┘                         │   │
+│  └──────────────────────────────────────────────────────────────┘   │
+│                                                                     │
+│  ┌──────────────────────────────────────────────────────────────┐   │
+│  │                   UTILITY MODULES                            │   │
+│  │                                                              │   │
+│  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐        │   │
+│  │  │   Toast UI   │  │  Navigation  │  │ Print System │        │   │
+│  │  │ ──────────── │  │ ──────────── │  │ ──────────── │        │   │
+│  │  │              │  │              │  │              │        │   │
+│  │  │ showToast()  │  │ switchTab()  │  │ doPrint()    │        │   │
+│  │  │ clearToasts()│  │ initNav()    │  │ copyRx()     │        │   │
+│  │  │              │  │              │  │ #rxPrint     │        │   │
+│  │  └──────────────┘  └──────────────┘  └──────────────┘        │   │
+│  │                                                              │   │
+│  │  ┌──────────────┐  ┌──────────────┐                          │   │
+│  │  │   Helpers    │  │   Parsers    │                          │   │
+│  │  │ ──────────── │  │ ──────────── │                          │   │
+│  │  │              │  │              │                          │   │
+│  │  │ escapeHTML() │  │ CSVToArray() │                          │   │
+│  │  │ debounce()   │  │ parseCSV()   │                          │   │
+│  │  │ $, $$ DOM    │  │              │                          │   │
+│  │  └──────────────┘  └──────────────┘                          │   │
+│  └──────────────────────────────────────────────────────────────┘   │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+**For detailed architecture documentation including data flows, state machines, and pipeline diagrams, see [ARCHITECTURE.md](ARCHITECTURE.md).**
+
+### Architecture Highlights
+
+- **Zero-dependency, vanilla JavaScript** approach
+- **Single-file application** structure (`index.html` + `main.js` + `styles.css`)
+- **Client-side FHIR terminology** consumption via `tx.fhirlab.net`
+- **Dual offline/online data loading** strategy with automatic fallback
+- **State management** through a central `state` object
+- **Search indexing** for performance on 34K+ records
+
+## File Structure
+
+```
+searchmedsfda/
+├── index.html              # Main application (single file)
+├── main.js                 # All JavaScript logic (~1500 lines)
+├── styles.css              # All styles (mobile-first, responsive)
+├── ALL_DrugProducts.csv    # Local drug database (CSV)
+│
+├── ARCHITECTURE.md         # Detailed technical documentation
+├── generate-fhir-          # FHIR terminology generator
+│   terminology.ts          # (Converts CSV → FHIR resources)
+│
+├── cleanup-terminology.ts  # Cleanup script for FHIR server
+│
+├── fhir-terminology/       # Generated FHIR resources
+│   ├── ph-fda-codesystem.json   # ~48MB, 34K+ concepts
+│   ├── ph-fda-valueset.json     # ValueSet definition
+│   └── summary.json             # Generation statistics
+│
+├── FHIR_TERMINOLOGY_       # Documentation for FHIR
+│   UPLOAD.md               # server integration
+│
+├── package.json            # Node/Bun dependencies
+├── tsconfig.json           # TypeScript config
+└── images/                 # Screenshots for README
+    ├── medication_search.png
+    └── prescription.png
+```
+
+## Data Sources
+
+### Option 1: FHIR Terminology Server (Online)
+
+The app connects to `tx.fhirlab.net/fhir` (powered by Ontoserver on FHIRLab) to fetch the complete Philippine FDA drug database using FHIR R4 terminology resources.
+
+**Resources:**
+- **CodeSystem** (`TestPHFDACPRCS`): Contains all 34,000+ drug products with properties
+- **ValueSet** (`TestPHFDACPRVS`): Defines the complete set of valid codes
+
+**Properties per Concept:**
+- `genericName` - Generic/INN name
+- `brandName` - Brand name
+- `dosageStrength` - Strength/concentration
+- `dosageForm` - Tablet, Injection, etc.
+- `classification` - RX, OTC, etc.
+- `manufacturer` - Drug manufacturer
+- `expiryDate` - Registration expiry
+
+### Option 2: CSV File (Offline)
+
+Load the `ALL_DrugProducts.csv` file locally for complete offline operation. The CSV parser handles:
+- Quoted fields with embedded commas
+- Header mapping
+- Automatic type conversion
+- Drag-and-drop file loading
+
+## Development
+
+```bash
+# Install dependencies
+bun install
+
+# Generate FHIR terminology from CSV
+bun run generate-fhir-terminology.ts
+
+# Cleanup FHIR server (if needed)
+bun run cleanup-terminology.ts
+```
+
+### FHIR Terminology Generation
+
+The `generate-fhir-terminology.ts` script converts the CSV drug database into standard FHIR R4 terminology resources:
+
+1. Reads `ALL_DrugProducts.csv`
+2. Maps columns to FHIR CodeSystem properties
+3. Generates unique codes (Registration Numbers)
+4. Outputs:
+   - `fhir-terminology/ph-fda-codesystem.json` (~48MB)
+   - `fhir-terminology/ph-fda-valueset.json`
+   - `fhir-terminology/summary.json`
+
+See `FHIR_TERMINOLOGY_UPLOAD.md` for upload instructions to the FHIR server.
+
+## Deployment
+
+Since the app is a single HTML file with no build step:
+
+1. **GitHub Pages**: Push to repo, enable Pages
+2. **Netlify**: Drag-and-drop the folder
+3. **Static Host**: Upload `index.html`, `styles.css`, `main.js`
+4. **Local**: Open `index.html` in browser
+
+No server-side processing required.
+
+## Privacy & Security
+
+- **Zero data transmission**: All processing happens client-side
+- **No cookies or tracking**
+- **LocalStorage only**: Used for draft prescriptions
+- **FHIR server**: Read-only access to public terminology server
+- **CSV files**: Never uploaded anywhere
 
 ## Contributing
 
-PRs that improve data parsing, search UX, accessibility, or add a build step to automate CSV updates are welcome. When opening a PR, describe how you tested the page locally (which browser, command used).
+PRs welcome for:
+- Search improvements
+- UI/UX enhancements
+- Accessibility improvements
+- Additional export formats
 
 ## License
 
-Include license information here if you want to open-source the project (MIT, Apache-2.0, etc.).
+MIT (or specify your preferred license)
+
+---
+
+**Data Source**: FDA Philippines Drug Products Database
+**FHIR Server**: FHIRLab / tx.fhirlab.net (powered by Ontoserver)
+**Developer**: Thomas Reyes
