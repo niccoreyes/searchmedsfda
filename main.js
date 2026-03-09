@@ -773,7 +773,7 @@
     const classification = r['Classification'] || '';
     const manufacturer = r['Manufacturer'] || '';
     const regNo = r['Registration Number'] || '';
-    const expiry = (r['Expiry Date'] || '').split(' ')[0];
+    const expiry = r['Expiry Date'] || '';
 
     const isRx = classification.toLowerCase().includes('prescription');
     const expiryStatus = getExpiryStatus(r['Expiry Date']);
@@ -818,7 +818,7 @@
     const classification = r['Classification'] || '';
     const manufacturer = r['Manufacturer'] || '';
     const regNo = r['Registration Number'] || '';
-    const expiry = (r['Expiry Date'] || '').split(' ')[0];
+    const expiry = r['Expiry Date'] || '';
 
     const isRx = classification.toLowerCase().includes('prescription');
     const expiryStatus = getExpiryStatus(r['Expiry Date']);
@@ -1055,7 +1055,7 @@
 
   function sideCardHTML(r, q, idx) {
     const h = (s) => highlight(String(s || ''), q);
-    const expiry = (r['Expiry Date'] || '').split(' ')[0];
+    const expiry = r['Expiry Date'] || '';
 
     return `
       <div class="side-card">
