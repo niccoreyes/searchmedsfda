@@ -22,7 +22,7 @@ A modern, **mobile-first prescription builder** with integrated Philippine FDA d
 
 ## Quick Start
 
-Open `index.html` in any modern browser, or deploy to GitHub Pages/Netlify for instant access.
+Open `index.html` in any modern browser, or deploy to Vercel for instant access.
 
 ```bash
 # Optional: Install dependencies for FHIR terminology tools
@@ -219,12 +219,21 @@ See `FHIR_TERMINOLOGY_UPLOAD.md` for upload instructions to the FHIR server.
 
 Since the app is a single HTML file with no build step:
 
-1. **GitHub Pages**: Push to repo, enable Pages
-2. **Netlify**: Drag-and-drop the folder
-3. **Static Host**: Upload `index.html`, `styles.css`, `main.js`
-4. **Local**: Open `index.html` in browser
+**Deploy to Vercel:**
 
-No server-side processing required.
+1. Push to GitHub (if not already done)
+2. Deploy via Vercel CLI:
+   ```bash
+   npm i -g vercel
+   vercel
+   ```
+3. Or use the Vercel dashboard at [vercel.com](https://vercel.com) to import your repo
+
+No build configuration needed. Vercel auto-detects it as a static site.
+
+**Other Options:**
+- **Static Host**: Upload `index.html`, `styles.css`, `main.js`
+- **Local**: Open `index.html` in browser
 
 ## Privacy & Security
 
