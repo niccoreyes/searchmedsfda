@@ -1101,11 +1101,6 @@
       </div>
       <div class="rx-item-body">
         <input class="rx-sig" placeholder="Sig (e.g., 1 tab PO BID)">
-        <input class="rx-duration small" placeholder="Duration">
-        <input class="rx-refills small" placeholder="Refills">
-      </div>
-      <div class="rx-item-body">
-        <input class="rx-notes" placeholder="Special instructions (optional)">
       </div>
       <div class="rx-item-actions">
         <button class="btn btn-ghost btn-sm move-up">↑</button>
@@ -1206,10 +1201,7 @@
       strength: div.querySelector('.rx-strength')?.value.trim() || '',
       form: div.querySelector('.rx-form')?.value.trim() || '',
       qty: div.querySelector('.rx-qty')?.value.trim() || '',
-      sig: div.querySelector('.rx-sig')?.value.trim() || '',
-      duration: div.querySelector('.rx-duration')?.value.trim() || '',
-      refills: div.querySelector('.rx-refills')?.value.trim() || '',
-      notes: div.querySelector('.rx-notes')?.value.trim() || ''
+      sig: div.querySelector('.rx-sig')?.value.trim() || ''
     };
   }
 
@@ -1396,9 +1388,7 @@
         [displayName, it.strength].filter(Boolean).join(', '),
         it.form,
         it.sig,
-        it.duration ? `for ${it.duration}` : '',
-        it.qty ? `Qty: ${it.qty}` : '',
-        it.refills ? `Refills: ${it.refills}` : ''
+        it.qty ? `Qty: ${it.qty}` : ''
       ]
         .filter(Boolean)
         .join(' • ');
@@ -1406,14 +1396,6 @@
       const li = document.createElement('li');
       li.textContent = line;
       ol.appendChild(li);
-
-      if (it.notes) {
-        const n = document.createElement('div');
-        n.className = 'print-note';
-        n.textContent = '— ' + it.notes;
-        n.style.cssText = 'margin-left: 20px; font-style: italic; color: #666;';
-        ol.appendChild(n);
-      }
     }
 
     const notes = fields.rxNotes?.value?.trim();
