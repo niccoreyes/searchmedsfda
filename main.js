@@ -17,7 +17,7 @@
     searchQ: '',
     searchField: 'all',
     onlyRX: false,
-    onlyHuman: false,
+    onlyHuman: true,
     pageRows: [],
     quickIndex: [],
     isDataLoaded: false,
@@ -635,8 +635,9 @@
       const gen = (row['Pharmacologic Category'] || '').toLowerCase();
       const cls = (row['Classification'] || '').toLowerCase();
       const brand = (row['Brand Name'] || '').toLowerCase();
+      const generic = (row['Generic Name'] || '').toLowerCase();
 
-      if (gen.includes('veterinary') || cls.includes('veterinary') || brand.includes('vet')) {
+      if (gen.includes('veterinary') || cls.includes('veterinary') || brand.includes('(vet.)') || brand.includes('vet') || generic.includes('(vet.)') || generic.includes('veterinary')) {
         return false;
       }
       return true;
