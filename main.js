@@ -17,6 +17,7 @@
     searchQ: '',
     searchField: 'all',
     onlyRX: false,
+    onlyOTC: false,
     onlyHuman: true,
     pageRows: [],
     quickIndex: [],
@@ -471,6 +472,7 @@
     const fieldSelect = $('#fieldSelect');
     const perPage = $('#perPage');
     const onlyRX = $('#onlyRX');
+    const onlyOTC = $('#onlyOTC');
     const onlyHuman = $('#onlyHuman');
     const clearSearch = $('#clearSearch');
     const clearFilters = $('#clearFilters');
@@ -499,8 +501,10 @@
       q.value = '';
       state.searchQ = '';
       state.onlyRX = false;
+      state.onlyOTC = false;
       state.onlyHuman = false;
       onlyRX.checked = false;
+      onlyOTC.checked = false;
       onlyHuman.checked = false;
       state.page = 1;
       filterAndRender();
@@ -523,6 +527,16 @@
     // Filters
     onlyRX?.addEventListener('change', () => {
       state.onlyRX = onlyRX.checked;
+      if (state.onlyRX) state.onlyOTC = false;
+      onlyOTC.checked = false;
+      state.page = 1;
+      filterAndRender();
+    });
+
+    onlyOTC?.addEventListener('change', () => {
+      state.onlyOTC = onlyOTC.checked;
+      if (state.onlyOTC) state.onlyRX = false;
+      onlyRX.checked = false;
       state.page = 1;
       filterAndRender();
     });
@@ -656,6 +670,11 @@
       if (state.onlyRX) {
         const cls = String(row['Classification'] || '').toLowerCase();
         if (!cls.includes('prescription')) return false;
+      }
+
+      if (state.onlyOTC) {
+        const cls = String(row['Classification'] || '').toLowerCase();
+        if (!cls.includes('over-the-counter') && !cls.includes('otc')) return false;
       }
 
       if (state.onlyHuman) {
