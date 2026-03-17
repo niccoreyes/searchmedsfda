@@ -171,6 +171,10 @@ The app connects to `tx.fhirlab.net/fhir` (powered by Ontoserver on FHIRLab) to 
 - **CodeSystem** (`TestPHFDACPRCS`): Contains all 34,000+ drug products with properties
 - **ValueSet** (`TestPHFDACPRVS`): Defines the complete set of valid codes
 
+**Direct Links:**
+- 👉 CodeSystem: https://tx.fhirlab.net/fhir/CodeSystem/TestPHFDACPRCS
+- 👉 ValueSet: https://tx.fhirlab.net/fhir/ValueSet/TestPHFDACPRVS
+
 **Properties per Concept:**
 - `genericName` - Generic/INN name
 - `brandName` - Brand name
