@@ -195,7 +195,7 @@
     showToast('Connecting to FHIR terminology server...', 'info');
 
     try {
-      const allConcepts = await fetchAllValueSetConcepts();
+      const { concepts: allConcepts, meta } = await fetchAllValueSetConcepts();
 
       if (allConcepts.length === 0) {
         throw new Error('No concepts returned from FHIR server');
@@ -213,8 +213,15 @@
       setStatus(`${data.length.toLocaleString()} records (FHIR)`, 'loaded');
       $('#summary').textContent = `${data.length.toLocaleString()} drugs`;
 
-      // FHIR data doesn't have a CSV update date, use current date
-      state.lastUpdatedText = new Date().toLocaleDateString();
+      // Use FHIR CodeSystem meta.lastUpdated for the badge
+      const lastUpdated = meta?.lastUpdated;
+      if (lastUpdated) {
+        // Parse ISO date and format as locale date
+        const date = new Date(lastUpdated);
+        state.lastUpdatedText = date.toLocaleDateString();
+      } else {
+        state.lastUpdatedText = new Date().toLocaleDateString();
+      }
       $('#updateBadge').textContent = `Updated: ${state.lastUpdatedText}`;
 
       // Show search UI
@@ -240,6 +247,7 @@
    * Fetch all concepts from FHIR CodeSystem
    * CodeSystem contains all concept properties (generic name, strength, etc.)
    * The server returns all ~34,000 concepts at once (~28MB)
+   * @returns {{concepts: Array, meta: Object|null}} Concepts and metadata from CodeSystem
    */
   async function fetchAllValueSetConcepts() {
     // Create abort controller for timeout - 2 minutes for large data
@@ -275,11 +283,12 @@
       const total = codeSystem.count || 0;
       console.log(`FHIR CodeSystem total concepts: ${total}`);
 
-      // Extract concepts from CodeSystem
+      // Extract concepts and metadata from CodeSystem
       const concepts = codeSystem.concept || [];
+      const meta = codeSystem.meta || null;
 
       console.log(`Total FHIR concepts loaded: ${concepts.length}`);
-      return concepts;
+      return { concepts, meta };
     } finally {
       clearTimeout(timeoutId);
     }
@@ -339,8 +348,16 @@
     }).filter(item => item !== null); // Remove null entries
   }
 
-  function tryAutoLoad() {
+  async function tryAutoLoad() {
     setStatus('Loading CSV...', 'loading');
+
+    // Fetch GitHub last commit date for the CSV file
+    let githubDate = null;
+    try {
+      githubDate = await fetchGitHubCSVLastUpdated();
+    } catch (e) {
+      console.log('Could not fetch GitHub date:', e);
+    }
 
     fetch('ALL_DrugProducts.csv')
       .then((r) => {
@@ -348,7 +365,7 @@
         return r.text();
       })
       .then((text) => {
-        parseAndLoadCSV(text);
+        parseAndLoadCSV(text, null, githubDate);
       })
       .catch(() => {
         setStatus('Load failed', 'error');
@@ -356,12 +373,42 @@
       });
   }
 
+  /**
+   * Fetch the last commit date for the CSV file from GitHub API
+   * @returns {Promise<string|null>} ISO date string or null
+   */
+  async function fetchGitHubCSVLastUpdated() {
+    try {
+      // GitHub API endpoint for commits affecting the CSV file
+      const url = 'https://api.github.com/repos/niccoreyes/searchmedsfda/commits?path=ALL_DrugProducts.csv&per_page=1';
+
+      const response = await fetch(url, {
+        headers: {
+          'Accept': 'application/vnd.github.v3+json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`GitHub API failed: HTTP ${response.status}`);
+      }
+
+      const commits = await response.json();
+      if (commits && commits.length > 0 && commits[0].commit) {
+        return commits[0].commit.committer?.date || commits[0].commit.author?.date || null;
+      }
+      return null;
+    } catch (error) {
+      console.error('Failed to fetch GitHub last updated date:', error);
+      return null;
+    }
+  }
+
   function readFile(file) {
     setStatus('Reading...', 'loading');
 
     const reader = new FileReader();
     reader.onload = () => {
-      parseAndLoadCSV(reader.result, file.name);
+      parseAndLoadCSV(reader.result, file.name, null);
       showToast(`Loaded ${file.name}`, 'success');
     };
     reader.onerror = () => {
@@ -371,7 +418,13 @@
     reader.readAsText(file);
   }
 
-  function parseAndLoadCSV(text) {
+  /**
+   * Parse and load CSV data
+   * @param {string} text - CSV content
+   * @param {string|null} filename - Name of the file (if loaded from file input)
+   * @param {string|null} githubDate - ISO date string from GitHub API (if available)
+   */
+  function parseAndLoadCSV(text, _filename = null, githubDate = null) {
     const rows = CSVToArray(text);
 
     if (!rows.length) {
@@ -403,9 +456,21 @@
     setStatus(`${data.length.toLocaleString()} records (CSV)`, 'loaded');
     $('#summary').textContent = `${data.length.toLocaleString()} drugs`;
 
-    // Try to extract update date from CSV
-    const m = text.match(/Updated\s+as\s+of\s+([^\r\n]+)/i);
-    state.lastUpdatedText = m ? m[1].trim() : '—';
+    // Determine last updated date for the badge
+    // Priority: 1. CSV header date, 2. GitHub API date, 3. Fallback message
+    const csvHeaderMatch = text.match(/Updated\s+as\s+of\s+([^\r\n]+)/i);
+    let lastUpdatedText = '—';
+
+    if (csvHeaderMatch) {
+      // Use date from CSV header if available
+      lastUpdatedText = csvHeaderMatch[1].trim();
+    } else if (githubDate) {
+      // Use GitHub commit date if available
+      const date = new Date(githubDate);
+      lastUpdatedText = date.toLocaleDateString();
+    }
+
+    state.lastUpdatedText = lastUpdatedText;
     $('#updateBadge').textContent = `Updated: ${state.lastUpdatedText}`;
 
     // Show search UI
