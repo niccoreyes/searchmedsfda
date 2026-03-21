@@ -1477,24 +1477,22 @@
       .map((div) => collectItem(div));
 
     for (const it of items) {
-      let displayName = '';
-      if (it.genericName && it.brandName) {
-        displayName = `${it.genericName} — ${it.brandName}`;
-      } else if (it.genericName) {
-        displayName = it.genericName;
-      }
-
-      const line = [
-        [displayName, it.strength].filter(Boolean).join(', '),
-        it.form,
-        it.sig,
-        it.qty ? `Qty: ${it.qty}` : ''
-      ]
-        .filter(Boolean)
-        .join(' • ');
+      const namePart = it.genericName && it.brandName
+        ? `${it.genericName} (${it.brandName})`
+        : it.genericName;
+      const strengthPart = it.strength || '';
+      const formPart = it.form || '';
+      const qtyPart = it.qty ? ` #${it.qty}` : '';
+      const line1Left = `${namePart} ${strengthPart} ${formPart}`.trim();
+      const line1Right = qtyPart ? `<span class="qty-right">${qtyPart}</span>` : '';
+      const line1 = line1Right
+        ? `<div class="rx-line"><span>${line1Left}</span>${line1Right}</div>`
+        : line1Left;
+      const line2 = it.sig ? `Sig. ${it.sig}` : '';
 
       const li = document.createElement('li');
-      li.textContent = line;
+      const sigDiv = line2 ? `<div class="rx-sig">${line2}</div>` : '';
+      li.innerHTML = line1 + sigDiv;
       ol.appendChild(li);
     }
 

@@ -1526,6 +1526,31 @@ p {
     padding-left: 8px;
   }
 
+  .rx-print .rx-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+
+  .rx-print .qty-right {
+    margin-left: 16px;
+  }
+
+  .rx-print .rx-sig {
+    margin-top: 5px;
+  }
+
+  .rx-print .rx-line + .rx-sig {
+    margin-top: 5px;
+    line-height: 1;
+  }
+
+  .rx-print li {
+    margin-bottom: 8px;
+    padding-left: 8px;
+    line-height: 1;
+  }
+
   .print-notes {
     margin-top: 24px;
     padding-top: 12px;
