@@ -589,3 +589,7 @@ Received SIGINT. Saving state and exiting gracefully...
 [2026-03-21T04:06:23.275Z] Querying: NC (attempt 1)
 [2026-03-21T04:07:14.169Z] Query NC: Found 1477 CDRR records, 0 new added
 [2026-03-21T04:07:15.672Z] Querying: ND (attempt 1)
+[2026-03-21T04:07:46.546Z] Query ND: Found 2235 CDRR records, 0 new added
+[2026-03-21T04:07:48.048Z] Querying: NE (attempt 1)
+[2026-03-21T04:08:29.234Z] Query NE: Found 13524 CDRR records, 0 new added
+[2026-03-21T04:08:30.736Z] Querying: NF (attempt 1)

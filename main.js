@@ -1168,7 +1168,7 @@
     });
   }
 
-  function addRxItem({ genericName = '', brandName = '', strength = '', form = '' }) {
+  function addRxItem({ genericName = '', brandName = '', strength = '', form = '', qty = '', sig = '' }) {
     const rxItems = $('#rxItems');
 
     // Remove empty state if present
@@ -1189,10 +1189,10 @@
         <input class="rx-brand" value="${escapeHTML(brandName)}" placeholder="Brand Name">
         <input class="rx-strength small" value="${escapeHTML(strength)}" placeholder="Strength">
         <input class="rx-form small" value="${escapeHTML(form)}" placeholder="Form">
-        <input class="rx-qty small" placeholder="Qty">
+        <input class="rx-qty small" value="${escapeHTML(qty)}" placeholder="Qty">
       </div>
       <div class="rx-item-body">
-        <input class="rx-sig" placeholder="Sig (e.g., 1 tab PO BID)">
+        <input class="rx-sig" value="${escapeHTML(sig)}" placeholder="Sig (e.g., 1 tab PO BID)">
       </div>
       <div class="rx-item-actions">
         <button class="btn btn-ghost btn-sm move-up">↑</button>
