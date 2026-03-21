@@ -1,6 +1,15 @@
 {
   "name": "searchmeds",
   "private": true,
+  "scripts": {
+    "harvest": "bun run fda_harvester.ts",
+    "harvest:start": "bun run fda_harvester.ts start",
+    "harvest:resume": "bun run fda_harvester.ts resume",
+    "harvest:status": "bun run fda_harvester.ts status",
+    "harvest:reset": "bun run fda_harvester.ts reset",
+    "harvest:validate": "bun run validate_csv.ts",
+    "harvest:stats": "bun run stats.ts"
+  },
   "devDependencies": {
     "@types/bun": "latest",
     "@types/node": "^24.5.2",
