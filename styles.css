@@ -1232,6 +1232,49 @@ p {
   min-width: 120px;
 }
 
+.rx-actions-bar .btn svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.rx-actions-bar .btn .btn-text {
+  white-space: nowrap;
+}
+
+/* Button Group for Export Actions */
+.btn-group {
+  display: flex;
+  flex: 2;
+  min-width: 160px;
+}
+
+.btn-group .btn {
+  border-radius: 0;
+  margin: 0;
+}
+
+.btn-group .btn:first-child {
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn-group .btn:last-child {
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  padding: var(--space-3);
+  min-width: auto;
+  flex: 0 0 auto;
+}
+
+.btn-group .btn.btn-icon {
+  padding: var(--space-3);
+}
+
+.btn-group .btn.btn-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
 /* About Card */
 .about-card {
   background: var(--surface);

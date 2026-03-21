@@ -1374,6 +1374,9 @@
 
     // Print
     $('#printRx')?.addEventListener('click', printRx);
+
+    // Save as Image
+    $('#saveImageRx')?.addEventListener('click', saveAsImage);
   }
 
   function sideCardHTML(r, q, idx) {
@@ -1731,6 +1734,131 @@
     $('#pNotes').textContent = notes ? `Notes: ${notes}` : '';
 
     window.print();
+  }
+
+  async function saveAsImage() {
+    if (!window.htmlToImage) {
+      showToast('Image library not loaded. Please try again.', 'error');
+      return;
+    }
+
+    const printEl = $('#rxPrint');
+    if (!printEl) {
+      showToast('Print template not found', 'error');
+      return;
+    }
+
+    // First populate the print template with current data (same as printRx)
+    const fields = {
+      clinic: $('#clinic'),
+      clinicAddr: $('#clinicAddr'),
+      docName: $('#docName'),
+      prc: $('#prc'),
+      ptr: $('#ptr'),
+      s2: $('#s2'),
+      ptName: $('#ptName'),
+      ptAge: $('#ptAge'),
+      ptSex: $('#ptSex'),
+      ptAddr: $('#ptAddr'),
+      rxDate: $('#rxDate'),
+      rxNotes: $('#rxNotes')
+    };
+
+    $('#pClinic').textContent = fields.clinic?.value || 'Clinic Name';
+    $('#pClinicAddr').textContent = fields.clinicAddr?.value || '';
+    $('#pPtName').textContent = fields.ptName?.value || '';
+
+    const ageSex = [fields.ptAge?.value, fields.ptSex?.value]
+      .filter(Boolean)
+      .join(' / ');
+    $('#pPtAgeSex').textContent = ageSex;
+
+    $('#pPtAddr').textContent = fields.ptAddr?.value || '';
+    $('#pDate').textContent =
+      fields.rxDate?.value || new Date().toISOString().slice(0, 10);
+    $('#pDoc2').textContent = fields.docName?.value || '';
+
+    const prcVal = fields.prc?.value?.trim();
+    const ptrVal = fields.ptr?.value?.trim();
+    const s2Val = fields.s2?.value?.trim();
+    $('#pPRC2Wrap').textContent = prcVal ? `PRC: ${prcVal}` : '';
+    $('#pPTR2Wrap').textContent = ptrVal ? `PTR: ${ptrVal}` : '';
+    $('#pS22Wrap').textContent = s2Val ? `S2: ${s2Val}` : '';
+
+    const hasAnyLicense = prcVal || ptrVal || s2Val;
+    $('#signatureLabel').style.display = hasAnyLicense ? 'none' : 'block';
+
+    const ol = $('#pItems');
+    ol.innerHTML = '';
+
+    const items = Array.from($('#rxItems').children)
+      .filter((child) => child.classList.contains('rx-item'))
+      .map((div) => collectItem(div));
+
+    for (const it of items) {
+      const namePart = it.genericName && it.brandName
+        ? `${it.genericName} (${it.brandName})`
+        : it.genericName;
+      const strengthPart = it.strength || '';
+      const formPart = it.form || '';
+      const qtyPart = it.qty ? ` #${it.qty}` : '';
+      const line1Left = `${namePart} ${strengthPart} ${formPart}`.trim();
+      const line1Right = qtyPart ? `<span class="qty-right">${qtyPart}</span>` : '';
+      const line1 = line1Right
+        ? `<div class="rx-line"><span>${line1Left}</span>${line1Right}</div>`
+        : line1Left;
+      const line2 = it.sig ? `Sig. ${it.sig}` : '';
+
+      const li = document.createElement('li');
+      const sigDiv = line2 ? `<div class="rx-sig">${line2}</div>` : '';
+      li.innerHTML = line1 + sigDiv;
+      ol.appendChild(li);
+    }
+
+    const rxNotes = fields.rxNotes?.value?.trim();
+    $('#pNotes').textContent = rxNotes ? `Notes: ${rxNotes}` : '';
+
+    // Show loading toast
+    showToast('Generating image...', 'info');
+
+    try {
+      // Temporarily show the print element for capture
+      const originalDisplay = printEl.style.display;
+      printEl.style.display = 'block';
+      printEl.style.position = 'absolute';
+      printEl.style.left = '-9999px';
+
+      // Wait for fonts to render
+      await document.fonts.ready;
+
+      // Generate PNG
+      const dataUrl = await window.htmlToImage.toPng(printEl, {
+        quality: 1.0,
+        pixelRatio: 2,
+        backgroundColor: '#ffffff'
+      });
+
+      // Restore original display
+      printEl.style.display = originalDisplay;
+      printEl.style.position = '';
+      printEl.style.left = '';
+
+      // Create download link
+      const link = document.createElement('a');
+      const patientName = fields.ptName?.value?.trim() || 'prescription';
+      const dateStr = new Date().toISOString().slice(0, 10);
+      link.download = `rx-${patientName.replace(/\s+/g, '_')}-${dateStr}.png`;
+      link.href = dataUrl;
+      link.click();
+
+      showToast('Image saved!', 'success');
+    } catch (err) {
+      console.error('Failed to generate image:', err);
+      printEl.style.display = '';
+      printEl.style.position = '';
+      printEl.style.left = '';
+      showToast('Failed to generate image. Please try again.', 'error');
+    }
   }
 
   // ==================== Initialization ====================
