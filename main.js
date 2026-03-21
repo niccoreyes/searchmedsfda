@@ -112,6 +112,176 @@
     maxTotal: 50000
   };
 
+  // ==================== Data Cache (IndexedDB) ====================
+
+  const DB_NAME = 'rxBuilderDB';
+  const DB_VERSION = 1;
+  const STORE_DATA = 'drugData';
+  const STORE_META = 'drugMeta';
+
+  let dbPromise = null;
+
+  /**
+   * Open IndexedDB connection
+   * @returns {Promise<IDBDatabase>}
+   */
+  function openDB() {
+    if (dbPromise) return dbPromise;
+
+    dbPromise = new Promise((resolve, reject) => {
+      const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve(request.result);
+
+      request.onupgradeneeded = (event) => {
+        const db = event.target.result;
+        if (!db.objectStoreNames.contains(STORE_DATA)) {
+          db.createObjectStore(STORE_DATA, { keyPath: 'id' });
+        }
+        if (!db.objectStoreNames.contains(STORE_META)) {
+          db.createObjectStore(STORE_META, { keyPath: 'key' });
+        }
+      };
+    });
+
+    return dbPromise;
+  }
+
+  /**
+   * Save drug data to IndexedDB with version metadata
+   * @param {Array} data - The drug data array
+   * @param {Object} meta - Version metadata {source, versionId, lastUpdated, timestamp}
+   */
+  async function saveCachedData(data, meta) {
+    try {
+      const db = await openDB();
+
+      // Store data (compressed by removing _fhirConcept which can be huge)
+      const dataToStore = data.map((item, index) => {
+        const { _fhirConcept, ...rest } = item;
+        return { id: index, ...rest };
+      });
+
+      // Clear old data and store new data
+      const transaction = db.transaction([STORE_DATA, STORE_META], 'readwrite');
+      const dataStore = transaction.objectStore(STORE_DATA);
+      const metaStore = transaction.objectStore(STORE_META);
+
+      // Clear existing data
+      await new Promise((resolve, reject) => {
+        const clearReq = dataStore.clear();
+        clearReq.onsuccess = resolve;
+        clearReq.onerror = () => reject(clearReq.error);
+      });
+
+      // Store each record
+      for (const record of dataToStore) {
+        dataStore.put(record);
+      }
+
+      // Store metadata
+      metaStore.put({
+        key: 'meta',
+        ...meta,
+        timestamp: Date.now(),
+        recordCount: data.length
+      });
+
+      await new Promise((resolve, reject) => {
+        transaction.oncomplete = resolve;
+        transaction.onerror = () => reject(transaction.error);
+      });
+
+      console.log(`Cached ${data.length} records to IndexedDB`);
+      return true;
+    } catch (error) {
+      console.error('Failed to cache data:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Load cached drug data from IndexedDB
+   * @returns {{data: Array|null, meta: Object|null}}
+   */
+  async function loadCachedData() {
+    try {
+      const db = await openDB();
+
+      const transaction = db.transaction([STORE_DATA, STORE_META], 'readonly');
+      const dataStore = transaction.objectStore(STORE_DATA);
+      const metaStore = transaction.objectStore(STORE_META);
+
+      // Load metadata
+      const meta = await new Promise((resolve, reject) => {
+        const request = metaStore.get('meta');
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+
+      if (!meta) {
+        return { data: null, meta: null };
+      }
+
+      // Load all data records
+      const data = await new Promise((resolve, reject) => {
+        const request = dataStore.getAll();
+        request.onsuccess = () => {
+          // Sort by id to maintain order, then remove id field
+          const records = request.result
+            .sort((a, b) => a.id - b.id)
+            .map(({ id, ...rest }) => rest);
+          resolve(records);
+        };
+        request.onerror = () => reject(request.error);
+      });
+
+      console.log(`Loaded ${data.length} records from cache (saved ${new Date(meta.timestamp).toLocaleString()})`);
+      return { data, meta };
+    } catch (error) {
+      console.error('Failed to load cached data:', error);
+      await clearCachedData();
+      return { data: null, meta: null };
+    }
+  }
+
+  /**
+   * Clear cached data from IndexedDB
+   */
+  async function clearCachedData() {
+    try {
+      const db = await openDB();
+      const transaction = db.transaction([STORE_DATA, STORE_META], 'readwrite');
+      transaction.objectStore(STORE_DATA).clear();
+      transaction.objectStore(STORE_META).clear();
+      await new Promise((resolve, reject) => {
+        transaction.oncomplete = resolve;
+        transaction.onerror = () => reject(transaction.error);
+      });
+      console.log('Cleared drug cache from IndexedDB');
+    } catch (error) {
+      console.error('Failed to clear cache:', error);
+    }
+  }
+
+  /**
+   * Check if cached data needs updating by comparing versions
+   * @param {Object} cachedMeta - The cached metadata
+   * @param {string} remoteVersionId - FHIR versionId or CSV date
+   * @param {string} source - 'fhir' or 'csv'
+   * @returns {boolean} true if update needed
+   */
+  function isCacheStale(cachedMeta, remoteVersionId, source) {
+    if (!cachedMeta) return true;
+    if (cachedMeta.source !== source) return true;
+    if (!remoteVersionId) return true;
+
+    // For FHIR: compare versionId
+    // For CSV: compare lastUpdated (commit date)
+    return cachedMeta.versionId !== remoteVersionId;
+  }
+
   // ==================== CSV Loading ====================
 
   function initCSVLoading() {
@@ -158,9 +328,6 @@
         showToast('Please drop a CSV file', 'error');
       }
     });
-
-    // Try auto-load on init - use FHIR first, fallback to CSV
-    setTimeout(tryFHIRLoad, 500);
   }
 
   function setStatus(text, type = 'loading') {
@@ -176,11 +343,20 @@
     if (!badgeEl) return;
 
     const source = state.dataSource;
-    if (source === 'fhir') {
-      badgeEl.textContent = 'FHIR Online';
+    if (source === 'fhir-fresh') {
+      badgeEl.textContent = 'FHIR';
       badgeEl.className = 'status-badge online';
+    } else if (source === 'fhir') {
+      badgeEl.textContent = 'FHIR';
+      badgeEl.className = 'status-badge online';
+    } else if (source === 'csv-fresh') {
+      badgeEl.textContent = 'CSV';
+      badgeEl.className = 'status-badge offline';
     } else if (source === 'csv') {
-      badgeEl.textContent = 'CSV Offline';
+      badgeEl.textContent = 'CSV';
+      badgeEl.className = 'status-badge offline';
+    } else if (source === 'cached') {
+      badgeEl.textContent = 'Cache';
       badgeEl.className = 'status-badge offline';
     } else {
       badgeEl.textContent = 'Offline';
@@ -206,10 +382,10 @@
       state.data = data;
       state.page = 1;
       state.isDataLoaded = true;
-      state.dataSource = 'fhir';
+      state.dataSource = 'fhir-fresh';
       updateDataSourceBadge();
 
-      setStatus(`${data.length.toLocaleString()} records (FHIR)`, 'loaded');
+      setStatus(`${data.length.toLocaleString()} records | FHIR`, 'loaded');
       $('#summary').textContent = `${data.length.toLocaleString()} drugs`;
 
       // Use FHIR CodeSystem meta.lastUpdated for the badge
@@ -229,6 +405,14 @@
       // Build index and render
       buildQuickIndex();
       filterAndRender();
+
+      // Save to cache
+      const versionId = meta?.versionId || meta?.lastUpdated;
+      await saveCachedData(data, {
+        source: 'fhir',
+        versionId: versionId,
+        lastUpdated: meta?.lastUpdated || new Date().toISOString()
+      });
 
       clearToasts();
       showToast(`Loaded ${data.length.toLocaleString()} drugs from FHIR server`, 'success');
@@ -365,18 +549,25 @@
       console.log('Could not fetch GitHub date:', e);
     }
 
-    fetch('Combined_All_CPR.csv')
-      .then((r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.text();
-      })
-      .then((text) => {
-        parseAndLoadCSV(text, null, githubDate);
-      })
-      .catch(() => {
-        setStatus('Load failed', 'error');
-        showUploadUI();
-      });
+    try {
+      const response = await fetch('Combined_All_CPR.csv');
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+      const text = await response.text();
+      const data = parseAndLoadCSV(text, null, githubDate);
+
+      // Save to cache
+      if (data && data.length > 0) {
+        await saveCachedData(data, {
+          source: 'csv',
+          versionId: githubDate || new Date().toISOString(),
+          lastUpdated: githubDate || new Date().toISOString()
+        });
+      }
+    } catch {
+      setStatus('Load failed', 'error');
+      showUploadUI();
+    }
   }
 
   /**
@@ -435,7 +626,7 @@
 
     if (!rows.length) {
       setStatus('Empty CSV', 'error');
-      return;
+      return [];
     }
 
     // Parse headers
@@ -456,10 +647,10 @@
     state.data = data;
     state.page = 1;
     state.isDataLoaded = true;
-    state.dataSource = 'csv';
+    state.dataSource = 'csv-fresh';
     updateDataSourceBadge();
 
-    setStatus(`${data.length.toLocaleString()} records (CSV)`, 'loaded');
+    setStatus(`${data.length.toLocaleString()} records | CSV`, 'loaded');
     $('#summary').textContent = `${data.length.toLocaleString()} drugs`;
 
     // Determine last updated date for the badge
@@ -485,6 +676,8 @@
     // Build index and render
     buildQuickIndex();
     filterAndRender();
+
+    return data;
   }
 
   function showUploadUI() {
@@ -1503,7 +1696,7 @@
 
   // ==================== Initialization ====================
 
-  function init() {
+  async function init() {
     initNavigation();
     initCSVLoading();
     initSearch();
@@ -1513,6 +1706,185 @@
     const saved = localStorage.getItem('rxBuilderSave_v2');
     if (saved) {
       // Don't auto-load, let user decide
+    }
+
+    // Try to load from cache first for immediate offline availability
+    const cached = await loadCachedData();
+    if (cached.data && cached.data.length > 0) {
+      // Load cached data immediately
+      state.data = cached.data;
+      state.page = 1;
+      state.isDataLoaded = true;
+      state.dataSource = 'cached';
+      state.lastUpdatedText = cached.meta?.lastUpdated
+        ? new Date(cached.meta.lastUpdated).toLocaleDateString()
+        : new Date(cached.meta?.timestamp).toLocaleDateString();
+
+      updateDataSourceBadge();
+      setStatus(`${cached.data.length.toLocaleString()} records | Cache`, 'loaded');
+      $('#summary').textContent = `${cached.data.length.toLocaleString()} drugs`;
+      $('#updateBadge').textContent = `Updated: ${state.lastUpdatedText}`;
+
+      showSearchUI();
+      buildQuickIndex();
+      filterAndRender();
+
+      // Silent load from cache - no toast
+
+      // Check for updates in the background
+      setTimeout(() => checkForUpdates(cached.meta), 1000);
+    } else {
+      // No cache - try to load from network
+      setTimeout(() => tryFHIRLoadWithCache(), 500);
+    }
+  }
+
+  /**
+   * Check for data updates in the background
+   * @param {Object} cachedMeta - Current cached metadata
+   */
+  async function checkForUpdates(cachedMeta) {
+    // Try FHIR first
+    try {
+      setStatus('Checking for updates...', 'loading');
+
+      // Quick HEAD request to check version without downloading full data
+      const url = `${FHIR_CONFIG.baseUrl}/CodeSystem/${FHIR_CONFIG.codeSystemId}`;
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/fhir+json'
+        },
+        mode: 'cors'
+      });
+
+      if (response.ok) {
+        const codeSystem = await response.json();
+        const meta = codeSystem.meta;
+        const versionId = meta?.versionId;
+
+        if (isCacheStale(cachedMeta, versionId, 'fhir')) {
+          showToast('New drug data available, updating...', 'info', 5000);
+          await tryFHIRLoadWithCache();
+        } else {
+          setStatus(`${state.data.length.toLocaleString()} records | Current`, 'loaded');
+          console.log('Cache is up to date with FHIR server');
+        }
+        return;
+      }
+    } catch (error) {
+      console.log('FHIR update check failed:', error);
+    }
+
+    // Fallback to CSV check
+    try {
+      const githubDate = await fetchGitHubCSVLastUpdated();
+      if (isCacheStale(cachedMeta, githubDate, 'csv')) {
+        showToast('New CSV data available, updating...', 'info', 5000);
+        await tryCSVLoadWithCache();
+      } else {
+        setStatus(`${state.data.length.toLocaleString()} records | Current`, 'loaded');
+      }
+    } catch (error) {
+      console.log('CSV update check failed:', error);
+      setStatus(`${state.data.length.toLocaleString()} records | Cache (offline)`, 'loaded');
+    }
+  }
+
+  /**
+   * Load from FHIR and cache the result
+   */
+  async function tryFHIRLoadWithCache() {
+    setStatus('Loading from FHIR...', 'loading');
+
+    try {
+      const { concepts: allConcepts, meta } = await fetchAllValueSetConcepts();
+
+      if (allConcepts.length === 0) {
+        throw new Error('No concepts returned from FHIR server');
+      }
+
+      // Convert FHIR concepts to the same format as CSV data
+      const data = convertFHIRConceptsToData(allConcepts);
+
+      // Save to cache with version metadata
+      const versionId = meta?.versionId || meta?.lastUpdated;
+      saveCachedData(data, {
+        source: 'fhir',
+        versionId: versionId,
+        lastUpdated: meta?.lastUpdated || new Date().toISOString()
+      });
+
+      state.data = data;
+      state.page = 1;
+      state.isDataLoaded = true;
+      state.dataSource = 'fhir-fresh';
+      updateDataSourceBadge();
+
+      setStatus(`${data.length.toLocaleString()} records | FHIR`, 'loaded');
+      $('#summary').textContent = `${data.length.toLocaleString()} drugs`;
+
+      // Use FHIR CodeSystem meta.lastUpdated for the badge
+      const lastUpdated = meta?.lastUpdated;
+      if (lastUpdated) {
+        const date = new Date(lastUpdated);
+        state.lastUpdatedText = date.toLocaleDateString();
+      } else {
+        state.lastUpdatedText = new Date().toLocaleDateString();
+      }
+      $('#updateBadge').textContent = `Updated: ${state.lastUpdatedText}`;
+
+      // Show search UI
+      showSearchUI();
+
+      // Build index and render
+      buildQuickIndex();
+      filterAndRender();
+
+      clearToasts();
+      showToast(`Updated to ${data.length.toLocaleString()} drugs from FHIR server`, 'success');
+    } catch (error) {
+      console.error('FHIR load failed:', error);
+      setStatus('FHIR failed, trying CSV...', 'loading');
+      showToast('FHIR server unavailable, falling back to CSV', 'error');
+
+      // Fall back to CSV
+      await tryCSVLoadWithCache();
+    }
+  }
+
+  /**
+   * Load from CSV and cache the result
+   */
+  async function tryCSVLoadWithCache() {
+    setStatus('Loading CSV...', 'loading');
+
+    // Fetch GitHub last commit date for the CSV file
+    let githubDate = null;
+    try {
+      githubDate = await fetchGitHubCSVLastUpdated();
+    } catch (e) {
+      console.log('Could not fetch GitHub date:', e);
+    }
+
+    try {
+      const response = await fetch('Combined_All_CPR.csv');
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+      const text = await response.text();
+      const data = parseAndLoadCSV(text, null, githubDate);
+
+      if (data && data.length > 0) {
+        // Save to cache with version metadata (using GitHub commit date as version)
+        await saveCachedData(data, {
+          source: 'csv',
+          versionId: githubDate || new Date().toISOString(),
+          lastUpdated: githubDate || new Date().toISOString()
+        });
+      }
+    } catch (error) {
+      setStatus('Load failed', 'error');
+      showUploadUI();
     }
   }
 
