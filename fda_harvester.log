@@ -912,3 +912,162 @@ Received SIGINT. Saving state and exiting gracefully...
 [2026-03-21T05:02:17.250Z] CSV file: fda_harvested_products.csv
 [2026-03-21T05:02:17.250Z] State file: fda_harvester_state.json
 [2026-03-21T05:02:17.250Z] ============================================================
+[2026-03-21T14:38:36.827Z] ============================================================
+[2026-03-21T14:38:36.829Z] FDA Philippines Drug Product Harvester Starting
+[2026-03-21T14:38:36.829Z] ============================================================
+[2026-03-21T14:38:36.830Z] Backed up existing state to fda_harvester_state.json.backup.1774103916829
+[2026-03-21T14:38:36.831Z] State saved: 0 processed, 26 pending
+[2026-03-21T14:38:36.832Z] Querying: A (attempt 1)
+[2026-03-21T14:39:30.394Z] Error for query A: HTTP 500
+[2026-03-21T14:39:30.398Z] Drilling down on error: A -> [AZ, AY, AX, AW, AV, AU, AT, AS, AR, AQ, AP, AO, AN, AM, AL, AK, AJ, AI, AH, AG, AF, AE, AD, AC, AB, AA]
+[2026-03-21T14:39:30.399Z] State saved: 0 processed, 51 pending
+[2026-03-21T14:39:31.901Z] Querying: AA (attempt 1)
+[2026-03-21T14:39:50.230Z] Query AA: Found 46 CDRR records, 46 new added
+[2026-03-21T14:39:50.238Z] Query AA: Found 1227 FDA Food products, 1227 new added
+[2026-03-21T14:39:51.742Z] Querying: AB (attempt 1)
+[2026-03-21T14:40:15.622Z] Query AB: Found 1417 CDRR records, 1416 new added
+[2026-03-21T14:40:15.640Z] Query AB: Found 10621 FDA Food products, 10423 new added
+[2026-03-21T14:40:17.141Z] Querying: AC (attempt 1)
+[2026-03-21T14:40:55.855Z] Query AC: Found 8352 CDRR records, 8096 new added
+[2026-03-21T14:40:55.916Z] Query AC: Found 29974 FDA Food products, 27368 new added
+[2026-03-21T14:40:57.417Z] Querying: AD (attempt 1)
+[2026-03-21T14:41:21.558Z] Query AD: Found 1464 CDRR records, 1016 new added
+[2026-03-21T14:41:21.585Z] Query AD: Found 22887 FDA Food products, 16659 new added
+[2026-03-21T14:41:23.086Z] Querying: AE (attempt 1)
+[2026-03-21T14:41:34.970Z] Query AE: Found 258 CDRR records, 102 new added
+[2026-03-21T14:41:34.974Z] Query AE: Found 1548 FDA Food products, 862 new added
+[2026-03-21T14:41:36.476Z] Querying: AF (attempt 1)
+[2026-03-21T14:41:43.140Z] 
+Received SIGINT. Saving state and exiting gracefully...
+[2026-03-21T14:41:43.158Z] State saved: 67215 processed, 45 pending
+[2026-03-21T14:43:47.181Z] ============================================================
+[2026-03-21T14:43:47.182Z] FDA Philippines Drug Product Harvester Starting
+[2026-03-21T14:43:47.182Z] ============================================================
+[2026-03-21T14:43:47.185Z] Backed up existing state to fda_harvester_state.json.backup.1774104227182
+[2026-03-21T14:43:47.185Z] State saved: 0 processed, 26 pending
+[2026-03-21T14:43:47.186Z] Querying: A (attempt 1)
+[2026-03-21T14:44:47.430Z] Error for query A: HTTP 504
+[2026-03-21T14:44:47.433Z] Drilling down on error: A -> [AZ, AY, AX, AW, AV, AU, AT, AS, AR, AQ, AP, AO, AN, AM, AL, AK, AJ, AI, AH, AG, AF, AE, AD, AC, AB, AA]
+[2026-03-21T14:44:47.433Z] State saved: 0 processed, 51 pending
+[2026-03-21T14:44:48.935Z] Querying: AA (attempt 1)
+[2026-03-21T14:45:04.085Z] Query AA: Found 46 CDRR records, 46 new added
+[2026-03-21T14:45:04.088Z] Query AA: Found 1227 FDA Food products, 967 new added
+[2026-03-21T14:45:05.589Z] Querying: AB (attempt 1)
+[2026-03-21T14:45:33.638Z] Query AB: Found 1417 CDRR records, 1416 new added
+[2026-03-21T14:45:33.654Z] Query AB: Found 10621 FDA Food products, 6567 new added
+[2026-03-21T14:45:35.156Z] Querying: AC (attempt 1)
+[2026-03-21T14:46:11.608Z] Query AC: Found 8352 CDRR records, 8096 new added
+[2026-03-21T14:46:11.646Z] Query AC: Found 29974 FDA Food products, 19957 new added
+[2026-03-21T14:46:13.147Z] Querying: AD (attempt 1)
+[2026-03-21T14:46:40.381Z] Query AD: Found 1464 CDRR records, 1016 new added
+[2026-03-21T14:46:40.406Z] Query AD: Found 22887 FDA Food products, 13123 new added
+[2026-03-21T14:46:41.907Z] Querying: AE (attempt 1)
+[2026-03-21T14:46:57.161Z] Query AE: Found 258 CDRR records, 102 new added
+[2026-03-21T14:46:57.163Z] Query AE: Found 1548 FDA Food products, 652 new added
+[2026-03-21T14:46:58.664Z] Querying: AF (attempt 1)
+[2026-03-21T14:47:19.894Z] Query AF: Found 791 CDRR records, 554 new added
+[2026-03-21T14:47:19.898Z] Query AF: Found 5237 FDA Food products, 2145 new added
+[2026-03-21T14:47:21.399Z] Querying: AG (attempt 1)
+[2026-03-21T14:47:25.418Z] 
+Received SIGINT. Saving state and exiting gracefully...
+[2026-03-21T14:47:25.423Z] State saved: 54641 processed, 44 pending
+[2026-03-21T14:51:16.796Z] ============================================================
+[2026-03-21T14:51:16.798Z] FDA Philippines Drug Product Harvester Starting
+[2026-03-21T14:51:16.798Z] ============================================================
+[2026-03-21T14:51:16.801Z] Backed up existing state to fda_harvester_state.json.backup.1774104676798
+[2026-03-21T14:51:16.801Z] State saved: 0 processed, 26 pending
+[2026-03-21T14:51:16.802Z] Querying: A (attempt 1)
+[2026-03-21T14:52:01.202Z] Error for query A: HTTP 500
+[2026-03-21T14:52:01.205Z] Drilling down on error: A -> [AZ, AY, AX, AW, AV, AU, AT, AS, AR, AQ, AP, AO, AN, AM, AL, AK, AJ, AI, AH, AG, AF, AE, AD, AC, AB, AA]
+[2026-03-21T14:52:01.206Z] State saved: 0 processed, 51 pending
+[2026-03-21T14:52:02.708Z] Querying: AA (attempt 1)
+[2026-03-21T14:52:13.428Z] Query AA: Found 46 CDRR records, 46 new added
+[2026-03-21T14:52:13.430Z] Query AA: Found 1227 FDA Food products, 260 new added
+[2026-03-21T14:52:14.932Z] Querying: AB (attempt 1)
+[2026-03-21T14:52:37.055Z] Query AB: Found 1417 CDRR records, 1416 new added
+[2026-03-21T14:52:37.065Z] Query AB: Found 10621 FDA Food products, 3856 new added
+[2026-03-21T14:52:38.567Z] Querying: AC (attempt 1)
+[2026-03-21T14:53:05.269Z] 
+Received SIGINT. Saving state and exiting gracefully...
+[2026-03-21T14:53:05.270Z] State saved: 5578 processed, 48 pending
+[2026-03-21T14:58:42.796Z] ============================================================
+[2026-03-21T14:58:42.798Z] FDA Philippines Drug Product Harvester Starting
+[2026-03-21T14:58:42.798Z] ============================================================
+[2026-03-21T14:58:42.799Z] Backed up existing state to fda_harvester_state.json.backup.1774105122798
+[2026-03-21T14:58:42.800Z] State saved: 0 processed, 27 pending
+[2026-03-21T14:58:42.800Z] Querying: Supplement (attempt 1)
+[2026-03-21T14:58:54.374Z] Query Supplement: Found 2 CDRR records, 2 new added
+[2026-03-21T14:58:54.400Z] Query Supplement: Found 9096 FDA Food products, 7427 new added
+[2026-03-21T14:58:55.903Z] Querying: A (attempt 1)
+[2026-03-21T14:59:41.497Z] Error for query A: HTTP 500
+[2026-03-21T14:59:41.499Z] Drilling down on error: A -> [AZ, AY, AX, AW, AV, AU, AT, AS, AR, AQ, AP, AO, AN, AM, AL, AK, AJ, AI, AH, AG, AF, AE, AD, AC, AB, AA]
+[2026-03-21T14:59:43.001Z] Querying: AA (attempt 1)
+[2026-03-21T14:59:56.162Z] Query AA: Found 46 CDRR records, 46 new added
+[2026-03-21T14:59:56.165Z] Query AA: Found 1227 FDA Food products, 1218 new added
+[2026-03-21T14:59:57.665Z] Querying: AB (attempt 1)
+[2026-03-21T15:00:23.067Z] Query AB: Found 1417 CDRR records, 1416 new added
+[2026-03-21T15:00:23.085Z] Query AB: Found 10621 FDA Food products, 8559 new added
+[2026-03-21T15:00:24.587Z] Querying: AC (attempt 1)
+[2026-03-21T15:01:07.735Z] Query AC: Found 8352 CDRR records, 8094 new added
+[2026-03-21T15:01:07.778Z] Query AC: Found 29974 FDA Food products, 24654 new added
+[2026-03-21T15:01:09.280Z] Querying: AD (attempt 1)
+[2026-03-21T15:01:35.371Z] Query AD: Found 1464 CDRR records, 1016 new added
+[2026-03-21T15:01:35.406Z] Query AD: Found 22887 FDA Food products, 16330 new added
+[2026-03-21T15:01:36.907Z] Querying: AE (attempt 1)
+[2026-03-21T15:01:49.937Z] Query AE: Found 258 CDRR records, 102 new added
+[2026-03-21T15:01:49.940Z] Query AE: Found 1548 FDA Food products, 849 new added
+[2026-03-21T15:01:51.441Z] Querying: AF (attempt 1)
+[2026-03-21T15:02:08.621Z] 
+Received SIGINT. Saving state and exiting gracefully...
+[2026-03-21T15:02:08.628Z] State saved: 69713 processed, 45 pending
+[2026-03-21T15:04:16.352Z] ============================================================
+[2026-03-21T15:04:16.355Z] FDA Philippines Drug Product Harvester Starting
+[2026-03-21T15:04:16.355Z] ============================================================
+[2026-03-21T15:04:16.357Z] Backed up existing state to fda_harvester_state.json.backup.1774105456355
+[2026-03-21T15:04:16.358Z] State saved: 0 processed, 27 pending
+[2026-03-21T15:04:16.358Z] Querying: Supplement (attempt 1)
+[2026-03-21T15:04:28.019Z] Query Supplement: Found 2 CDRR records, 2 new added
+[2026-03-21T15:04:28.052Z] Query Supplement: Found 9096 FDA Food products, 7427 new added
+[2026-03-21T15:04:29.556Z] Querying: A (attempt 1)
+[2026-03-21T15:05:12.062Z] Error for query A: HTTP 500
+[2026-03-21T15:05:12.063Z] Drilling down on error: A -> [AZ, AY, AX, AW, AV, AU, AT, AS, AR, AQ, AP, AO, AN, AM, AL, AK, AJ, AI, AH, AG, AF, AE, AD, AC, AB, AA]
+[2026-03-21T15:05:13.564Z] Querying: AA (attempt 1)
+[2026-03-21T15:05:24.668Z] Query AA: Found 46 CDRR records, 46 new added
+[2026-03-21T15:05:26.170Z] Querying: AB (attempt 1)
+[2026-03-21T15:05:48.784Z] Query AB: Found 1417 CDRR records, 1416 new added
+[2026-03-21T15:05:50.285Z] Querying: AC (attempt 1)
+[2026-03-21T15:06:26.516Z] Query AC: Found 8352 CDRR records, 8094 new added
+[2026-03-21T15:06:28.018Z] Querying: AD (attempt 1)
+[2026-03-21T15:06:53.309Z] Query AD: Found 1464 CDRR records, 1016 new added
+[2026-03-21T15:06:54.811Z] Querying: AE (attempt 1)
+[2026-03-21T15:07:06.891Z] Query AE: Found 258 CDRR records, 102 new added
+[2026-03-21T15:07:08.392Z] Querying: AF (attempt 1)
+[2026-03-21T15:07:25.805Z] Query AF: Found 791 CDRR records, 554 new added
+[2026-03-21T15:07:27.306Z] Querying: AG (attempt 1)
+[2026-03-21T15:07:48.915Z] Query AG: Found 1392 CDRR records, 987 new added
+[2026-03-21T15:07:50.417Z] Querying: AH (attempt 1)
+[2026-03-21T15:08:03.193Z] Query AH: Found 357 CDRR records, 303 new added
+[2026-03-21T15:08:04.694Z] Querying: AI (attempt 1)
+[2026-03-21T15:08:24.977Z] Query AI: Found 826 CDRR records, 483 new added
+[2026-03-21T15:08:24.979Z] State saved: 20430 processed, 42 pending
+[2026-03-21T15:08:26.481Z] Querying: AJ (attempt 1)
+[2026-03-21T15:08:36.402Z] Query AJ: Found 44 CDRR records, 21 new added
+[2026-03-21T15:08:37.904Z] Querying: AK (attempt 1)
+[2026-03-21T15:08:51.296Z] Query AK: Found 179 CDRR records, 96 new added
+[2026-03-21T15:08:52.798Z] Querying: AL (attempt 1)
+[2026-03-21T15:09:36.058Z] Query AL: Found 7213 CDRR records, 4426 new added
+[2026-03-21T15:09:37.560Z] Querying: AM (attempt 1)
+[2026-03-21T15:10:06.685Z] Query AM: Found 10209 CDRR records, 4034 new added
+[2026-03-21T15:10:08.188Z] Querying: AN (attempt 1)
+[2026-03-21T15:10:50.346Z] Query AN: Found 7010 CDRR records, 2866 new added
+[2026-03-21T15:10:51.847Z] Querying: AO (attempt 1)
+[2026-03-21T15:11:05.957Z] Query AO: Found 13 CDRR records, 3 new added
+[2026-03-21T15:11:07.458Z] Querying: AP (attempt 1)
+[2026-03-21T15:11:26.888Z] Query AP: Found 2315 CDRR records, 597 new added
+[2026-03-21T15:11:28.389Z] Querying: AQ (attempt 1)
+[2026-03-21T15:11:38.242Z] Query AQ: Found 39 CDRR records, 9 new added
+[2026-03-21T15:11:39.743Z] Querying: AR (attempt 1)
+[2026-03-21T15:12:26.598Z] Query AR: Found 6196 CDRR records, 1313 new added
+[2026-03-21T15:12:28.099Z] Querying: AS (attempt 1)
+[2026-03-21T15:12:56.338Z] Query AS: Found 13696 CDRR records, 3372 new added
+[2026-03-21T15:12:57.840Z] Querying: AT (attempt 1)

@@ -53,7 +53,13 @@ type ProcessingState = {
 
 function createInitialState(): ProcessingState {
   const queue: QueueItem[] = [];
-  // Initialize with A-Z
+  // Start with "Supplement" query to get all food supplements
+  queue.push({
+    query: "Supplement",
+    depth: 1,
+    parentQuery: null,
+  });
+  // Then add A-Z queries for regular drug search
   for (let i = 65; i <= 90; i++) {
     queue.push({
       query: String.fromCharCode(i),
@@ -232,6 +238,19 @@ type CDRRRecord = {
   pharmacologic_category: string;
 };
 
+type FDAFoodProduct = {
+  ACCOUNTCODE: string;
+  PRODUCT_NAME: string;
+  BRAND_NAME: string;
+  TYPE_FOOD_PRODUCT_LABEL: string;
+  COMPANY_NAME: string;
+  DENIAL_DATE: string;
+  DATE_VALIDITY: string;
+  LOW_RISK_DECISION: string;
+  APPLICATION_TYPE_LABEL: string;
+  IS_CANCELED: string;
+};
+
 type APISearchResponse = {
   lto_food?: unknown[];
   lto_drugs?: unknown[];
@@ -352,6 +371,34 @@ function delay(ms: number): Promise<void> {
 }
 
 // ============================================================================
+// FDA FOOD PRODUCT MAPPING
+// ============================================================================
+
+function mapFDAFoodProductToRecord(foodProduct: FDAFoodProduct): CDRRRecord {
+  // Clean up brand name (trim whitespace)
+  const brandName = (foodProduct.BRAND_NAME || "").trim();
+
+  return {
+    registration_number: foodProduct.ACCOUNTCODE || "",
+    generic_name: foodProduct.PRODUCT_NAME || "",
+    brand_name: brandName,
+    dosage_strength: "", // Could extract from PRODUCT_NAME in future
+    dosage_form: "", // Could extract from PRODUCT_NAME in future
+    classification: "Supplement",
+    packaging: "",
+    manufacturer: foodProduct.COMPANY_NAME || "",
+    country_of_origin: "",
+    trader: null,
+    importer: "",
+    distributor: "",
+    app_type: foodProduct.APPLICATION_TYPE_LABEL || "",
+    issuance_date: "", // DENIAL_DATE is not issuance date
+    expiry_date: foodProduct.DATE_VALIDITY || "",
+    pharmacologic_category: foodProduct.TYPE_FOOD_PRODUCT_LABEL || "",
+  };
+}
+
+// ============================================================================
 // CHARACTER HANDLING
 // ============================================================================
 
@@ -414,10 +461,11 @@ async function processQuery(
   const result = await queryAPI(item.query);
 
   if (result.type === "success") {
-    const cdrrRecords = result.data.cdrr || [];
+    let totalAdded = 0;
 
+    // Process CDRR records (drug products)
+    const cdrrRecords = result.data.cdrr || [];
     if (cdrrRecords.length > 0) {
-      // Sanitize and validate records
       const validRecords: CDRRRecord[] = [];
 
       for (let i = 0; i < cdrrRecords.length; i++) {
@@ -430,11 +478,39 @@ async function processQuery(
       }
 
       const added = appendToCsv(validRecords, state);
+      totalAdded += added;
       log(`Query ${item.query}: Found ${cdrrRecords.length} CDRR records, ${added} new added`);
-      return { success: true, shouldDrillDown: false, recordsFound: added };
     }
 
-    // No CDRR records found - DO NOT drill down if no records returned
+    // Process FDA Food Products (only for "Supplement" query)
+    if (item.query === "Supplement") {
+      const fdaFoodProducts = (result.data.fdafoodproducts || []) as FDAFoodProduct[];
+      if (fdaFoodProducts.length > 0) {
+        const foodRecords: CDRRRecord[] = [];
+
+        for (const foodProduct of fdaFoodProducts) {
+          if (!foodProduct || foodProduct.IS_CANCELED === "Y") continue;
+          // AND filter - High Risk + SUPPLEMENT in name
+          if (foodProduct.TYPE_FOOD_PRODUCT_LABEL !== "High Risk Food Product") continue;
+          if (!foodProduct.PRODUCT_NAME?.toUpperCase().includes("SUPPLEMENT")) continue;
+          const record = mapFDAFoodProductToRecord(foodProduct);
+          const sanitized = sanitizeRecord(record);
+          if (sanitized) {
+            foodRecords.push(sanitized);
+          }
+        }
+
+        const added = appendToCsv(foodRecords, state);
+        totalAdded += added;
+        log(`Query ${item.query}: Found ${fdaFoodProducts.length} FDA Food products, ${added} new added`);
+      }
+    }
+
+    if (totalAdded > 0) {
+      return { success: true, shouldDrillDown: false, recordsFound: totalAdded };
+    }
+
+    // No records found - DO NOT drill down if no records returned
     // This prevents infinite loops on empty branches
     return { success: true, shouldDrillDown: false, recordsFound: 0 };
   }

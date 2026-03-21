@@ -18,7 +18,8 @@
     searchField: 'all',
     onlyRX: false,
     onlyOTC: false,
-    onlyHuman: true,
+    onlyVet: false,
+    includeSupplement: false,
     pageRows: [],
     quickIndex: [],
     isDataLoaded: false,
@@ -819,7 +820,8 @@
     const perPage = $('#perPage');
     const onlyRX = $('#onlyRX');
     const onlyOTC = $('#onlyOTC');
-    const onlyHuman = $('#onlyHuman');
+    const onlyVet = $('#onlyVet');
+    const includeSupplement = $('#includeSupplement');
     const clearSearch = $('#clearSearch');
     const clearFilters = $('#clearFilters');
 
@@ -848,10 +850,12 @@
       state.searchQ = '';
       state.onlyRX = false;
       state.onlyOTC = false;
-      state.onlyHuman = false;
+      state.onlyVet = false;
+      state.includeSupplement = false;
       onlyRX.checked = false;
       onlyOTC.checked = false;
-      onlyHuman.checked = false;
+      onlyVet.checked = false;
+      includeSupplement.checked = false;
       state.page = 1;
       filterAndRender();
     });
@@ -887,8 +891,14 @@
       filterAndRender();
     });
 
-    onlyHuman?.addEventListener('change', () => {
-      state.onlyHuman = onlyHuman.checked;
+    onlyVet?.addEventListener('change', () => {
+      state.onlyVet = onlyVet.checked;
+      state.page = 1;
+      filterAndRender();
+    });
+
+    includeSupplement?.addEventListener('change', () => {
+      state.includeSupplement = includeSupplement.checked;
       state.page = 1;
       filterAndRender();
     });
@@ -1023,8 +1033,15 @@
         if (!cls.includes('over-the-counter') && !cls.includes('otc')) return false;
       }
 
-      if (state.onlyHuman) {
+      if (state.onlyVet) {
+        if (isHuman(row)) return false;
+      } else {
         if (!isHuman(row)) return false;
+      }
+
+      if (!state.includeSupplement) {
+        const cls = String(row['Classification'] || '').toLowerCase();
+        if (cls.includes('supplement')) return false;
       }
 
       if (!q) return true;
