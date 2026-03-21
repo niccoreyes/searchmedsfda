@@ -205,3 +205,30 @@ Received SIGINT. Saving state and exiting gracefully...
 [2026-03-21T03:05:51.450Z] Querying: CK (attempt 1)
 [2026-03-21T03:06:11.430Z] Query CK: Found 108 CDRR records, 0 new added
 [2026-03-21T03:06:12.933Z] Querying: CL (attempt 1)
+[2026-03-21T03:06:30.149Z] Query CL: Found 2978 CDRR records, 2 new added
+[2026-03-21T03:06:30.151Z] State saved: 34000 processed, 25 pending
+[2026-03-21T03:06:31.653Z] Querying: CM (attempt 1)
+[2026-03-21T03:06:43.298Z] Query CM: Found 20 CDRR records, 0 new added
+[2026-03-21T03:06:43.303Z] State saved: 34000 processed, 24 pending
+[2026-03-21T03:06:44.804Z] Querying: CN (attempt 1)
+[2026-03-21T03:06:54.663Z] Query CN: Found 23 CDRR records, 0 new added
+[2026-03-21T03:06:54.668Z] State saved: 34000 processed, 23 pending
+[2026-03-21T03:06:56.170Z] Querying: CO (attempt 1)
+[2026-03-21T03:07:37.478Z] Query CO: Found 5959 CDRR records, 10 new added
+[2026-03-21T03:07:37.480Z] State saved: 34010 processed, 22 pending
+[2026-03-21T03:07:38.981Z] Querying: CP (attempt 1)
+[2026-03-21T03:07:53.683Z] Query CP: Found 63 CDRR records, 0 new added
+[2026-03-21T03:07:53.685Z] State saved: 34010 processed, 21 pending
+[2026-03-21T03:07:55.187Z] Querying: CQ (attempt 1)
+[2026-03-21T03:08:05.277Z] Query CQ: Found 4 CDRR records, 0 new added
+[2026-03-21T03:08:05.281Z] State saved: 34010 processed, 20 pending
+[2026-03-21T03:08:06.783Z] Querying: CR (attempt 1)
+[2026-03-21T03:08:32.214Z] Query CR: Found 425 CDRR records, 0 new added
+[2026-03-21T03:08:32.216Z] State saved: 34010 processed, 19 pending
+[2026-03-21T03:08:33.718Z] Querying: CS (attempt 1)
+[2026-03-21T03:08:50.110Z] Query CS: Found 39 CDRR records, 0 new added
+[2026-03-21T03:08:50.113Z] State saved: 34010 processed, 18 pending
+[2026-03-21T03:08:51.615Z] Querying: CT (attempt 1)
+[2026-03-21T03:09:15.189Z] Query CT: Found 1845 CDRR records, 0 new added
+[2026-03-21T03:09:15.192Z] State saved: 34010 processed, 17 pending
+[2026-03-21T03:09:16.694Z] Querying: CU (attempt 1)

@@ -3,13 +3,15 @@
  * Generates CodeSystem and ValueSet resources from CSV
  *
  * Run with: bun run generate-fhir-terminology.ts
+ * Run with upload: bun run generate-fhir-terminology.ts --upload
  */
 
 import { parse } from "csv-parse/sync";
+import { createInterface } from "readline";
 
 // Configuration
 const CONFIG = {
-  csvPath: "./ALL_DrugProducts.csv",
+  csvPath: "./Combined_All_CPR.csv",
   outputDir: "./fhir-terminology",
   codeSystemUrl: "https://thomasreyes.vercel.app/ph-fda",
   codeSystemName: "TestPHFDACPRCS",
@@ -146,6 +148,69 @@ interface FHIRValueSet {
       system: string;
     }>;
   };
+}
+
+/**
+ * Prompt user for confirmation
+ */
+function confirmUpload(): Promise<boolean> {
+  const rl = createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+  return new Promise((resolve) => {
+    rl.question("🚀 Upload generated files to terminology server? (y/N): ", (answer) => {
+      rl.close();
+      const normalized = answer.trim().toLowerCase();
+      resolve(normalized === "y" || normalized === "yes");
+    });
+  });
+}
+
+/**
+ * Upload a FHIR resource to the terminology server using PUT
+ */
+async function uploadResource(
+  resourceType: string,
+  resourceId: string,
+  resourceData: object,
+  serverUrl: string
+): Promise<{ success: boolean; status: number; message: string }> {
+  const url = `${serverUrl}/${resourceType}/${resourceId}`;
+
+  try {
+    const response = await fetch(url, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/fhir+json",
+        Accept: "application/fhir+json",
+      },
+      body: JSON.stringify(resourceData),
+    });
+
+    const responseText = await response.text();
+
+    if (response.ok) {
+      return {
+        success: true,
+        status: response.status,
+        message: `Successfully uploaded ${resourceType}/${resourceId}`,
+      };
+    } else {
+      return {
+        success: false,
+        status: response.status,
+        message: `Failed to upload ${resourceType}/${resourceId}: ${response.status} ${response.statusText}${responseText ? " - " + responseText : ""}`,
+      };
+    }
+  } catch (error) {
+    return {
+      success: false,
+      status: 0,
+      message: `Network error uploading ${resourceType}/${resourceId}: ${error instanceof Error ? error.message : String(error)}`,
+    };
+  }
 }
 
 async function readCSV(filePath: string): Promise<DrugProduct[]> {
@@ -293,6 +358,10 @@ function generateValueSet(): FHIRValueSet {
 }
 
 async function main() {
+  // Parse CLI arguments
+  const args = process.argv.slice(2);
+  const shouldUpload = args.includes("--upload") || args.includes("-u");
+
   console.log("📖 Reading CSV file...");
   const products = await readCSV(CONFIG.csvPath);
   console.log(`✅ Loaded ${products.length} drug products`);
@@ -369,10 +438,66 @@ async function main() {
   console.log(`   ValueSet:   ${valueSetPath}`);
   console.log(`\n🔗 CodeSystem URL: ${codeSystem.url}`);
   console.log(`🔗 ValueSet URL:   ${valueSet.url}`);
-  console.log(`\n💡 You can now upload these files to your FHIR terminology server.`);
-  console.log(`   Target server: ${CONFIG.terminologyServer}`);
-  console.log("   Example cURL command:");
-  console.log(`   curl -X POST ${CONFIG.terminologyServer}/CodeSystem -H 'Content-Type: application/fhir+json' -d @${codeSystemPath}`);
+  // Upload to terminology server if requested
+  if (shouldUpload) {
+    console.log(`\n🚀 Upload to terminology server enabled`);
+    console.log(`   Target server: ${CONFIG.terminologyServer}`);
+
+    const confirmed = await confirmUpload();
+
+    if (confirmed) {
+      console.log("\n📤 Uploading to terminology server...");
+
+      // Upload CodeSystem
+      console.log(`   PUT ${CONFIG.terminologyServer}/CodeSystem/${CONFIG.codeSystemName}`);
+      const codeSystemResult = await uploadResource(
+        "CodeSystem",
+        CONFIG.codeSystemName,
+        codeSystem,
+        CONFIG.terminologyServer
+      );
+
+      if (codeSystemResult.success) {
+        console.log(`   ✅ ${codeSystemResult.message}`);
+      } else {
+        console.error(`   ❌ ${codeSystemResult.message}`);
+      }
+
+      // Upload ValueSet
+      console.log(`   PUT ${CONFIG.terminologyServer}/ValueSet/${CONFIG.valueSetName}`);
+      const valueSetResult = await uploadResource(
+        "ValueSet",
+        CONFIG.valueSetName,
+        valueSet,
+        CONFIG.terminologyServer
+      );
+
+      if (valueSetResult.success) {
+        console.log(`   ✅ ${valueSetResult.message}`);
+      } else {
+        console.error(`   ❌ ${valueSetResult.message}`);
+      }
+
+      // Summary
+      console.log("\n" + "=".repeat(60));
+      if (codeSystemResult.success && valueSetResult.success) {
+        console.log("✅ All resources uploaded successfully!");
+      } else {
+        console.log("⚠️  Upload completed with some errors");
+      }
+      console.log("=".repeat(60));
+    } else {
+      console.log("\n⏭️  Upload skipped by user");
+      console.log(`\n💡 To upload manually, run: bun run generate-fhir-terminology.ts --upload`);
+    }
+  } else {
+    console.log(`\n💡 To upload to the terminology server, run with --upload flag:`);
+    console.log(`   bun run generate-fhir-terminology.ts --upload`);
+    console.log(`\n   Target server: ${CONFIG.terminologyServer}`);
+    console.log("   Or use cURL commands:");
+    console.log(`   curl -X PUT ${CONFIG.terminologyServer}/CodeSystem/${CONFIG.codeSystemName} -H 'Content-Type: application/fhir+json' -d @${codeSystemPath}`);
+    console.log(`   curl -X PUT ${CONFIG.terminologyServer}/ValueSet/${CONFIG.valueSetName} -H 'Content-Type: application/fhir+json' -d @${valueSetPath}`);
+  }
 }
 
 main().catch((error) => {

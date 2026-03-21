@@ -1,56 +1,6 @@
 {
   "queryQueue": [
     {
-      "query": "CK",
-      "depth": 2,
-      "parentQuery": "C"
-    },
-    {
-      "query": "CL",
-      "depth": 2,
-      "parentQuery": "C"
-    },
-    {
-      "query": "CM",
-      "depth": 2,
-      "parentQuery": "C"
-    },
-    {
-      "query": "CN",
-      "depth": 2,
-      "parentQuery": "C"
-    },
-    {
-      "query": "CO",
-      "depth": 2,
-      "parentQuery": "C"
-    },
-    {
-      "query": "CP",
-      "depth": 2,
-      "parentQuery": "C"
-    },
-    {
-      "query": "CQ",
-      "depth": 2,
-      "parentQuery": "C"
-    },
-    {
-      "query": "CR",
-      "depth": 2,
-      "parentQuery": "C"
-    },
-    {
-      "query": "CS",
-      "depth": 2,
-      "parentQuery": "C"
-    },
-    {
-      "query": "CT",
-      "depth": 2,
-      "parentQuery": "C"
-    },
-    {
       "query": "CU",
       "depth": 2,
       "parentQuery": "C"
@@ -210,7 +160,17 @@
     "CJAT",
     "CJAU",
     "CJAV",
-    "CJAW"
+    "CJAW",
+    "CK",
+    "CL",
+    "CM",
+    "CN",
+    "CO",
+    "CP",
+    "CQ",
+    "CR",
+    "CS",
+    "CT"
   ],
   "failedQueries": [],
   "registrationNumbers": [
@@ -34211,10 +34171,22 @@
     "DRP-5671-02",
     "DRP-078",
     "DRP-11039",
-    "DRP-14324"
+    "DRP-14324",
+    "DRP-6300-01",
+    "DRP-6300-02",
+    "DRP-1743-02",
+    "DRP-2811-03",
+    "DRP-2811-06",
+    "DRP-3494-03",
+    "DRP-5378-01",
+    "DRP-1063-05",
+    "DRP-1063-13",
+    "DRP-3494-07",
+    "DRP-9898",
+    "DRP-11927-03"
   ],
-  "totalProcessed": 33998,
+  "totalProcessed": 34010,
   "startTime": "2026-03-21T01:58:21.369Z",
-  "lastSaved": "2026-03-21T03:05:51.448Z",
+  "lastSaved": "2026-03-21T03:09:15.191Z",
   "interruptedAt": "2026-03-21T02:53:14.058Z"
 }
