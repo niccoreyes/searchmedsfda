@@ -39,6 +39,49 @@
     container.innerHTML = '';
   }
 
+  function showConfirmToast(message, onConfirm, onCancel) {
+    const container = $('#toastContainer');
+    if (!container) return;
+
+    // Clear existing toasts
+    container.innerHTML = '';
+
+    const toast = document.createElement('div');
+    toast.className = 'toast confirm';
+    toast.innerHTML = `
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="13"/>
+        <circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/>
+      </svg>
+      <span>${escapeHTML(message)}</span>
+      <div class="toast-actions">
+        <button class="btn btn-danger-ghost btn-sm toast-confirm">Clear</button>
+        <button class="btn btn-secondary btn-sm toast-cancel">Cancel</button>
+      </div>
+    `;
+
+    container.appendChild(toast);
+
+    // Wire up buttons
+    toast.querySelector('.toast-confirm').addEventListener('click', () => {
+      toast.remove();
+      onConfirm();
+    });
+    toast.querySelector('.toast-cancel').addEventListener('click', () => {
+      toast.remove();
+      if (onCancel) onCancel();
+    });
+
+    // Trigger animation
+    requestAnimationFrame(() => {
+      toast.style.opacity = '1';
+      toast.style.transform = 'translateY(0)';
+    });
+
+    return toast;
+  }
+
   function showToast(message, type = 'info', duration = 3000) {
     const container = $('#toastContainer');
     if (!container) return;
@@ -1342,9 +1385,12 @@
     // Clear all items
     clearItems?.addEventListener('click', () => {
       const rxItems = $('#rxItems');
-      if (rxItems.children.length > 1) {
-        // > 1 because of empty state
-        if (confirm('Remove all prescription items?')) {
+      const itemCount = rxItems.querySelectorAll('.rx-item').length;
+      if (itemCount === 0) return;
+
+      showConfirmToast(
+        `Remove all ${itemCount} medication${itemCount > 1 ? 's' : ''}?`,
+        () => {
           rxItems.innerHTML = `
             <div class="empty-rx">
               <div class="empty-icon">
@@ -1362,7 +1408,7 @@
           updateRxPreview();
           showToast('All items cleared', 'info');
         }
-      }
+      );
     });
 
     // Save/Load local
