@@ -418,10 +418,35 @@
       showToast(`Loaded ${data.length.toLocaleString()} drugs from FHIR server`, 'success');
     } catch (error) {
       console.error('FHIR load failed:', error);
+
+      // Check if we have cached data to fall back to
+      const cached = await loadCachedData();
+      if (cached.data && cached.data.length > 0) {
+        // Keep using cached data
+        state.data = cached.data;
+        state.page = 1;
+        state.isDataLoaded = true;
+        state.dataSource = 'cached';
+        state.lastUpdatedText = cached.meta?.lastUpdated
+          ? new Date(cached.meta.lastUpdated).toLocaleDateString()
+          : new Date(cached.meta?.timestamp).toLocaleDateString();
+
+        updateDataSourceBadge();
+        setStatus(`${cached.data.length.toLocaleString()} records | Cache (FHIR failed)`, 'loaded');
+        $('#summary').textContent = `${cached.data.length.toLocaleString()} drugs`;
+        $('#updateBadge').textContent = `Updated: ${state.lastUpdatedText}`;
+
+        showSearchUI();
+        buildQuickIndex();
+        filterAndRender();
+
+        showToast('FHIR server unavailable, using cached data', 'warning');
+        return;
+      }
+
+      // No cache - fall back to CSV
       setStatus('FHIR failed, trying CSV...', 'loading');
       showToast('FHIR server unavailable, falling back to CSV', 'error');
-
-      // Fall back to CSV
       setTimeout(tryAutoLoad, 500);
     }
   }
@@ -541,6 +566,10 @@
   async function tryAutoLoad() {
     setStatus('Loading CSV...', 'loading');
 
+    // Check if we already have cached data - if so, keep it and don't show error
+    const cached = await loadCachedData();
+    const hasCache = cached.data && cached.data.length > 0;
+
     // Fetch GitHub last commit date for the CSV file
     let githubDate = null;
     try {
@@ -564,7 +593,17 @@
           lastUpdated: githubDate || new Date().toISOString()
         });
       }
-    } catch {
+    } catch (error) {
+      console.error('CSV load failed:', error);
+
+      // If we have cached data, keep using it silently
+      if (hasCache) {
+        console.log('CSV load failed but cache exists, keeping cached data');
+        setStatus(`${cached.data.length.toLocaleString()} records | Cache (offline)`, 'loaded');
+        return;
+      }
+
+      // No cache - show error
       setStatus('Load failed', 'error');
       showUploadUI();
     }
@@ -1729,26 +1768,85 @@
       buildQuickIndex();
       filterAndRender();
 
-      // Silent load from cache - no toast
-
-      // Check for updates in the background
+      // Check for updates in the background (silent - no toasts for connection issues)
       setTimeout(() => checkForUpdates(cached.meta), 1000);
     } else {
-      // No cache - try to load from network
-      setTimeout(() => tryFHIRLoadWithCache(), 500);
+      // No cache - try to load from network (FHIR first, then CSV)
+      setStatus('Loading drug data...', 'loading');
+      await tryLoadFromNetwork();
     }
   }
 
   /**
-   * Check for data updates in the background
+   * Try to load from network sources (FHIR -> CSV)
+   * Only called when there's no cached data
+   */
+  async function tryLoadFromNetwork() {
+    // Try FHIR first
+    try {
+      const { concepts: allConcepts, meta } = await fetchAllValueSetConcepts();
+
+      if (allConcepts.length === 0) {
+        throw new Error('No concepts returned from FHIR server');
+      }
+
+      // Convert FHIR concepts to the same format as CSV data
+      const data = convertFHIRConceptsToData(allConcepts);
+
+      // Save to cache with version metadata
+      const versionId = meta?.versionId || meta?.lastUpdated;
+      await saveCachedData(data, {
+        source: 'fhir',
+        versionId: versionId,
+        lastUpdated: meta?.lastUpdated || new Date().toISOString()
+      });
+
+      state.data = data;
+      state.page = 1;
+      state.isDataLoaded = true;
+      state.dataSource = 'fhir-fresh';
+      updateDataSourceBadge();
+
+      setStatus(`${data.length.toLocaleString()} records | FHIR`, 'loaded');
+      $('#summary').textContent = `${data.length.toLocaleString()} drugs`;
+
+      // Use FHIR CodeSystem meta.lastUpdated for the badge
+      const lastUpdated = meta?.lastUpdated;
+      if (lastUpdated) {
+        const date = new Date(lastUpdated);
+        state.lastUpdatedText = date.toLocaleDateString();
+      } else {
+        state.lastUpdatedText = new Date().toLocaleDateString();
+      }
+      $('#updateBadge').textContent = `Updated: ${state.lastUpdatedText}`;
+
+      // Show search UI
+      showSearchUI();
+
+      // Build index and render
+      buildQuickIndex();
+      filterAndRender();
+
+      clearToasts();
+      showToast(`Loaded ${data.length.toLocaleString()} drugs from FHIR server`, 'success');
+    } catch (error) {
+      console.error('FHIR load failed:', error);
+      // Fall back to CSV
+      await tryCSVLoadWithCache();
+    }
+  }
+
+  /**
+   * Check for data updates in the background (silent - no errors shown to user)
    * @param {Object} cachedMeta - Current cached metadata
    */
   async function checkForUpdates(cachedMeta) {
+    // Silently check for updates - don't disturb user if offline
+    console.log('Checking for updates in background...');
+
     // Try FHIR first
     try {
-      setStatus('Checking for updates...', 'loading');
-
-      // Quick HEAD request to check version without downloading full data
+      // Quick check to see if FHIR is available
       const url = `${FHIR_CONFIG.baseUrl}/CodeSystem/${FHIR_CONFIG.codeSystemId}`;
       const response = await fetch(url, {
         method: 'GET',
@@ -1765,36 +1863,37 @@
 
         if (isCacheStale(cachedMeta, versionId, 'fhir')) {
           showToast('New drug data available, updating...', 'info', 5000);
-          await tryFHIRLoadWithCache();
+          await tryFHIRLoadWithCache(true); // true = called from background update, don't fallback to CSV
         } else {
-          setStatus(`${state.data.length.toLocaleString()} records | Current`, 'loaded');
           console.log('Cache is up to date with FHIR server');
         }
         return;
       }
     } catch (error) {
-      console.log('FHIR update check failed:', error);
+      // Silent fail - we're just checking, cache is already loaded
+      console.log('FHIR update check failed (likely offline):', error.message);
     }
 
-    // Fallback to CSV check
+    // Fallback to CSV check (only if FHIR not available)
     try {
       const githubDate = await fetchGitHubCSVLastUpdated();
       if (isCacheStale(cachedMeta, githubDate, 'csv')) {
         showToast('New CSV data available, updating...', 'info', 5000);
         await tryCSVLoadWithCache();
       } else {
-        setStatus(`${state.data.length.toLocaleString()} records | Current`, 'loaded');
+        console.log('Cache is up to date with CSV');
       }
     } catch (error) {
-      console.log('CSV update check failed:', error);
-      setStatus(`${state.data.length.toLocaleString()} records | Cache (offline)`, 'loaded');
+      // Silent fail - cache is already loaded and working
+      console.log('CSV update check failed (likely offline):', error.message);
     }
   }
 
   /**
    * Load from FHIR and cache the result
+   * @param {boolean} fromBackgroundUpdate - If true, don't fallback to CSV on failure (cache already exists)
    */
-  async function tryFHIRLoadWithCache() {
+  async function tryFHIRLoadWithCache(fromBackgroundUpdate = false) {
     setStatus('Loading from FHIR...', 'loading');
 
     try {
@@ -1809,7 +1908,7 @@
 
       // Save to cache with version metadata
       const versionId = meta?.versionId || meta?.lastUpdated;
-      saveCachedData(data, {
+      await saveCachedData(data, {
         source: 'fhir',
         versionId: versionId,
         lastUpdated: meta?.lastUpdated || new Date().toISOString()
@@ -1845,6 +1944,13 @@
       showToast(`Updated to ${data.length.toLocaleString()} drugs from FHIR server`, 'success');
     } catch (error) {
       console.error('FHIR load failed:', error);
+
+      // If called from background update and we have cached data, just keep using cache
+      if (fromBackgroundUpdate && state.data && state.data.length > 0) {
+        console.log('Background FHIR update failed, keeping cached data');
+        return;
+      }
+
       setStatus('FHIR failed, trying CSV...', 'loading');
       showToast('FHIR server unavailable, falling back to CSV', 'error');
 
@@ -1858,6 +1964,10 @@
    */
   async function tryCSVLoadWithCache() {
     setStatus('Loading CSV...', 'loading');
+
+    // Check if we already have cached data - if so, keep it and don't show error
+    const cached = await loadCachedData();
+    const hasCache = cached.data && cached.data.length > 0;
 
     // Fetch GitHub last commit date for the CSV file
     let githubDate = null;
@@ -1883,6 +1993,16 @@
         });
       }
     } catch (error) {
+      console.error('CSV load failed:', error);
+
+      // If we have cached data, keep using it silently
+      if (hasCache) {
+        console.log('CSV load failed but cache exists, keeping cached data');
+        setStatus(`${cached.data.length.toLocaleString()} records | Cache (offline)`, 'loaded');
+        return;
+      }
+
+      // No cache - show error
       setStatus('Load failed', 'error');
       showUploadUI();
     }

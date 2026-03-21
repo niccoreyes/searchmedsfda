@@ -1435,6 +1435,89 @@ p {
   color: var(--blue-600);
 }
 
+/* Update Toast - PWA refresh notification */
+.toast-update {
+  background: var(--primary-700);
+  border-color: var(--primary-600);
+  color: white;
+  padding: var(--space-3) var(--space-4);
+}
+
+.toast-update .toast-content {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex: 1;
+}
+
+.toast-update .toast-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.toast-update .toast-message {
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.toast-update .toast-action {
+  background: white;
+  color: var(--primary-700);
+  border: none;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  margin-left: var(--space-2);
+}
+
+.toast-update .toast-action:hover {
+  background: var(--primary-50);
+  transform: translateY(-1px);
+}
+
+.toast-update .toast-close {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  padding: var(--space-1);
+  margin-left: var(--space-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+}
+
+.toast-update .toast-close:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.toast-update .toast-close svg {
+  width: 18px;
+  height: 18px;
+}
+
+.toast-hiding {
+  animation: slideUp 0.3s ease forwards;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+}
+
 @keyframes slideDown {
   from {
     opacity: 0;
