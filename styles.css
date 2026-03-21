@@ -1268,6 +1268,7 @@ p {
   box-shadow: var(--shadow-lg);
 }
 
+
 .rx-actions-bar .btn {
   flex: 1;
   min-width: 120px;
@@ -1948,6 +1949,12 @@ p {
 @media (min-width: 900px) {
   .app-main {
     padding: var(--space-8);
+  }
+
+  .rx-actions-bar {
+    display: flex;
+    width: fit-content;
+    margin: 0 auto;
   }
 
   .form-grid {
