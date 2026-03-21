@@ -1071,3 +1071,5 @@ Received SIGINT. Saving state and exiting gracefully...
 [2026-03-21T15:12:28.099Z] Querying: AS (attempt 1)
 [2026-03-21T15:12:56.338Z] Query AS: Found 13696 CDRR records, 3372 new added
 [2026-03-21T15:12:57.840Z] Querying: AT (attempt 1)
+[2026-03-21T15:13:35.904Z] Query AT: Found 11101 CDRR records, 718 new added
+[2026-03-21T15:13:37.406Z] Querying: AU (attempt 1)
