@@ -1,0 +1,64 @@
+[2026-03-21T01:58:21.367Z] ============================================================
+[2026-03-21T01:58:21.369Z] FDA Philippines Drug Product Harvester Starting
+[2026-03-21T01:58:21.369Z] ============================================================
+[2026-03-21T01:58:21.369Z] Created new CSV file: fda_harvested_products.csv
+[2026-03-21T01:58:21.370Z] State saved: 0 processed, 26 pending
+[2026-03-21T01:58:21.370Z] Querying: A (attempt 1)
+[2026-03-21T01:59:01.642Z] Error for query A: HTTP 500
+[2026-03-21T01:59:01.643Z] State saved: 0 processed, 26 pending
+[2026-03-21T01:59:03.146Z] Querying: B (attempt 1)
+[2026-03-21T01:59:47.986Z] Query B: Found 12915 CDRR records, 12915 new added
+[2026-03-21T01:59:49.494Z] Querying: C (attempt 1)
+[2026-03-21T02:00:40.869Z] Error for query C: HTTP 500
+[2026-03-21T02:00:42.372Z] Querying: D (attempt 1)
+[2026-03-21T02:01:32.857Z] Error for query D: HTTP 500
+[2026-03-21T02:01:34.360Z] Querying: E (attempt 1)
+[2026-03-21T02:02:14.942Z] Error for query E: HTTP 500
+[2026-03-21T02:02:16.444Z] Querying: F (attempt 1)
+[2026-03-21T02:03:03.910Z] Query F: Found 10794 CDRR records, 6960 new added
+[2026-03-21T02:03:05.412Z] Querying: G (attempt 1)
+[2026-03-21T02:04:00.924Z] Query G: Found 6534 CDRR records, 2603 new added
+[2026-03-21T02:04:02.428Z] Querying: H (attempt 1)
+[2026-03-21T02:05:10.167Z] Query H: Found 14885 CDRR records, 5455 new added
+[2026-03-21T02:05:11.670Z] Querying: I (attempt 1)
+[2026-03-21T02:05:54.343Z] Error for query I: HTTP 500
+[2026-03-21T02:05:55.845Z] Querying: J (attempt 1)
+[2026-03-21T02:06:24.519Z] Query J: Found 490 CDRR records, 78 new added
+[2026-03-21T02:06:26.021Z] Querying: K (attempt 1)
+[2026-03-21T02:07:00.709Z] Query K: Found 2368 CDRR records, 453 new added
+[2026-03-21T02:07:02.212Z] Querying: L (attempt 1)
+[2026-03-21T02:07:36.116Z] Error for query L: HTTP 500
+[2026-03-21T02:07:37.618Z] Querying: M (attempt 1)
+[2026-03-21T02:08:12.523Z] Error for query M: HTTP 500
+[2026-03-21T02:08:14.026Z] Querying: N (attempt 1)
+[2026-03-21T02:08:58.623Z] Error for query N: HTTP 500
+[2026-03-21T02:09:00.125Z] Querying: O (attempt 1)
+[2026-03-21T02:09:43.609Z] Error for query O: HTTP 500
+[2026-03-21T02:09:45.111Z] Querying: P (attempt 1)
+[2026-03-21T02:10:22.430Z] Error for query P: HTTP 500
+[2026-03-21T02:10:23.932Z] Querying: Q (attempt 1)
+[2026-03-21T02:10:46.324Z] Query Q: Found 795 CDRR records, 75 new added
+[2026-03-21T02:10:47.826Z] Querying: R (attempt 1)
+[2026-03-21T02:11:38.147Z] Error for query R: HTTP 500
+[2026-03-21T02:11:39.649Z] Querying: S (attempt 1)
+[2026-03-21T02:12:24.500Z] Error for query S: HTTP 500
+[2026-03-21T02:12:26.003Z] Querying: T (attempt 1)
+[2026-03-21T02:13:13.183Z] Error for query T: HTTP 500
+[2026-03-21T02:13:14.685Z] Querying: U (attempt 1)
+[2026-03-21T02:14:16.779Z] Query U: Found 16059 CDRR records, 2027 new added
+[2026-03-21T02:14:18.281Z] Querying: V (attempt 1)
+[2026-03-21T02:15:01.625Z] Query V: Found 9938 CDRR records, 1181 new added
+[2026-03-21T02:15:03.126Z] Querying: W (attempt 1)
+[2026-03-21T02:15:38.725Z] Query W: Found 960 CDRR records, 44 new added
+[2026-03-21T02:15:40.230Z] Querying: X (attempt 1)
+[2026-03-21T02:16:11.699Z] Query X: Found 15739 CDRR records, 1073 new added
+[2026-03-21T02:16:13.201Z] Querying: Y (attempt 1)
+[2026-03-21T02:17:11.680Z] Query Y: Found 17426 CDRR records, 121 new added
+[2026-03-21T02:17:13.183Z] Querying: Z (attempt 1)
+[2026-03-21T02:17:41.309Z] Query Z: Found 7999 CDRR records, 478 new added
+[2026-03-21T02:17:42.810Z] Querying: A (attempt 1)
+[2026-03-21T02:18:37.147Z] Error for query A: HTTP 500
+[2026-03-21T02:18:38.650Z] Querying: C (attempt 1)
+[2026-03-21T02:19:23.995Z] 
+Received SIGINT. Saving state and exiting gracefully...
+[2026-03-21T02:19:24.010Z] State saved: 33463 processed, 12 pending
