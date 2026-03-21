@@ -583,7 +583,7 @@
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
       const text = await response.text();
-      const data = parseAndLoadCSV(text, null, githubDate);
+      const data = parseAndLoadCSV(text, null, githubDate, false);
 
       // Save to cache
       if (data && data.length > 0) {
@@ -660,7 +660,7 @@
    * @param {string|null} filename - Name of the file (if loaded from file input)
    * @param {string|null} githubDate - ISO date string from GitHub API (if available)
    */
-  function parseAndLoadCSV(text, _filename = null, githubDate = null) {
+  function parseAndLoadCSV(text, _filename = null, githubDate = null, _fromBackgroundUpdate = false) {
     const rows = CSVToArray(text);
 
     if (!rows.length) {
@@ -1877,9 +1877,14 @@
     // Fallback to CSV check (only if FHIR not available)
     try {
       const githubDate = await fetchGitHubCSVLastUpdated();
+      // If we can't get the GitHub date (offline), don't show "new data available"
+      if (!githubDate) {
+        console.log('Could not check CSV update date (likely offline), keeping cached data');
+        return;
+      }
       if (isCacheStale(cachedMeta, githubDate, 'csv')) {
-        showToast('New CSV data available, updating...', 'info', 5000);
-        await tryCSVLoadWithCache();
+        // Don't show toast until we successfully fetch the data
+        await tryCSVLoadWithCache(true); // true = from background update
       } else {
         console.log('Cache is up to date with CSV');
       }
@@ -1961,8 +1966,9 @@
 
   /**
    * Load from CSV and cache the result
+   * @param {boolean} fromBackgroundUpdate - If true, show toast only on success
    */
-  async function tryCSVLoadWithCache() {
+  async function tryCSVLoadWithCache(fromBackgroundUpdate = false) {
     setStatus('Loading CSV...', 'loading');
 
     // Check if we already have cached data - if so, keep it and don't show error
@@ -1982,7 +1988,7 @@
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
       const text = await response.text();
-      const data = parseAndLoadCSV(text, null, githubDate);
+      const data = parseAndLoadCSV(text, null, githubDate, fromBackgroundUpdate);
 
       if (data && data.length > 0) {
         // Save to cache with version metadata (using GitHub commit date as version)
@@ -1991,6 +1997,11 @@
           versionId: githubDate || new Date().toISOString(),
           lastUpdated: githubDate || new Date().toISOString()
         });
+
+        // Only show toast for background updates after successful fetch
+        if (fromBackgroundUpdate) {
+          showToast(`Updated to ${data.length.toLocaleString()} drugs from CSV`, 'success');
+        }
       }
     } catch (error) {
       console.error('CSV load failed:', error);
