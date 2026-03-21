@@ -1577,6 +1577,128 @@ p {
   display: none;
 }
 
+/* Image capture mode - styles for html-to-image capture */
+.rx-print.capture-mode {
+  display: block !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  padding: 40px;
+  max-width: 800px;
+  width: 800px;
+  margin: 0;
+  font-size: 12pt;
+  line-height: 1.5;
+  color: #000;
+  background: white;
+  z-index: -9999;
+  visibility: visible;
+  opacity: 1;
+}
+
+.rx-print.capture-mode .print-header {
+  text-align: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #000;
+}
+
+.rx-print.capture-mode .print-header h2 {
+  font-size: 18pt;
+  margin-bottom: 4px;
+}
+
+.rx-print.capture-mode .print-patient {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  padding: 12px 0;
+  border-bottom: 1px solid #ccc;
+}
+
+.rx-print.capture-mode .print-col {
+  flex: 1;
+}
+
+.rx-print.capture-mode .print-col.right {
+  text-align: right;
+}
+
+.rx-print.capture-mode .rx-label {
+  font-weight: bold;
+  font-size: 14pt;
+  margin-bottom: 12px;
+}
+
+.rx-print.capture-mode ol {
+  margin: 0 0 24px 24px;
+  padding: 0;
+}
+
+.rx-print.capture-mode li {
+  margin-bottom: 8px;
+  padding-left: 8px;
+  line-height: 1;
+}
+
+.rx-print.capture-mode .rx-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.rx-print.capture-mode .qty-right {
+  margin-left: 16px;
+}
+
+.rx-print.capture-mode .rx-sig {
+  margin-top: 5px;
+}
+
+.rx-print.capture-mode .rx-line + .rx-sig {
+  margin-top: 5px;
+  line-height: 1;
+}
+
+.rx-print.capture-mode .print-notes {
+  margin-top: 24px;
+  padding-top: 12px;
+  border-top: 1px solid #ccc;
+  font-style: italic;
+}
+
+.rx-print.capture-mode .print-signature {
+  margin-top: 60px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.rx-print.capture-mode .signature-line {
+  text-align: center;
+  min-width: 250px;
+}
+
+.rx-print.capture-mode .signature-line p:first-child {
+  border-top: 1px solid #000;
+  padding-top: 8px;
+  margin-bottom: 4px;
+}
+
+.rx-print.capture-mode .signature-label {
+  font-size: 9pt;
+  color: #666;
+}
+
+.rx-print.capture-mode .signature-licenses {
+  font-size: 9pt;
+  margin: 4px 0;
+  color: #333;
+}
+
+.rx-print.capture-mode .signature-licenses div {
+  margin: 2px 0;
+}
+
 @media print {
   body {
     background: white;

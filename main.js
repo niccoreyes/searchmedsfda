@@ -1822,26 +1822,30 @@
     showToast('Generating image...', 'info');
 
     try {
-      // Temporarily show the print element for capture
-      const originalDisplay = printEl.style.display;
-      printEl.style.display = 'block';
-      printEl.style.position = 'absolute';
-      printEl.style.left = '-9999px';
+      // Add capture-mode class to show element with proper styles
+      printEl.classList.add('capture-mode');
+
+      // Wait for next frame to ensure element is rendered
+      await new Promise(resolve => requestAnimationFrame(resolve));
+      // Wait another frame to be sure styles are applied
+      await new Promise(resolve => requestAnimationFrame(resolve));
 
       // Wait for fonts to render
       await document.fonts.ready;
+
+      // Small delay to ensure everything is painted
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       // Generate PNG
       const dataUrl = await window.htmlToImage.toPng(printEl, {
         quality: 1.0,
         pixelRatio: 2,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        skipFonts: false
       });
 
-      // Restore original display
-      printEl.style.display = originalDisplay;
-      printEl.style.position = '';
-      printEl.style.left = '';
+      // Remove capture-mode class
+      printEl.classList.remove('capture-mode');
 
       // Create download link
       const link = document.createElement('a');
@@ -1854,9 +1858,7 @@
       showToast('Image saved!', 'success');
     } catch (err) {
       console.error('Failed to generate image:', err);
-      printEl.style.display = '';
-      printEl.style.position = '';
-      printEl.style.left = '';
+      printEl.classList.remove('capture-mode');
       showToast('Failed to generate image. Please try again.', 'error');
     }
   }
