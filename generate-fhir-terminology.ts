@@ -95,6 +95,17 @@ interface DrugProduct {
   expiryDate: string;
 }
 
+interface ConceptDefinition {
+  code: string;
+  display: string;
+  definition?: string;
+  property?: Array<{
+    code: string;
+    valueString: string;
+  }>;
+  concept?: ConceptDefinition[];
+}
+
 interface FHIRCodeSystem {
   resourceType: "CodeSystem";
   id: string;
@@ -109,20 +120,14 @@ interface FHIRCodeSystem {
   description: string;
   caseSensitive: boolean;
   content: "complete" | "fragment" | "not-present" | "supplement";
+  hierarchyMeaning?: "is-a" | "part-of" | "grouped-by" | "subsumed-by";
   count: number;
   property: Array<{
     code: string;
     type: string;
     description: string;
   }>;
-  concept: Array<{
-    code: string;
-    display: string;
-    property: Array<{
-      code: string;
-      valueString: string;
-    }>;
-  }>;
+  concept: ConceptDefinition[];
 }
 
 interface CodeSystemResult {
@@ -307,6 +312,14 @@ function generateCodeSystem(products: DrugProduct[]): CodeSystemResult {
 
   const totalDuplicates = duplicates.reduce((sum, d) => sum + (d.count - 1), 0);
 
+  // Create root parent concept with all drugs nested underneath
+  const rootConcept: ConceptDefinition = {
+    code: "PH-FDA-DRUGS",
+    display: "Philippine FDA Registered Drug Products",
+    definition: "Root concept for all FDA Certificate of Product Registration (CPR) registered medications in the Philippines",
+    concept: concepts,
+  };
+
   return {
     codeSystem: {
       resourceType: "CodeSystem",
@@ -322,9 +335,10 @@ function generateCodeSystem(products: DrugProduct[]): CodeSystemResult {
       description: "Registered drug products from the Philippine Food and Drug Administration (FDA)",
       caseSensitive: false,
       content: "complete",
-      count: concepts.length,
+      hierarchyMeaning: "is-a",
+      count: concepts.length + 1, // +1 for root concept
       property: PROPERTY_DEFINITIONS,
-      concept: concepts,
+      concept: [rootConcept],
     },
     duplicates,
     totalDuplicates,

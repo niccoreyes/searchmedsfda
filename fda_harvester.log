@@ -232,3 +232,74 @@ Received SIGINT. Saving state and exiting gracefully...
 [2026-03-21T03:09:15.189Z] Query CT: Found 1845 CDRR records, 0 new added
 [2026-03-21T03:09:15.192Z] State saved: 34010 processed, 17 pending
 [2026-03-21T03:09:16.694Z] Querying: CU (attempt 1)
+[2026-03-21T03:09:33.600Z] Query CU: Found 401 CDRR records, 0 new added
+[2026-03-21T03:09:33.603Z] State saved: 34010 processed, 16 pending
+[2026-03-21T03:09:35.104Z] Querying: CV (attempt 1)
+[2026-03-21T03:09:46.118Z] Query CV: Found 76 CDRR records, 0 new added
+[2026-03-21T03:09:46.123Z] State saved: 34010 processed, 15 pending
+[2026-03-21T03:09:47.624Z] Querying: CW (attempt 1)
+[2026-03-21T03:09:57.183Z] State saved: 34010 processed, 14 pending
+[2026-03-21T03:09:58.685Z] Querying: CX (attempt 1)
+[2026-03-21T03:10:08.703Z] Query CX: Found 17 CDRR records, 0 new added
+[2026-03-21T03:10:08.706Z] State saved: 34010 processed, 13 pending
+[2026-03-21T03:10:10.208Z] Querying: CY (attempt 1)
+[2026-03-21T03:10:36.869Z] Query CY: Found 1186 CDRR records, 0 new added
+[2026-03-21T03:10:36.872Z] State saved: 34010 processed, 12 pending
+[2026-03-21T03:10:38.374Z] Querying: CZ (attempt 1)
+[2026-03-21T03:10:47.792Z] Query CZ: Found 30 CDRR records, 0 new added
+[2026-03-21T03:10:47.798Z] State saved: 34010 processed, 11 pending
+[2026-03-21T03:10:49.300Z] Querying: D (attempt 1)
+[2026-03-21T03:11:35.690Z] Error for query D: HTTP 500
+[2026-03-21T03:11:35.692Z] Drilling down on error: D -> [DZ, DY, DX, DW, DV, DU, DT, DS, DR, DQ, DP, DO, DN, DM, DL, DK, DJ, DI, DH, DG, DF, DE, DD, DC, DB, DA]
+[2026-03-21T03:11:35.697Z] State saved: 34010 processed, 36 pending
+[2026-03-21T03:11:37.199Z] Querying: DA (attempt 1)
+[2026-03-21T03:12:00.752Z] Query DA: Found 1291 CDRR records, 0 new added
+[2026-03-21T03:12:00.753Z] State saved: 34010 processed, 35 pending
+[2026-03-21T03:12:02.255Z] Querying: DB (attempt 1)
+[2026-03-21T03:12:12.295Z] Query DB: Found 15 CDRR records, 0 new added
+[2026-03-21T03:12:12.300Z] State saved: 34010 processed, 34 pending
+[2026-03-21T03:12:13.802Z] Querying: DC (attempt 1)
+[2026-03-21T03:12:24.116Z] Query DC: Found 65 CDRR records, 0 new added
+[2026-03-21T03:12:24.120Z] State saved: 34010 processed, 33 pending
+[2026-03-21T03:12:25.621Z] Querying: DD (attempt 1)
+[2026-03-21T03:12:37.814Z] Query DD: Found 27 CDRR records, 0 new added
+[2026-03-21T03:12:37.817Z] State saved: 34010 processed, 32 pending
+[2026-03-21T03:12:39.319Z] Querying: DE (attempt 1)
+[2026-03-21T03:13:11.023Z] Query DE: Found 9286 CDRR records, 4 new added
+[2026-03-21T03:13:12.524Z] Querying: DF (attempt 1)
+[2026-03-21T03:13:25.274Z] Query DF: Found 16 CDRR records, 0 new added
+[2026-03-21T03:13:26.776Z] Querying: DG (attempt 1)
+[2026-03-21T03:13:37.200Z] Query DG: Found 25 CDRR records, 0 new added
+[2026-03-21T03:13:38.701Z] Querying: DH (attempt 1)
+[2026-03-21T03:13:48.953Z] Query DH: Found 35 CDRR records, 0 new added
+[2026-03-21T03:13:50.457Z] Querying: DI (attempt 1)
+[2026-03-21T03:14:25.179Z] Query DI: Found 8334 CDRR records, 4 new added
+[2026-03-21T03:14:26.681Z] Querying: DJ (attempt 1)
+[2026-03-21T03:14:36.645Z] Query DJ: Found 10 CDRR records, 0 new added
+[2026-03-21T03:14:38.147Z] Querying: DK (attempt 1)
+[2026-03-21T03:14:48.572Z] Query DK: Found 1 CDRR records, 0 new added
+[2026-03-21T03:14:50.074Z] Querying: DL (attempt 1)
+[2026-03-21T03:15:04.846Z] Query DL: Found 78 CDRR records, 0 new added
+[2026-03-21T03:15:06.348Z] Querying: DM (attempt 1)
+[2026-03-21T03:15:22.754Z] Query DM: Found 43 CDRR records, 2 new added
+[2026-03-21T03:15:22.756Z] State saved: 34020 processed, 23 pending
+[2026-03-21T03:15:24.258Z] Querying: DN (attempt 1)
+[2026-03-21T03:15:35.697Z] Query DN: Found 293 CDRR records, 11 new added
+[2026-03-21T03:15:37.199Z] Querying: DO (attempt 1)
+[2026-03-21T03:15:57.920Z] Query DO: Found 2510 CDRR records, 27 new added
+[2026-03-21T03:15:59.422Z] Querying: DP (attempt 1)
+[2026-03-21T03:16:09.683Z] Query DP: Found 37 CDRR records, 0 new added
+[2026-03-21T03:16:11.185Z] Querying: DQ (attempt 1)
+[2026-03-21T03:16:23.920Z] Querying: DR (attempt 1)
+[2026-03-21T03:17:18.641Z] Query DR: Found 30848 CDRR records, 29 new added
+[2026-03-21T03:17:20.144Z] Querying: DS (attempt 1)
+[2026-03-21T03:17:53.155Z] Query DS: Found 551 CDRR records, 0 new added
+[2026-03-21T03:17:54.656Z] Querying: DT (attempt 1)
+[2026-03-21T03:18:07.446Z] Query DT: Found 54 CDRR records, 0 new added
+[2026-03-21T03:18:08.949Z] Querying: DU (attempt 1)
+[2026-03-21T03:18:31.099Z] Query DU: Found 352 CDRR records, 0 new added
+[2026-03-21T03:18:32.601Z] Querying: DV (attempt 1)
+[2026-03-21T03:18:49.823Z] Query DV: Found 118 CDRR records, 0 new added
+[2026-03-21T03:18:51.325Z] Querying: DW (attempt 1)
+[2026-03-21T03:19:07.454Z] Query DW: Found 5 CDRR records, 0 new added
+[2026-03-21T03:19:08.956Z] Querying: DX (attempt 1)

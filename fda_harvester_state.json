@@ -1,39 +1,69 @@
 {
   "queryQueue": [
     {
-      "query": "CU",
+      "query": "DN",
       "depth": 2,
-      "parentQuery": "C"
+      "parentQuery": "D"
     },
     {
-      "query": "CV",
+      "query": "DO",
       "depth": 2,
-      "parentQuery": "C"
+      "parentQuery": "D"
     },
     {
-      "query": "CW",
+      "query": "DP",
       "depth": 2,
-      "parentQuery": "C"
+      "parentQuery": "D"
     },
     {
-      "query": "CX",
+      "query": "DQ",
       "depth": 2,
-      "parentQuery": "C"
+      "parentQuery": "D"
     },
     {
-      "query": "CY",
+      "query": "DR",
       "depth": 2,
-      "parentQuery": "C"
+      "parentQuery": "D"
     },
     {
-      "query": "CZ",
+      "query": "DS",
       "depth": 2,
-      "parentQuery": "C"
+      "parentQuery": "D"
     },
     {
-      "query": "D",
-      "depth": 1,
-      "parentQuery": null
+      "query": "DT",
+      "depth": 2,
+      "parentQuery": "D"
+    },
+    {
+      "query": "DU",
+      "depth": 2,
+      "parentQuery": "D"
+    },
+    {
+      "query": "DV",
+      "depth": 2,
+      "parentQuery": "D"
+    },
+    {
+      "query": "DW",
+      "depth": 2,
+      "parentQuery": "D"
+    },
+    {
+      "query": "DX",
+      "depth": 2,
+      "parentQuery": "D"
+    },
+    {
+      "query": "DY",
+      "depth": 2,
+      "parentQuery": "D"
+    },
+    {
+      "query": "DZ",
+      "depth": 2,
+      "parentQuery": "D"
     },
     {
       "query": "E",
@@ -170,7 +200,27 @@
     "CQ",
     "CR",
     "CS",
-    "CT"
+    "CT",
+    "CU",
+    "CV",
+    "CW",
+    "CX",
+    "CY",
+    "CZ",
+    "D",
+    "DA",
+    "DB",
+    "DC",
+    "DD",
+    "DE",
+    "DF",
+    "DG",
+    "DH",
+    "DI",
+    "DJ",
+    "DK",
+    "DL",
+    "DM"
   ],
   "failedQueries": [],
   "registrationNumbers": [
@@ -34183,10 +34233,20 @@
     "DRP-1063-13",
     "DRP-3494-07",
     "DRP-9898",
-    "DRP-11927-03"
+    "DRP-11927-03",
+    "DRP-4915",
+    "DRP-7971",
+    "DRP-8724",
+    "DRP-13185-01",
+    "DRP-5587-01",
+    "DRP-9784",
+    "DRP-8848-01",
+    "DRP-12208-01",
+    "DRP-16093",
+    "DRP-16094"
   ],
-  "totalProcessed": 34010,
+  "totalProcessed": 34020,
   "startTime": "2026-03-21T01:58:21.369Z",
-  "lastSaved": "2026-03-21T03:09:15.191Z",
+  "lastSaved": "2026-03-21T03:15:22.755Z",
   "interruptedAt": "2026-03-21T02:53:14.058Z"
 }

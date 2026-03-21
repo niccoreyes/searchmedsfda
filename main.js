@@ -284,8 +284,15 @@
       console.log(`FHIR CodeSystem total concepts: ${total}`);
 
       // Extract concepts and metadata from CodeSystem
-      const concepts = codeSystem.concept || [];
+      // Handle hierarchical CodeSystem with nested concepts (root -> children)
+      let concepts = codeSystem.concept || [];
       const meta = codeSystem.meta || null;
+
+      // Flatten hierarchy: if there's a root concept with nested children, extract them
+      if (concepts.length === 1 && concepts[0].concept && Array.isArray(concepts[0].concept)) {
+        console.log(`Found hierarchical CodeSystem with root concept: ${concepts[0].code}`);
+        concepts = concepts[0].concept;
+      }
 
       console.log(`Total FHIR concepts loaded: ${concepts.length}`);
       return { concepts, meta };
