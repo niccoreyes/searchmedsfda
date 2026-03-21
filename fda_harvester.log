@@ -593,3 +593,29 @@ Received SIGINT. Saving state and exiting gracefully...
 [2026-03-21T04:07:48.048Z] Querying: NE (attempt 1)
 [2026-03-21T04:08:29.234Z] Query NE: Found 13524 CDRR records, 0 new added
 [2026-03-21T04:08:30.736Z] Querying: NF (attempt 1)
+[2026-03-21T04:08:51.051Z] Query NF: Found 291 CDRR records, 0 new added
+[2026-03-21T04:08:52.554Z] Querying: NG (attempt 1)
+[2026-03-21T04:09:24.171Z] Query NG: Found 569 CDRR records, 0 new added
+[2026-03-21T04:09:25.674Z] Querying: NH (attempt 1)
+[2026-03-21T04:09:35.663Z] Query NH: Found 109 CDRR records, 0 new added
+[2026-03-21T04:09:37.166Z] Querying: NI (attempt 1)
+[2026-03-21T04:09:59.204Z] Query NI: Found 2717 CDRR records, 0 new added
+[2026-03-21T04:10:00.706Z] Querying: NJ (attempt 1)
+[2026-03-21T04:10:11.874Z] Query NJ: Found 124 CDRR records, 0 new added
+[2026-03-21T04:10:13.375Z] Querying: NK (attempt 1)
+[2026-03-21T04:10:26.219Z] Query NK: Found 91 CDRR records, 0 new added
+[2026-03-21T04:10:27.722Z] Querying: NL (attempt 1)
+[2026-03-21T04:10:44.169Z] Query NL: Found 138 CDRR records, 0 new added
+[2026-03-21T04:10:45.671Z] Querying: NM (attempt 1)
+[2026-03-21T04:11:02.694Z] Query NM: Found 160 CDRR records, 0 new added
+[2026-03-21T04:11:04.197Z] Querying: NN (attempt 1)
+[2026-03-21T04:11:27.310Z] Query NN: Found 141 CDRR records, 0 new added
+[2026-03-21T04:11:28.813Z] Querying: NO (attempt 1)
+[2026-03-21T04:11:53.654Z] Query NO: Found 6605 CDRR records, 0 new added
+[2026-03-21T04:11:55.156Z] Querying: NP (attempt 1)
+[2026-03-21T04:12:08.260Z] Query NP: Found 66 CDRR records, 0 new added
+[2026-03-21T04:12:09.763Z] Querying: NQ (attempt 1)
+[2026-03-21T04:12:25.212Z] Query NQ: Found 6 CDRR records, 0 new added
+[2026-03-21T04:12:26.713Z] Querying: NR (attempt 1)
+[2026-03-21T04:12:40.784Z] Query NR: Found 74 CDRR records, 0 new added
+[2026-03-21T04:12:42.286Z] Querying: NS (attempt 1)

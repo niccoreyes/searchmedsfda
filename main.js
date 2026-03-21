@@ -192,7 +192,6 @@
 
   async function tryFHIRLoad() {
     setStatus('Loading from FHIR...', 'loading');
-    showToast('Connecting to FHIR terminology server...', 'info');
 
     try {
       const { concepts: allConcepts, meta } = await fetchAllValueSetConcepts();
