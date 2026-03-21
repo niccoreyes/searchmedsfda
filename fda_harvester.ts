@@ -546,11 +546,11 @@ async function runHarvester(resume = false) {
       const existingFail = state.failedQueries.get(item.query);
       const retries = (existingFail?.retries || 0) + 1;
 
-      if (result.shouldDrillDown && retries >= CONFIG.MAX_RETRIES && item.depth < 5) {
-        // Drill down instead of retrying
+      if (result.shouldDrillDown && item.depth < 5) {
+        // Drill down immediately on server errors (500, timeout, etc.)
         const subQueries = generateSubQueries(item.query);
         for (const sq of subQueries.reverse()) {
-          if (!state.completedQueries.has(sq)) {
+          if (!state.completedQueries.has(sq) && !state.queryQueue.some(q => q.query === sq)) {
             state.queryQueue.unshift({
               query: sq,
               depth: item.depth + 1,
@@ -558,10 +558,11 @@ async function runHarvester(resume = false) {
             });
           }
         }
-        log(`Drilling down after failures: ${item.query} -> [${subQueries.join(", ")}]`);
+        log(`Drilling down on error: ${item.query} -> [${subQueries.join(", ")}]`);
         state.completedQueries.add(item.query); // Mark as processed to avoid retry
-      } else {
-        // Retry later
+        state.failedQueries.delete(item.query); // Remove from failed if it was there
+      } else if (retries < CONFIG.MAX_RETRIES) {
+        // Retry later for non-drillable failures
         state.failedQueries.set(item.query, {
           error: "Failed to process",
           timestamp: Date.now(),

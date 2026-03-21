@@ -1,66 +1,5 @@
 {
-  "queryQueue": [
-    {
-      "query": "D",
-      "depth": 1,
-      "parentQuery": null
-    },
-    {
-      "query": "E",
-      "depth": 1,
-      "parentQuery": null
-    },
-    {
-      "query": "I",
-      "depth": 1,
-      "parentQuery": null
-    },
-    {
-      "query": "L",
-      "depth": 1,
-      "parentQuery": null
-    },
-    {
-      "query": "M",
-      "depth": 1,
-      "parentQuery": null
-    },
-    {
-      "query": "N",
-      "depth": 1,
-      "parentQuery": null
-    },
-    {
-      "query": "O",
-      "depth": 1,
-      "parentQuery": null
-    },
-    {
-      "query": "P",
-      "depth": 1,
-      "parentQuery": null
-    },
-    {
-      "query": "R",
-      "depth": 1,
-      "parentQuery": null
-    },
-    {
-      "query": "S",
-      "depth": 1,
-      "parentQuery": null
-    },
-    {
-      "query": "T",
-      "depth": 1,
-      "parentQuery": null
-    },
-    {
-      "query": "A",
-      "depth": 1,
-      "parentQuery": null
-    }
-  ],
+  "queryQueue": [],
   "completedQueries": [
     "B",
     "F",
@@ -74,114 +13,21 @@
     "W",
     "X",
     "Y",
-    "Z"
+    "Z",
+    "D",
+    "E",
+    "I",
+    "L",
+    "M",
+    "N",
+    "O",
+    "P",
+    "R",
+    "S",
+    "T",
+    "A"
   ],
-  "failedQueries": [
-    [
-      "A",
-      {
-        "error": "Failed to process",
-        "timestamp": 1774059517148,
-        "retries": 2
-      }
-    ],
-    [
-      "C",
-      {
-        "error": "Failed to process",
-        "timestamp": 1774058440871,
-        "retries": 1
-      }
-    ],
-    [
-      "D",
-      {
-        "error": "Failed to process",
-        "timestamp": 1774058492859,
-        "retries": 1
-      }
-    ],
-    [
-      "E",
-      {
-        "error": "Failed to process",
-        "timestamp": 1774058534943,
-        "retries": 1
-      }
-    ],
-    [
-      "I",
-      {
-        "error": "Failed to process",
-        "timestamp": 1774058754344,
-        "retries": 1
-      }
-    ],
-    [
-      "L",
-      {
-        "error": "Failed to process",
-        "timestamp": 1774058856117,
-        "retries": 1
-      }
-    ],
-    [
-      "M",
-      {
-        "error": "Failed to process",
-        "timestamp": 1774058892524,
-        "retries": 1
-      }
-    ],
-    [
-      "N",
-      {
-        "error": "Failed to process",
-        "timestamp": 1774058938624,
-        "retries": 1
-      }
-    ],
-    [
-      "O",
-      {
-        "error": "Failed to process",
-        "timestamp": 1774058983610,
-        "retries": 1
-      }
-    ],
-    [
-      "P",
-      {
-        "error": "Failed to process",
-        "timestamp": 1774059022430,
-        "retries": 1
-      }
-    ],
-    [
-      "R",
-      {
-        "error": "Failed to process",
-        "timestamp": 1774059098148,
-        "retries": 1
-      }
-    ],
-    [
-      "S",
-      {
-        "error": "Failed to process",
-        "timestamp": 1774059144500,
-        "retries": 1
-      }
-    ],
-    [
-      "T",
-      {
-        "error": "Failed to process",
-        "timestamp": 1774059193184,
-        "retries": 1
-      }
-    ]
-  ],
+  "failedQueries": [],
   "registrationNumbers": [
     "BR-1004",
     "BR-1005",
@@ -33649,6 +33495,6 @@
   ],
   "totalProcessed": 33463,
   "startTime": "2026-03-21T01:58:21.369Z",
-  "lastSaved": "2026-03-21T02:19:23.999Z",
+  "lastSaved": "2026-03-21T02:30:11.267Z",
   "interruptedAt": "2026-03-21T02:19:23.995Z"
 }

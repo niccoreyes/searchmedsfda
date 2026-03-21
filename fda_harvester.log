@@ -62,3 +62,22 @@
 [2026-03-21T02:19:23.995Z] 
 Received SIGINT. Saving state and exiting gracefully...
 [2026-03-21T02:19:24.010Z] State saved: 33463 processed, 12 pending
+
+[2026-03-21T02:20:00.000Z] 
+[2026-03-21T02:20:00.001Z] ============================================================
+[2026-03-21T02:20:00.002Z] Resuming with drilled-down queries (2nd loop strategy)
+[2026-03-21T02:20:00.003Z] Marking failed single-letter queries as completed: A, C, D, E, I, L, M, N, O, P, R, S, T
+[2026-03-21T02:20:00.004Z] Starting sub-queries: AA-AZ, CA-CZ, DA-DZ, EA-EZ, IA-IZ, LA-LZ, MA-MZ, NA-NZ, OA-OZ, PA-PZ, RA-RZ, SA-SZ, TA-TZ
+[2026-03-21T02:20:00.005Z] Queue size: 312 queries
+[2026-03-21T02:20:00.006Z] ============================================================
+[2026-03-21T02:30:11.257Z] ============================================================
+[2026-03-21T02:30:11.258Z] FDA Philippines Drug Product Harvester Starting
+[2026-03-21T02:30:11.258Z] ============================================================
+[2026-03-21T02:30:11.261Z] Resumed from save point: 33463 records processed
+[2026-03-21T02:30:11.265Z] State saved: 33463 processed, 12 pending
+[2026-03-21T02:30:11.268Z] State saved: 33463 processed, 0 pending
+[2026-03-21T02:30:11.268Z] ============================================================
+[2026-03-21T02:30:11.268Z] Harvest complete! Total records: 33463
+[2026-03-21T02:30:11.268Z] CSV file: fda_harvested_products.csv
+[2026-03-21T02:30:11.268Z] State file: fda_harvester_state.json
+[2026-03-21T02:30:11.268Z] ============================================================
