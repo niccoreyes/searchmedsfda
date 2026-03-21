@@ -366,7 +366,7 @@
       console.log('Could not fetch GitHub date:', e);
     }
 
-    fetch('ALL_DrugProducts.csv')
+    fetch('Combined_All_CPR.csv')
       .then((r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.text();
@@ -387,7 +387,7 @@
   async function fetchGitHubCSVLastUpdated() {
     try {
       // GitHub API endpoint for commits affecting the CSV file
-      const url = 'https://api.github.com/repos/niccoreyes/searchmedsfda/commits?path=ALL_DrugProducts.csv&per_page=1';
+      const url = 'https://api.github.com/repos/niccoreyes/searchmedsfda/commits?path=Combined_All_CPR.csv&per_page=1';
 
       const response = await fetch(url, {
         headers: {

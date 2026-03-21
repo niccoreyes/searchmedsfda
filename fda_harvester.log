@@ -303,3 +303,36 @@ Received SIGINT. Saving state and exiting gracefully...
 [2026-03-21T03:18:51.325Z] Querying: DW (attempt 1)
 [2026-03-21T03:19:07.454Z] Query DW: Found 5 CDRR records, 0 new added
 [2026-03-21T03:19:08.956Z] Querying: DX (attempt 1)
+[2026-03-21T03:19:20.198Z] Query DX: Found 9 CDRR records, 0 new added
+[2026-03-21T03:19:21.700Z] Querying: DY (attempt 1)
+[2026-03-21T03:19:34.609Z] Query DY: Found 213 CDRR records, 0 new added
+[2026-03-21T03:19:36.111Z] Querying: DZ (attempt 1)
+[2026-03-21T03:19:45.826Z] Query DZ: Found 55 CDRR records, 0 new added
+[2026-03-21T03:19:47.327Z] Querying: E (attempt 1)
+[2026-03-21T03:20:29.366Z] Error for query E: HTTP 500
+[2026-03-21T03:20:29.367Z] Drilling down on error: E -> [EZ, EY, EX, EW, EV, EU, ET, ES, ER, EQ, EP, EO, EN, EM, EL, EK, EJ, EI, EH, EG, EF, EE, ED, EC, EB, EA]
+[2026-03-21T03:20:30.869Z] Querying: EA (attempt 1)
+[2026-03-21T03:20:56.714Z] Query EA: Found 1360 CDRR records, 0 new added
+[2026-03-21T03:20:58.217Z] Querying: EB (attempt 1)
+[2026-03-21T03:21:16.299Z] Query EB: Found 458 CDRR records, 0 new added
+[2026-03-21T03:21:17.801Z] Querying: EC (attempt 1)
+[2026-03-21T03:21:37.092Z] Query EC: Found 1934 CDRR records, 0 new added
+[2026-03-21T03:21:38.594Z] Querying: ED (attempt 1)
+[2026-03-21T03:22:06.667Z] Query ED: Found 3388 CDRR records, 0 new added
+[2026-03-21T03:22:08.168Z] Querying: EE (attempt 1)
+[2026-03-21T03:22:28.008Z] Query EE: Found 764 CDRR records, 0 new added
+[2026-03-21T03:22:29.511Z] Querying: EF (attempt 1)
+[2026-03-21T03:22:46.209Z] Query EF: Found 2711 CDRR records, 0 new added
+[2026-03-21T03:22:47.710Z] Querying: EG (attempt 1)
+[2026-03-21T03:23:05.892Z] Query EG: Found 627 CDRR records, 0 new added
+[2026-03-21T03:23:07.394Z] Querying: EH (attempt 1)
+[2026-03-21T03:23:20.067Z] Query EH: Found 84 CDRR records, 0 new added
+[2026-03-21T03:23:21.569Z] Querying: EI (attempt 1)
+[2026-03-21T03:23:39.880Z] Query EI: Found 620 CDRR records, 0 new added
+[2026-03-21T03:23:41.382Z] Querying: EJ (attempt 1)
+[2026-03-21T03:23:53.009Z] Query EJ: Found 28 CDRR records, 0 new added
+[2026-03-21T03:23:54.512Z] Querying: EK (attempt 1)
+[2026-03-21T03:24:05.729Z] Query EK: Found 126 CDRR records, 0 new added
+[2026-03-21T03:24:07.230Z] Querying: EL (attempt 1)
+[2026-03-21T03:24:32.515Z] Query EL: Found 3154 CDRR records, 0 new added
+[2026-03-21T03:24:34.017Z] Querying: EM (attempt 1)

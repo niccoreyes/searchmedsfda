@@ -330,7 +330,7 @@ The app connects to `tx.fhirlab.net/fhir` (powered by Ontoserver on FHIRLab) to 
 
 ### CSV File (Offline)
 
-Load the `ALL_DrugProducts.csv` file locally for complete offline operation. The CSV parser handles:
+Load the `Combined_All_CPR.csv` file locally for complete offline operation. The CSV parser handles:
 - Quoted fields with embedded commas
 - Header mapping
 - Automatic type conversion

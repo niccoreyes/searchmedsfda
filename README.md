@@ -138,8 +138,8 @@ searchmedsfda/
 ├── index.html              # Main application (single file)
 ├── main.js                 # All JavaScript logic (~1500 lines)
 ├── styles.css              # All styles (mobile-first, responsive)
-├── ALL_DrugProducts.csv    # Local drug database (CSV)
-│
+├── ALL_DrugProducts.csv    # Old Local drug database (CSV) Sept 2025
+├── Combined_All_CPR.csv    # Updated Local drug database (CSV)
 ├── ARCHITECTURE.md         # Detailed technical documentation
 ├── generate-fhir-          # FHIR terminology generator
 │   terminology.ts          # (Converts CSV → FHIR resources)
@@ -209,7 +209,7 @@ bun run cleanup-terminology.ts
 
 The `generate-fhir-terminology.ts` script converts the CSV drug database into standard FHIR R4 terminology resources:
 
-1. Reads `ALL_DrugProducts.csv`
+1. Reads `Combined_All_CPR.csv`
 2. Maps columns to FHIR CodeSystem properties
 3. Generates unique codes (Registration Numbers)
 4. Outputs:
