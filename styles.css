@@ -1379,6 +1379,29 @@ p {
   border-top: 1px solid var(--border);
 }
 
+.app-version {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+  padding: var(--space-3);
+  background: var(--surface);
+  border-radius: var(--radius);
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+}
+
+.app-version button {
+  font-size: var(--font-size-xs);
+  padding: var(--space-1) var(--space-2);
+}
+
+.update-status {
+  font-size: var(--font-size-xs);
+  color: var(--primary);
+}
+
 /* Bottom Navigation */
 .bottom-nav {
   position: fixed;

@@ -462,6 +462,11 @@
         <div class="about-footer">
           <p class="text-muted">Data source: FDA Philippines Drug Products Database</p>
           <p class="text-muted">Developed by Thomas Reyes</p>
+          <div class="app-version">
+            <span id="appVersion">Version: —</span>
+            <button id="checkUpdateBtn" class="btn btn-sm btn-ghost" onclick="manualUpdateCheck()">Check for Updates</button>
+            <span id="updateStatus" class="update-status"></span>
+          </div>
         </div>
       </div>
     </section>
@@ -553,157 +558,57 @@
   </script>
   <script src="main.js"></script>
 
-  <!-- Service Worker Registration and Update Toast -->
+  <!-- Service Worker Registration -->
   <script>
-    // Show update toast notification
-    function showUpdateToast() {
-      const container = document.getElementById('toastContainer');
-      if (!container) return;
-
-      // Check if update toast already exists
-      if (document.getElementById('updateToast')) return;
-
-      const toast = document.createElement('div');
-      toast.id = 'updateToast';
-      toast.className = 'toast toast-update';
-      toast.innerHTML = `
-        <div class="toast-content">
-          <svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
-          </svg>
-          <span class="toast-message">A new version is available</span>
-        </div>
-        <button class="toast-action" onclick="refreshForUpdate()">Refresh</button>
-        <button class="toast-close" onclick="dismissUpdateToast()" aria-label="Dismiss">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="18" y1="6" x2="6" y2="18"/>
-            <line x1="6" y1="6" x2="18" y2="18"/>
-          </svg>
-        </button>
-      `;
-
-      container.appendChild(toast);
-
-      // Auto-remove after 30 seconds if not interacted with
-      setTimeout(() => {
-        if (document.getElementById('updateToast')) {
-          dismissUpdateToast();
-        }
-      }, 30000);
-    }
-
-    // Refresh page to load updates
-    function refreshForUpdate() {
-      if (!swRegistration || !swRegistration.waiting) {
-        // No waiting worker, just reload
-        window.location.reload();
-        return;
-      }
-
-      // Tell the waiting service worker to skip waiting and activate
-      console.log('[PWA] Activating new service worker...');
-      swRegistration.waiting.postMessage('SKIP_WAITING');
-
-      // Wait for the new worker to activate, then reload
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        console.log('[PWA] New service worker activated, reloading...');
-        window.location.reload();
-      });
-
-      // Fallback: reload after 2 seconds if controllerchange doesn't fire
-      setTimeout(() => {
-        window.location.reload();
-      }, 2000);
-    }
-
-    // Dismiss the update toast
-    function dismissUpdateToast() {
-      const toast = document.getElementById('updateToast');
-      if (toast) {
-        toast.classList.add('toast-hiding');
-        setTimeout(() => toast.remove(), 300);
-      }
-      isUpdateAvailable = false;
-    }
-
-    // Track service worker state
-    let swRegistration = null;
-    let isUpdateAvailable = false;
-
-    // Check for service worker updates
-    function checkForUpdates() {
-      if (!swRegistration) return;
-
-      console.log('[PWA] Checking for updates...');
-      swRegistration.update().catch((err) => {
-        console.log('[PWA] Update check failed:', err);
-      });
-    }
-
-    // Handle new service worker waiting
-    function onUpdateFound(registration) {
-      const newWorker = registration.installing;
-      if (!newWorker) return;
-
-      console.log('[PWA] New service worker found:', newWorker.state);
-
-      newWorker.addEventListener('statechange', () => {
-        console.log('[PWA] Service worker state:', newWorker.state);
-
-        // If the new worker is installed and waiting, show update toast
-        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-          console.log('[PWA] New version ready to activate');
-          isUpdateAvailable = true;
-          showUpdateToast();
-        }
-      });
-    }
-
-    // Register service worker and listen for updates
+    // Register service worker
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
           .then((registration) => {
-            swRegistration = registration;
             console.log('[PWA] Service Worker registered:', registration.scope);
-
-            // Listen for new service workers
-            registration.addEventListener('updatefound', () => {
-              onUpdateFound(registration);
-            });
-
-            // Check if there's already a waiting worker
-            if (registration.waiting) {
-              console.log('[PWA] Service worker waiting');
-              isUpdateAvailable = true;
-              showUpdateToast();
-            }
-
-            // Check for updates periodically (every 5 minutes)
-            setInterval(checkForUpdates, 5 * 60 * 1000);
-
-            // Check for updates when page becomes visible
-            document.addEventListener('visibilitychange', () => {
-              if (document.visibilityState === 'visible') {
-                checkForUpdates();
-              }
-            });
           })
           .catch((error) => {
             console.error('[PWA] Service Worker registration failed:', error);
           });
-
-        // Listen for messages from service worker
-        navigator.serviceWorker.addEventListener('message', (event) => {
-          if (event.data && event.data.type === 'UPDATE_AVAILABLE') {
-            console.log('[PWA] Update available from SW:', event.data.message);
-            showUpdateToast();
-          }
-          if (event.data && event.data.type === 'SW_ACTIVATED') {
-            console.log('[PWA] Service worker activated version:', event.data.version);
-          }
-        });
       });
+    }
+
+    // Manual update check (called from About page)
+    async function manualUpdateCheck() {
+      const statusEl = document.getElementById('updateStatus');
+      const btn = document.getElementById('checkUpdateBtn');
+      if (!statusEl || !btn) return;
+
+      btn.disabled = true;
+      statusEl.textContent = 'Checking...';
+
+      try {
+        const registration = await navigator.serviceWorker.ready;
+        await registration.update();
+
+        // Check if there's a new service worker waiting
+        if (registration.waiting) {
+          statusEl.textContent = 'Update available! Reloading...';
+          registration.waiting.postMessage('SKIP_WAITING');
+          setTimeout(() => window.location.reload(), 1000);
+        } else if (registration.installing) {
+          statusEl.textContent = 'Installing update...';
+          registration.installing.addEventListener('statechange', (e) => {
+            if (e.target.state === 'activated') {
+              statusEl.textContent = 'Updated! Reloading...';
+              setTimeout(() => window.location.reload(), 500);
+            }
+          });
+        } else {
+          statusEl.textContent = 'App is up to date';
+          setTimeout(() => { statusEl.textContent = ''; }, 3000);
+        }
+      } catch (err) {
+        statusEl.textContent = 'Check failed';
+        setTimeout(() => { statusEl.textContent = ''; }, 3000);
+      } finally {
+        btn.disabled = false;
+      }
     }
   </script>
 </body>
