@@ -4,7 +4,7 @@
  */
 
 // Cache version - change this value to force cache update on new deployments
-const CACHE_VERSION = '1';
+const CACHE_VERSION = '2';
 const CACHE_NAME = `rx-builder-v${CACHE_VERSION}`;
 
 const STATIC_ASSETS = [
