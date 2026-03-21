@@ -762,6 +762,14 @@ p {
   gap: var(--space-3);
 }
 
+@media (min-width: 640px) {
+  .drug-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-4);
+  }
+}
+
 .drug-card {
   background: var(--surface);
   border: 1px solid var(--border);
