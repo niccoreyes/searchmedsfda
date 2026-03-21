@@ -1455,11 +1455,19 @@
     $('#pPtAddr').textContent = fields.ptAddr?.value || '';
     $('#pDate').textContent =
       fields.rxDate?.value || new Date().toISOString().slice(0, 10);
-    $('#pDoc').textContent = fields.docName?.value || '';
     $('#pDoc2').textContent = fields.docName?.value || '';
-    $('#pPRC').textContent = fields.prc?.value || '';
-    $('#pPTR').textContent = fields.ptr?.value || '';
-    $('#pS2').textContent = fields.s2?.value || '';
+
+    // Populate signature block licenses (stacked)
+    const prcVal = fields.prc?.value?.trim();
+    const ptrVal = fields.ptr?.value?.trim();
+    const s2Val = fields.s2?.value?.trim();
+    $('#pPRC2Wrap').textContent = prcVal ? `PRC: ${prcVal}` : '';
+    $('#pPTR2Wrap').textContent = ptrVal ? `PTR: ${ptrVal}` : '';
+    $('#pS22Wrap').textContent = s2Val ? `S2: ${s2Val}` : '';
+
+    // Show/hide signature label based on whether licenses are present
+    const hasAnyLicense = prcVal || ptrVal || s2Val;
+    $('#signatureLabel').style.display = hasAnyLicense ? 'none' : 'block';
 
     const ol = $('#pItems');
     ol.innerHTML = '';

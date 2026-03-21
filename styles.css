@@ -1510,15 +1510,6 @@ p {
     text-align: right;
   }
 
-  .print-licenses {
-    font-size: 9pt;
-    margin-top: 4px;
-  }
-
-  .print-licenses span {
-    margin-left: 12px;
-  }
-
   .rx-label {
     font-weight: bold;
     font-size: 14pt;
@@ -1562,6 +1553,16 @@ p {
   .signature-label {
     font-size: 9pt;
     color: #666;
+  }
+
+  .signature-licenses {
+    font-size: 9pt;
+    margin: 4px 0;
+    color: #333;
+  }
+
+  .signature-licenses div {
+    margin: 2px 0;
   }
 }
 

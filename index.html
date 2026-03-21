@@ -507,12 +507,6 @@
       </div>
       <div class="print-col right">
         <p><strong>Date:</strong> <span id="pDate"></span></p>
-        <p><strong>Physician:</strong> <span id="pDoc"></span></p>
-        <p class="print-licenses">
-          <span>PRC: <span id="pPRC"></span></span>
-          <span>PTR: <span id="pPTR"></span></span>
-          <span>S2: <span id="pS2"></span></span>
-        </p>
       </div>
     </div>
 
@@ -525,7 +519,12 @@
     <div class="print-signature">
       <div class="signature-line">
         <p id="pDoc2"></p>
-        <p class="signature-label">License No. / Signature</p>
+        <div class="signature-licenses">
+          <div id="pPRC2Wrap"></div>
+          <div id="pPTR2Wrap"></div>
+          <div id="pS22Wrap"></div>
+        </div>
+        <p class="signature-label" id="signatureLabel">Physician Name / License No.</p>
       </div>
     </div>
   </div>
