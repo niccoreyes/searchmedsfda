@@ -20,6 +20,7 @@ const CONFIG = {
   TIMEOUT_MS: 120000, // 120 second timeout for API requests (A-Z queries are large)
   MAX_RETRIES: 3,
   SAVE_INTERVAL: 10, // Save state every N successful requests
+  MAX_DRILL_DOWN_DEPTH: 4, // Maximum depth for drilling down (A -> AA -> AAA -> AAAA)
 };
 
 // ============================================================================
@@ -433,19 +434,16 @@ async function processQuery(
       return { success: true, shouldDrillDown: false, recordsFound: added };
     }
 
-    // No CDRR records found - check if we should drill down further
-    // If query is short and no results, drill down to find more specific matches
-    if (item.depth < 4 && item.query.length < 4) {
-      return { success: true, shouldDrillDown: true, recordsFound: 0 };
-    }
-
+    // No CDRR records found - DO NOT drill down if no records returned
+    // This prevents infinite loops on empty branches
     return { success: true, shouldDrillDown: false, recordsFound: 0 };
   }
 
   if (result.type === "parse_error") {
     log(`Parse error for query ${item.query}: ${result.error}`);
-    // Try to extract what we can or drill down
-    return { success: false, shouldDrillDown: true, recordsFound: 0 };
+    // Only drill down on parse errors if we haven't reached max depth
+    const shouldDrillDown = item.depth < CONFIG.MAX_DRILL_DOWN_DEPTH;
+    return { success: false, shouldDrillDown, recordsFound: 0 };
   }
 
   if (result.type === "empty") {
@@ -527,7 +525,7 @@ async function runHarvester(resume = false) {
       state.totalProcessed += result.recordsFound;
 
       // If we should drill down, add sub-queries
-      if (result.shouldDrillDown && item.depth < 5) {
+      if (result.shouldDrillDown && item.depth < CONFIG.MAX_DRILL_DOWN_DEPTH) {
         const subQueries = generateSubQueries(item.query);
         // Add to front of queue for depth-first search (more efficient)
         for (const sq of subQueries.reverse()) {
@@ -546,7 +544,7 @@ async function runHarvester(resume = false) {
       const existingFail = state.failedQueries.get(item.query);
       const retries = (existingFail?.retries || 0) + 1;
 
-      if (result.shouldDrillDown && item.depth < 5) {
+      if (result.shouldDrillDown && item.depth < CONFIG.MAX_DRILL_DOWN_DEPTH) {
         // Drill down immediately on server errors (500, timeout, etc.)
         const subQueries = generateSubQueries(item.query);
         for (const sq of subQueries.reverse()) {

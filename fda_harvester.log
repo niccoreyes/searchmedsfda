@@ -81,3 +81,127 @@ Received SIGINT. Saving state and exiting gracefully...
 [2026-03-21T02:30:11.268Z] CSV file: fda_harvested_products.csv
 [2026-03-21T02:30:11.268Z] State file: fda_harvester_state.json
 [2026-03-21T02:30:11.268Z] ============================================================
+[2026-03-21T02:31:57.362Z] ============================================================
+[2026-03-21T02:31:57.363Z] FDA Philippines Drug Product Harvester Starting
+[2026-03-21T02:31:57.363Z] ============================================================
+[2026-03-21T02:31:57.366Z] Resumed from save point: 33463 records processed
+[2026-03-21T02:31:57.372Z] State saved: 33463 processed, 13 pending
+[2026-03-21T02:31:57.372Z] Querying: A (attempt 1)
+[2026-03-21T02:32:46.824Z] Error for query A: HTTP 500
+[2026-03-21T02:32:46.825Z] Drilling down on error: A -> [AZ, AY, AX, AW, AV, AU, AT, AS, AR, AQ, AP, AO, AN, AM, AL, AK, AJ, AI, AH, AG, AF, AE, AD, AC, AB, AA]
+[2026-03-21T02:32:48.328Z] Querying: AA (attempt 1)
+[2026-03-21T02:32:59.528Z] Query AA: Found 46 CDRR records, 0 new added
+[2026-03-21T02:33:01.032Z] Querying: AB (attempt 1)
+[2026-03-21T02:33:21.595Z] Query AB: Found 1417 CDRR records, 0 new added
+[2026-03-21T02:33:23.102Z] Querying: AC (attempt 1)
+[2026-03-21T02:34:01.336Z] Query AC: Found 8352 CDRR records, 178 new added
+[2026-03-21T02:34:02.838Z] Querying: AD (attempt 1)
+[2026-03-21T02:34:29.789Z] Query AD: Found 1464 CDRR records, 47 new added
+[2026-03-21T02:34:31.291Z] Querying: AE (attempt 1)
+[2026-03-21T02:34:43.950Z] Query AE: Found 258 CDRR records, 2 new added
+[2026-03-21T02:34:43.958Z] State saved: 33690 processed, 33 pending
+[2026-03-21T02:34:45.461Z] Querying: AF (attempt 1)
+[2026-03-21T02:35:06.926Z] Query AF: Found 791 CDRR records, 0 new added
+[2026-03-21T02:35:06.928Z] State saved: 33690 processed, 32 pending
+[2026-03-21T02:35:08.431Z] Querying: AG (attempt 1)
+[2026-03-21T02:35:32.280Z] Query AG: Found 1392 CDRR records, 0 new added
+[2026-03-21T02:35:32.282Z] State saved: 33690 processed, 31 pending
+[2026-03-21T02:35:33.783Z] Querying: AH (attempt 1)
+[2026-03-21T02:35:47.564Z] Query AH: Found 357 CDRR records, 0 new added
+[2026-03-21T02:35:47.568Z] State saved: 33690 processed, 30 pending
+[2026-03-21T02:35:49.070Z] Querying: AI (attempt 1)
+[2026-03-21T02:36:11.144Z] Query AI: Found 826 CDRR records, 1 new added
+[2026-03-21T02:36:12.646Z] Querying: AJ (attempt 1)
+[2026-03-21T02:36:26.299Z] Query AJ: Found 44 CDRR records, 0 new added
+[2026-03-21T02:36:27.802Z] Querying: AK (attempt 1)
+[2026-03-21T02:36:43.715Z] Query AK: Found 179 CDRR records, 0 new added
+[2026-03-21T02:36:45.217Z] Querying: AL (attempt 1)
+[2026-03-21T02:37:29.664Z] Query AL: Found 7213 CDRR records, 43 new added
+[2026-03-21T02:37:31.165Z] Querying: AM (attempt 1)
+[2026-03-21T02:37:59.726Z] Query AM: Found 10209 CDRR records, 40 new added
+[2026-03-21T02:38:01.228Z] Querying: AN (attempt 1)
+[2026-03-21T02:38:43.829Z] Query AN: Found 7010 CDRR records, 123 new added
+[2026-03-21T02:38:45.331Z] Querying: AO (attempt 1)
+[2026-03-21T02:38:57.431Z] Query AO: Found 13 CDRR records, 0 new added
+[2026-03-21T02:38:58.932Z] Querying: AP (attempt 1)
+[2026-03-21T02:39:18.018Z] Query AP: Found 2315 CDRR records, 12 new added
+[2026-03-21T02:39:19.518Z] Querying: AQ (attempt 1)
+[2026-03-21T02:39:30.117Z] Query AQ: Found 39 CDRR records, 0 new added
+[2026-03-21T02:39:31.619Z] Querying: AR (attempt 1)
+[2026-03-21T02:40:17.100Z] Query AR: Found 6196 CDRR records, 36 new added
+[2026-03-21T02:40:18.603Z] Querying: AS (attempt 1)
+[2026-03-21T02:40:49.082Z] Query AS: Found 13696 CDRR records, 21 new added
+[2026-03-21T02:40:50.584Z] Querying: AT (attempt 1)
+[2026-03-21T02:41:33.386Z] Query AT: Found 11101 CDRR records, 26 new added
+[2026-03-21T02:41:34.888Z] Querying: AU (attempt 1)
+[2026-03-21T02:41:59.111Z] Query AU: Found 140 CDRR records, 0 new added
+[2026-03-21T02:42:00.613Z] Querying: AV (attempt 1)
+[2026-03-21T02:42:22.631Z] Query AV: Found 1536 CDRR records, 0 new added
+[2026-03-21T02:42:24.135Z] Querying: AW (attempt 1)
+[2026-03-21T02:42:44.152Z] Query AW: Found 63 CDRR records, 0 new added
+[2026-03-21T02:42:45.654Z] Querying: AX (attempt 1)
+[2026-03-21T02:42:57.753Z] Query AX: Found 2009 CDRR records, 0 new added
+[2026-03-21T02:42:59.256Z] Querying: AY (attempt 1)
+[2026-03-21T02:43:19.109Z] Query AY: Found 154 CDRR records, 0 new added
+[2026-03-21T02:43:20.611Z] Querying: AZ (attempt 1)
+[2026-03-21T02:43:35.663Z] Query AZ: Found 4082 CDRR records, 0 new added
+[2026-03-21T02:43:37.164Z] Querying: C (attempt 1)
+[2026-03-21T02:44:32.740Z] Error for query C: HTTP 500
+[2026-03-21T02:44:32.741Z] Drilling down on error: C -> [CZ, CY, CX, CW, CV, CU, CT, CS, CR, CQ, CP, CO, CN, CM, CL, CK, CJ, CI, CH, CG, CF, CE, CD, CC, CB, CA]
+[2026-03-21T02:44:34.242Z] Querying: CA (attempt 1)
+[2026-03-21T02:45:11.204Z] Query CA: Found 4184 CDRR records, 0 new added
+[2026-03-21T02:45:12.706Z] Querying: CB (attempt 1)
+[2026-03-21T02:45:24.848Z] Query CB: Found 26 CDRR records, 0 new added
+[2026-03-21T02:45:26.350Z] Querying: CC (attempt 1)
+[2026-03-21T02:45:47.300Z] Query CC: Found 874 CDRR records, 0 new added
+[2026-03-21T02:45:48.801Z] Querying: CD (attempt 1)
+[2026-03-21T02:46:28.537Z] Query CD: Found 46 CDRR records, 0 new added
+[2026-03-21T02:46:30.039Z] Querying: CE (attempt 1)
+[2026-03-21T02:46:59.339Z] Query CE: Found 5929 CDRR records, 0 new added
+[2026-03-21T02:47:00.840Z] Querying: CF (attempt 1)
+[2026-03-21T02:47:17.027Z] Query CF: Found 17 CDRR records, 0 new added
+[2026-03-21T02:47:18.529Z] Querying: CG (attempt 1)
+[2026-03-21T02:47:28.608Z] Query CG: Found 40 CDRR records, 0 new added
+[2026-03-21T02:47:30.110Z] Querying: CH (attempt 1)
+[2026-03-21T02:47:56.758Z] Query CH: Found 6623 CDRR records, 0 new added
+[2026-03-21T02:47:58.261Z] Querying: CI (attempt 1)
+[2026-03-21T02:48:23.762Z] Query CI: Found 9213 CDRR records, 6 new added
+[2026-03-21T02:48:25.265Z] Querying: CJ (attempt 1)
+[2026-03-21T02:48:35.062Z] Drilling down: CJ -> [CJZ, CJY, CJX, CJW, CJV, CJU, CJT, CJS, CJR, CJQ, CJP, CJO, CJN, CJM, CJL, CJK, CJJ, CJI, CJH, CJG, CJF, CJE, CJD, CJC, CJB, CJA]
+[2026-03-21T02:48:36.563Z] Querying: CJA (attempt 1)
+[2026-03-21T02:48:46.112Z] Drilling down: CJA -> [CJAZ, CJAY, CJAX, CJAW, CJAV, CJAU, CJAT, CJAS, CJAR, CJAQ, CJAP, CJAO, CJAN, CJAM, CJAL, CJAK, CJAJ, CJAI, CJAH, CJAG, CJAF, CJAE, CJAD, CJAC, CJAB, CJAA]
+[2026-03-21T02:48:47.614Z] Querying: CJAA (attempt 1)
+[2026-03-21T02:48:58.869Z] Querying: CJAB (attempt 1)
+[2026-03-21T02:49:10.202Z] Querying: CJAC (attempt 1)
+[2026-03-21T02:49:21.736Z] Querying: CJAD (attempt 1)
+[2026-03-21T02:49:33.110Z] Querying: CJAE (attempt 1)
+[2026-03-21T02:49:44.266Z] Querying: CJAF (attempt 1)
+[2026-03-21T02:49:55.492Z] Querying: CJAG (attempt 1)
+[2026-03-21T02:50:07.391Z] Querying: CJAH (attempt 1)
+[2026-03-21T02:50:18.433Z] Querying: CJAI (attempt 1)
+[2026-03-21T02:50:29.326Z] Querying: CJAJ (attempt 1)
+[2026-03-21T02:50:40.954Z] Querying: CJAK (attempt 1)
+[2026-03-21T02:50:51.912Z] Querying: CJAL (attempt 1)
+[2026-03-21T02:51:02.968Z] Querying: CJAM (attempt 1)
+[2026-03-21T02:51:13.871Z] Querying: CJAN (attempt 1)
+[2026-03-21T02:51:24.650Z] Querying: CJAO (attempt 1)
+[2026-03-21T02:51:35.759Z] Querying: CJAP (attempt 1)
+[2026-03-21T02:51:47.120Z] Querying: CJAQ (attempt 1)
+[2026-03-21T02:51:58.484Z] Querying: CJAR (attempt 1)
+[2026-03-21T02:52:09.404Z] Querying: CJAS (attempt 1)
+[2026-03-21T02:52:20.353Z] Querying: CJAT (attempt 1)
+[2026-03-21T02:52:31.540Z] Querying: CJAU (attempt 1)
+[2026-03-21T02:52:42.939Z] Querying: CJAV (attempt 1)
+[2026-03-21T02:52:54.003Z] Querying: CJAW (attempt 1)
+[2026-03-21T02:53:05.204Z] Querying: CJAX (attempt 1)
+[2026-03-21T02:53:14.058Z] 
+Received SIGINT. Saving state and exiting gracefully...
+[2026-03-21T02:53:14.061Z] State saved: 33998 processed, 54 pending
+[2026-03-21T03:05:51.437Z] ============================================================
+[2026-03-21T03:05:51.439Z] FDA Philippines Drug Product Harvester Starting
+[2026-03-21T03:05:51.439Z] ============================================================
+[2026-03-21T03:05:51.443Z] Resumed from save point: 33998 records processed
+[2026-03-21T03:05:51.449Z] State saved: 33998 processed, 27 pending
+[2026-03-21T03:05:51.450Z] Querying: CK (attempt 1)
+[2026-03-21T03:06:11.430Z] Query CK: Found 108 CDRR records, 0 new added
+[2026-03-21T03:06:12.933Z] Querying: CL (attempt 1)
