@@ -739,12 +739,31 @@ p {
 .results-table .rx-badge {
   display: inline-block;
   padding: 2px 6px;
-  background: var(--amber-100);
-  color: var(--amber-600);
+  background: var(--slate-100);
+  color: var(--slate-600);
   border-radius: var(--radius-sm);
   font-size: 0.625rem;
   font-weight: 600;
   text-transform: uppercase;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.results-table .rx-badge.rx {
+  background: var(--amber-100);
+  color: var(--amber-600);
+}
+
+.results-table .rx-badge.otc {
+  background: var(--green-100);
+  color: var(--green-600);
+}
+
+.results-table .rx-badge.household {
+  background: var(--blue-100);
+  color: var(--blue-600);
 }
 
 .results-table .expired {
@@ -768,6 +787,7 @@ p {
     grid-template-columns: repeat(2, 1fr);
     gap: var(--space-4);
   }
+
 }
 
 .drug-card {
@@ -821,11 +841,24 @@ p {
   border-radius: var(--radius-sm);
   white-space: nowrap;
   flex-shrink: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .drug-class.rx {
   background: var(--amber-100);
   color: var(--amber-600);
+}
+
+.drug-class.otc {
+  background: var(--green-100);
+  color: var(--green-600);
+}
+
+.drug-class.household {
+  background: var(--blue-100);
+  color: var(--blue-600);
 }
 
 .drug-details {

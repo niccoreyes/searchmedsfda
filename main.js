@@ -1141,8 +1141,26 @@
     const regNo = r['Registration Number'] || '';
     const expiry = r['Expiry Date'] || '';
 
-    const isRx = classification.toLowerCase().includes('prescription');
+    const isRx = classification.toLowerCase().includes('rx');
+    const isOtc = classification.toLowerCase().includes('over-the-counter');
+    const isHousehold = classification.toLowerCase().includes('household');
+    const isHumanDrug = classification.toLowerCase().includes('human drug');
     const expiryStatus = getExpiryStatus(r['Expiry Date']);
+
+    let chipClass = '';
+    let chipText = classification;
+    if (isRx) {
+      chipClass = 'rx';
+      chipText = 'Rx';
+    } else if (isOtc) {
+      chipClass = 'otc';
+      chipText = 'OTC';
+    } else if (isHousehold) {
+      chipClass = 'household';
+      chipText = 'Household Remedy';
+    }
+
+    const chipHtml = isHumanDrug ? '' : `<span class="drug-class ${chipClass}">${escapeHTML(chipText)}</span>`;
 
     return `
       <div class="drug-card" data-idx="${idx}">
@@ -1151,7 +1169,7 @@
             <div class="drug-generic">${h(generic)}</div>
             <div class="drug-brand">${h(brand)}</div>
           </div>
-          <span class="drug-class ${isRx ? 'rx' : ''}">${isRx ? 'Rx' : escapeHTML(classification.slice(0, 15))}</span>
+          ${chipHtml}
         </div>
         <div class="drug-details">
           <div class="drug-detail">
@@ -1186,8 +1204,26 @@
     const regNo = r['Registration Number'] || '';
     const expiry = r['Expiry Date'] || '';
 
-    const isRx = classification.toLowerCase().includes('prescription');
+    const isRx = classification.toLowerCase() === 'rx';
+    const isOtc = classification.toLowerCase().includes('over-the-counter');
+    const isHousehold = classification.toLowerCase().includes('household');
+    const isHumanDrug = classification.toLowerCase().includes('human drug');
     const expiryStatus = getExpiryStatus(r['Expiry Date']);
+
+    let tableBadgeClass = '';
+    let badgeText = classification;
+    if (isRx) {
+      tableBadgeClass = 'rx';
+      badgeText = 'Rx';
+    } else if (isOtc) {
+      tableBadgeClass = 'otc';
+      badgeText = 'OTC';
+    } else if (isHousehold) {
+      tableBadgeClass = 'household';
+      badgeText = 'Household Remedy';
+    }
+
+    const badgeHtml = isHumanDrug ? '' : `<span class="rx-badge ${tableBadgeClass}">${escapeHTML(badgeText)}</span>`;
 
     return `
       <tr data-idx="${idx}">
@@ -1195,12 +1231,7 @@
         <td class="truncate" title="${escapeHTML(brand)}">${h(brand)}</td>
         <td>${h(strength)}</td>
         <td>${h(form)}</td>
-        <td>
-          ${isRx
-            ? '<span class="rx-badge">Rx</span>'
-            : escapeHTML(classification.slice(0, 20))
-          }
-        </td>
+        <td>${badgeHtml}</td>
         <td class="truncate" title="${escapeHTML(manufacturer)}">${h(manufacturer)}</td>
         <td>${h(regNo)}</td>
         <td class="${expiryStatus.class}">${h(expiry) || '—'}</td>
