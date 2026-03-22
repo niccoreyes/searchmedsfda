@@ -1518,6 +1518,166 @@
       rxItems.addEventListener('click', handleRxItemAction);
       rxItems.addEventListener('input', handleRxItemInput);
     }
+
+    // Initialize signature pad
+    initSignaturePad();
+  }
+
+  // ==================== Signature Pad ====================
+
+  let signatureCanvas = null;
+  let signatureCtx = null;
+  let isDrawing = false;
+  let signatureData = localStorage.getItem('rxSignatureData') || '';
+
+  function initSignaturePad() {
+    signatureCanvas = $('#signatureCanvas');
+    if (!signatureCanvas) return;
+
+    signatureCtx = signatureCanvas.getContext('2d');
+    signatureCtx.strokeStyle = '#000000';
+    signatureCtx.lineWidth = 2;
+    signatureCtx.lineCap = 'round';
+    signatureCtx.lineJoin = 'round';
+
+    // Restore saved signature if exists
+    if (signatureData) {
+      restoreSignature(signatureData);
+    }
+
+    // Mouse events
+    signatureCanvas.addEventListener('mousedown', startDrawing);
+    signatureCanvas.addEventListener('mousemove', draw);
+    signatureCanvas.addEventListener('mouseup', stopDrawing);
+    signatureCanvas.addEventListener('mouseleave', stopDrawing);
+
+    // Touch events
+    signatureCanvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+    signatureCanvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+    signatureCanvas.addEventListener('touchend', stopDrawing);
+
+    // Upload button
+    $('#uploadSignature')?.addEventListener('click', () => {
+      $('#signatureFileInput')?.click();
+    });
+
+    // File input change
+    $('#signatureFileInput')?.addEventListener('change', handleSignatureUpload);
+
+    // Clear button
+    $('#clearSignature')?.addEventListener('click', clearSignature);
+  }
+
+  function startDrawing(e) {
+    isDrawing = true;
+    signatureCanvas.classList.add('signing');
+    const { x, y } = getCanvasCoordinates(e);
+    signatureCtx.beginPath();
+    signatureCtx.moveTo(x, y);
+  }
+
+  function draw(e) {
+    if (!isDrawing) return;
+    e.preventDefault();
+    const { x, y } = getCanvasCoordinates(e);
+    signatureCtx.lineTo(x, y);
+    signatureCtx.stroke();
+  }
+
+  function stopDrawing() {
+    if (!isDrawing) return;
+    isDrawing = false;
+    signatureCanvas.classList.remove('signing');
+    saveSignatureData();
+  }
+
+  function handleTouchStart(e) {
+    e.preventDefault();
+    const touch = e.touches[0];
+    const mouseEvent = new MouseEvent('mousedown', {
+      clientX: touch.clientX,
+      clientY: touch.clientY
+    });
+    signatureCanvas.dispatchEvent(mouseEvent);
+  }
+
+  function handleTouchMove(e) {
+    e.preventDefault();
+    const touch = e.touches[0];
+    const mouseEvent = new MouseEvent('mousemove', {
+      clientX: touch.clientX,
+      clientY: touch.clientY
+    });
+    signatureCanvas.dispatchEvent(mouseEvent);
+  }
+
+  function getCanvasCoordinates(e) {
+    const rect = signatureCanvas.getBoundingClientRect();
+    const scaleX = signatureCanvas.width / rect.width;
+    const scaleY = signatureCanvas.height / rect.height;
+    return {
+      x: (e.clientX - rect.left) * scaleX,
+      y: (e.clientY - rect.top) * scaleY
+    };
+  }
+
+  function saveSignatureData() {
+    signatureData = signatureCanvas.toDataURL('image/png');
+    localStorage.setItem('rxSignatureData', signatureData);
+  }
+
+  function restoreSignature(dataUrl) {
+    if (!signatureCtx || !dataUrl) return;
+    const img = new Image();
+    img.onload = () => {
+      signatureCtx.clearRect(0, 0, signatureCanvas.width, signatureCanvas.height);
+      signatureCtx.drawImage(img, 0, 0);
+    };
+    img.src = dataUrl;
+  }
+
+  function clearSignature() {
+    if (!signatureCtx) return;
+    signatureCtx.clearRect(0, 0, signatureCanvas.width, signatureCanvas.height);
+    signatureData = '';
+    localStorage.removeItem('rxSignatureData');
+  }
+
+  function handleSignatureUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      showToast('Please select an image file', 'error');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        // Clear canvas and draw uploaded image scaled to fit
+        signatureCtx.clearRect(0, 0, signatureCanvas.width, signatureCanvas.height);
+
+        // Calculate scaling to fit within canvas while maintaining aspect ratio
+        const scale = Math.min(
+          signatureCanvas.width / img.width,
+          signatureCanvas.height / img.height,
+          1
+        );
+        const x = (signatureCanvas.width - img.width * scale) / 2;
+        const y = (signatureCanvas.height - img.height * scale) / 2;
+
+        signatureCtx.drawImage(img, x, y, img.width * scale, img.height * scale);
+        saveSignatureData();
+        showToast('Signature uploaded', 'success');
+      };
+      img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+
+    // Reset file input
+    e.target.value = '';
   }
 
   function renderSideCard(r, q, idx, highlightFn) {
@@ -1675,7 +1835,8 @@
       meta: Object.fromEntries(
         Object.entries(fields).map(([k, el]) => [k, el?.value || ''])
       ),
-      items
+      items,
+      signature: signatureData || localStorage.getItem('rxSignatureData') || ''
     };
 
     localStorage.setItem('rxBuilderSave_v2', JSON.stringify(payload));
@@ -1706,6 +1867,14 @@
         rxItems.appendChild(cloneTemplate('tpl-empty-rx'));
       } else {
         items.forEach((item) => addRxItem(item));
+      }
+
+      // Restore signature if present
+      const savedSig = data.signature || '';
+      if (savedSig) {
+        signatureData = savedSig;
+        localStorage.setItem('rxSignatureData', savedSig);
+        restoreSignature(savedSig);
       }
 
       updateRxPreview();
@@ -1861,6 +2030,19 @@
 
     const notes = fields.rxNotes?.value?.trim();
     $('#pNotes').textContent = notes ? `Notes: ${notes}` : '';
+
+    // Populate signature image if available
+    const sigImg = $('#pSignatureImage');
+    if (sigImg) {
+      const sigData = signatureData || localStorage.getItem('rxSignatureData') || '';
+      if (sigData) {
+        sigImg.src = sigData;
+        sigImg.style.display = 'block';
+      } else {
+        sigImg.src = '';
+        sigImg.style.display = 'none';
+      }
+    }
 
     return fields;
   }

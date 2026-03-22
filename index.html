@@ -380,6 +380,38 @@
         </div>
       </div>
 
+      <!-- Physician Signature -->
+      <div class="rx-section">
+        <div class="section-header">
+          <h3 class="section-title">Physician Signature</h3>
+          <div class="signature-actions">
+            <button id="uploadSignature" class="btn btn-secondary btn-sm" title="Upload Signature Image">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17,8 12,3 7,8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              Upload
+            </button>
+            <button id="clearSignature" class="btn btn-danger-ghost btn-sm" title="Clear Signature">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3,6 5,6 21,6"/>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+              </svg>
+              Clear
+            </button>
+          </div>
+        </div>
+
+        <div class="signature-container">
+          <canvas id="signatureCanvas" class="signature-canvas" width="600" height="150"></canvas>
+          <div class="signature-hint">
+            <span>Sign above using mouse or touch</span>
+          </div>
+          <input type="file" id="signatureFileInput" accept="image/*" hidden>
+        </div>
+      </div>
+
       <!-- Notes -->
       <div class="rx-section">
         <h3 class="section-title">Additional Notes</h3>
@@ -448,12 +480,24 @@
 
         <div class="about-section">
           <h3>How It Works</h3>
-          <p>This web application provides a fast, local drug search and prescription builder. It can load drug data in two ways:</p>
+          <p>Rx Builder uses a <strong>local-first architecture</strong> with smart caching. Drug data is loaded once and stored in your browser's IndexedDB for instant offline access on subsequent visits.</p>
           <ul>
-            <li><strong>FHIR Server (Online):</strong> Connects to a FHIR terminology server to fetch the latest FDA drug data using FHIR standard APIs</li>
-            <li><strong>CSV File (Offline):</strong> Load a local CSV file from the FDA Philippines Verification Portal for offline use</li>
+            <li><strong>FHIR Server (Online):</strong> Connects to a FHIR terminology server to fetch the latest FDA drug data using FHIR standard APIs. Data is cached locally for offline use.</li>
+            <li><strong>CSV File (Offline):</strong> Load a local CSV file from the FDA Philippines Verification Portal. The data is cached and available offline immediately.</li>
           </ul>
-          <p>Once loaded, all drug searches happen locally in your browser for instant results. Build prescriptions, add custom medications, and print or save as PDF.</p>
+          <p>Once loaded, all searches happen instantly in your browser using a pre-built search index. Build prescriptions, add custom medications, and print or save as PDF.</p>
+        </div>
+
+        <div class="about-section">
+          <h3>Architecture & Caching</h3>
+          <p>The app is built as a <strong>single-page progressive web app (PWA)</strong> with zero server-side dependencies:</p>
+          <ul>
+            <li><strong>IndexedDB Storage:</strong> Drug data (~34,000 records) is cached in your browser using IndexedDB, allowing instant startup even when offline</li>
+            <li><strong>Smart Cache Updates:</strong> When online, the app automatically checks for new data in the background and updates silently</li>
+            <li><strong>Fallback Strategy:</strong> If FHIR server is unavailable, automatically uses cached data or falls back to CSV</li>
+            <li><strong>LocalStorage:</strong> Prescription drafts are saved to browser local storage</li>
+            <li><strong>Service Worker:</strong> Enables PWA installation and offline functionality</li>
+          </ul>
         </div>
 
         <div class="about-section">
@@ -474,7 +518,11 @@
 
         <div class="about-section">
           <h3>Privacy</h3>
-          <p>All processing happens locally in your browser. No data is ever uploaded to any server. Your prescriptions are saved to your browser's local storage only.</p>
+          <p>All processing happens locally in your browser. No prescription data or personal information is ever uploaded to any server. Your data is stored in:</p>
+          <ul>
+            <li><strong>IndexedDB:</strong> Drug database cache (public FDA data)</li>
+            <li><strong>LocalStorage:</strong> Your prescription drafts only</li>
+          </ul>
         </div>
 
         <div class="about-section">
@@ -482,7 +530,8 @@
           <ul>
             <li>Use <strong>cross-field search</strong>: type "Amlo Exfo" to find Amlodipine (generic) + Exforge (brand)</li>
             <li>Save drafts locally before printing</li>
-            <li>Works completely offline after loading the CSV</li>
+            <li>Works completely offline after first data load</li>
+            <li>Install as a PWA on mobile for quick access</li>
           </ul>
         </div>
 
@@ -490,7 +539,8 @@
           <p class="text-muted">Data source: FDA Philippines Drug Products Database</p>
           <p class="text-muted">Developed by Thomas Reyes</p>
           <div class="app-version">
-            <span id="appVersion">Version: —</span>
+            <span id="appVersion">Version 2026.03.22</span>
+            <span id="dataCacheInfo" class="cache-info"></span>
             <button id="checkUpdateBtn" class="btn btn-sm btn-ghost" onclick="manualUpdateCheck()">Check for Updates</button>
             <span id="updateStatus" class="update-status"></span>
           </div>
@@ -737,6 +787,9 @@
 
     <div class="print-signature">
       <div class="signature-line">
+        <div class="signature-image-container">
+          <img id="pSignatureImage" class="signature-image" alt="" style="display: none;">
+        </div>
         <p id="pDoc2"></p>
         <div class="signature-licenses">
           <div id="pPRCWrap"></div>

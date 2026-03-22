@@ -2,6 +2,8 @@
   "name": "Rx Builder - FDA Drug Search",
   "short_name": "Rx Builder",
   "description": "Local prescription builder with FDA Philippines drug search. Build prescriptions, search drugs, and print.",
+  "id": "/",
+  "version": "2026.03.22",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0f766e",

@@ -12,12 +12,15 @@ A modern, **mobile-first prescription builder** with integrated Philippine FDA d
 ## Features
 
 - **Dual Data Sources**: Load from FHIR terminology server (online) or local CSV (offline)
+- **Smart Caching**: IndexedDB storage for instant offline access after first load
+- **Background Updates**: Automatically checks for new data when online
 - **Smart Search**: Cross-field search (e.g., "Amlo Exfo" finds Amlodipine + Exforge)
 - **Prescription Builder**: Add medications, set quantities, directions, notes
 - **Live Preview**: See formatted prescription as you build
 - **Print/PDF Ready**: Optimized print stylesheet for professional output
 - **Draft Save/Load**: Persist prescriptions to browser localStorage
 - **Mobile Optimized**: Bottom navigation, responsive cards, touch-friendly UI
+- **PWA Support**: Install as a progressive web app for offline use
 - **Privacy First**: All processing happens client-side; no data leaves your device
 
 ## Quick Start
@@ -128,8 +131,57 @@ Rx Builder follows a **deliberately minimal, client-only architecture** with zer
 - **Single-file application** structure (`index.html` + `main.js` + `styles.css`)
 - **Client-side FHIR terminology** consumption via `tx.fhirlab.net`
 - **Dual offline/online data loading** strategy with automatic fallback
+- **IndexedDB caching layer** for persistent offline storage of 34K+ drug records
+- **Background update checking** with silent cache refresh
 - **State management** through a central `state` object
 - **Search indexing** for performance on 34K+ records
+
+### Caching Strategy
+
+The app implements a sophisticated multi-layer caching system for optimal offline/online experience:
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                        CACHING LAYERS                               │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  ┌─────────────────────────────────────────────────────────────┐    │
+│  │                    INDEXEDDB CACHE                          │    │
+│  │                   (Persistent Storage)                        │    │
+│  │                                                             │    │
+│  │  • Stores complete drug dataset (~34K records)              │    │
+│  │  • Version metadata tracks data freshness                   │    │
+│  │  • Automatic fallback when network unavailable              │    │
+│  │  • Cached data survives browser restarts                    │    │
+│  └─────────────────────────────────────────────────────────────┘    │
+│                              ▲                                      │
+│                              │                                      │
+│  ┌───────────────────────────┼───────────────────────────────┐      │
+│  │         MEMORY CACHE      │                               │      │
+│  │         (Runtime)         │                               │      │
+│  │                           │                               │      │
+│  │  • DOM element cache      │                               │      │
+│  │  • Template cache         │                               │      │
+│  │  • Search quick index     │                               │      │
+│  └───────────────────────────┼───────────────────────────────┘      │
+│                              │                                      │
+│                              ▼                                      │
+│  ┌─────────────────────────────────────────────────────────────┐    │
+│  │                    LOCALSTORAGE                             │    │
+│  │                   (User Data Only)                          │    │
+│  │                                                             │    │
+│  │  • Prescription drafts (rxBuilderSave_v2)                   │    │
+│  │  • User preferences (future)                                │    │
+│  └─────────────────────────────────────────────────────────────┘    │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+**Cache Update Flow:**
+1. On startup: Load from IndexedDB cache immediately for instant availability
+2. Background check: Query FHIR server version or CSV last-modified date
+3. If stale: Fetch new data and update cache silently (no disruption to user)
+4. If offline: Continue using cached data seamlessly
 
 ## File Structure
 
@@ -243,7 +295,8 @@ No build configuration needed. Vercel auto-detects it as a static site.
 
 - **Zero data transmission**: All processing happens client-side
 - **No cookies or tracking**
-- **LocalStorage only**: Used for draft prescriptions
+- **IndexedDB**: Caches public FDA drug database locally for offline use
+- **LocalStorage**: Stores your prescription drafts only
 - **FHIR server**: Read-only access to public terminology server
 - **CSV files**: Never uploaded anywhere
 
@@ -254,6 +307,29 @@ PRs welcome for:
 - UI/UX enhancements
 - Accessibility improvements
 - Additional export formats
+
+## Version Management
+
+The app version is automatically derived from the git commit date:
+
+```
+Version Format: YYYY.MM.DD
+Example: 2026.03.22
+```
+
+To update the version when deploying:
+
+```bash
+# Get the current version from git
+git log -1 --format="%cd" --date=format:"%Y.%m.%d"
+
+# Update version in these files before committing:
+# - index.html (appVersion span)
+# - manifest.json (version field)
+# - sw.js (CACHE_VERSION constant)
+```
+
+**Service Worker Cache:** The service worker uses a separate cache version (`CACHE_VERSION` in `sw.js`). Increment this manually when deploying new static assets to force client updates.
 
 ## License
 

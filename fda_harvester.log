@@ -2904,3 +2904,24 @@ Received SIGINT. Saving state and exiting gracefully...
 [2026-03-22T09:00:56.099Z] Query RL: Found 131 CDRR records, 0 new added
 [2026-03-22T09:00:56.100Z] Query RL: Found 407 cpr_cdrrhr records, 0 new added
 [2026-03-22T09:00:57.601Z] Querying: RM (attempt 1)
+[2026-03-22T09:03:17.010Z] Query RM: Found 1135 CDRR records, 0 new added
+[2026-03-22T09:03:17.012Z] Query RM: Found 590 cpr_cdrrhr records, 0 new added
+[2026-03-22T09:03:18.514Z] Querying: RN (attempt 1)
+[2026-03-22T09:05:42.225Z] Query RN: Found 143 CDRR records, 0 new added
+[2026-03-22T09:05:42.226Z] Query RN: Found 254 cpr_cdrrhr records, 0 new added
+[2026-03-22T09:05:43.728Z] Querying: RO (attempt 1)
+[2026-03-22T09:09:33.112Z] Query RO: Found 12749 CDRR records, 0 new added
+[2026-03-22T09:09:33.114Z] Query RO: Found 3336 cpr_cdrrhr records, 0 new added
+[2026-03-22T09:09:34.617Z] Querying: RP (attempt 1)
+[2026-03-22T09:12:21.010Z] Query RP: Found 23737 CDRR records, 0 new added
+[2026-03-22T09:12:21.011Z] Query RP: Found 164 cpr_cdrrhr records, 0 new added
+[2026-03-22T09:12:22.513Z] Querying: RQ (attempt 1)
+[2026-03-22T09:12:34.095Z] Query RQ: Found 6 CDRR records, 0 new added
+[2026-03-22T09:12:34.095Z] Query RQ: Found 14 cpr_cdrrhr records, 0 new added
+[2026-03-22T09:12:35.597Z] Querying: RR (attempt 1)
+[2026-03-22T09:16:02.557Z] Query RR: Found 378 CDRR records, 0 new added
+[2026-03-22T09:16:02.558Z] Query RR: Found 537 cpr_cdrrhr records, 0 new added
+[2026-03-22T09:16:04.060Z] Querying: RS (attempt 1)
+[2026-03-22T09:18:29.581Z] Query RS: Found 441 CDRR records, 0 new added
+[2026-03-22T09:18:29.582Z] Query RS: Found 615 cpr_cdrrhr records, 0 new added
+[2026-03-22T09:18:31.083Z] Querying: RT (attempt 1)
