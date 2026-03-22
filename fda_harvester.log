@@ -2925,3 +2925,15 @@ Received SIGINT. Saving state and exiting gracefully...
 [2026-03-22T09:18:29.581Z] Query RS: Found 441 CDRR records, 0 new added
 [2026-03-22T09:18:29.582Z] Query RS: Found 615 cpr_cdrrhr records, 0 new added
 [2026-03-22T09:18:31.083Z] Querying: RT (attempt 1)
+[2026-03-22T09:20:51.865Z] Query RT: Found 2815 CDRR records, 0 new added
+[2026-03-22T09:20:51.868Z] Query RT: Found 1409 cpr_cdrrhr records, 0 new added
+[2026-03-22T09:20:53.369Z] Querying: RU (attempt 1)
+[2026-03-22T09:22:43.627Z] Query RU: Found 885 CDRR records, 0 new added
+[2026-03-22T09:22:43.627Z] Query RU: Found 592 cpr_cdrrhr records, 0 new added
+[2026-03-22T09:22:45.129Z] Querying: RV (attempt 1)
+[2026-03-22T09:24:19.698Z] Query RV: Found 839 CDRR records, 0 new added
+[2026-03-22T09:24:19.699Z] Query RV: Found 311 cpr_cdrrhr records, 0 new added
+[2026-03-22T09:24:21.201Z] Querying: RW (attempt 1)
+[2026-03-22T09:25:09.773Z] 
+Received SIGINT. Saving state and exiting gracefully...
+[2026-03-22T09:25:09.787Z] State saved: 54578 processed, 11 pending
