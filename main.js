@@ -1758,8 +1758,8 @@
     previewEl.innerHTML = html;
   }
 
-  function printRx() {
-    const fields = {
+  function getFormFields() {
+    return {
       clinic: $('#clinic'),
       clinicAddr: $('#clinicAddr'),
       docName: $('#docName'),
@@ -1773,6 +1773,10 @@
       rxDate: $('#rxDate'),
       rxNotes: $('#rxNotes')
     };
+  }
+
+  function populatePrintTemplate() {
+    const fields = getFormFields();
 
     // Fill print template
     $('#pClinic').textContent = fields.clinic?.value || 'Clinic Name';
@@ -1793,9 +1797,9 @@
     const prcVal = fields.prc?.value?.trim();
     const ptrVal = fields.ptr?.value?.trim();
     const s2Val = fields.s2?.value?.trim();
-    $('#pPRC2Wrap').textContent = prcVal ? `PRC: ${prcVal}` : '';
-    $('#pPTR2Wrap').textContent = ptrVal ? `PTR: ${ptrVal}` : '';
-    $('#pS22Wrap').textContent = s2Val ? `S2: ${s2Val}` : '';
+    $('#pPRCWrap').textContent = prcVal ? `PRC: ${prcVal}` : '';
+    $('#pPTRWrap').textContent = ptrVal ? `PTR: ${ptrVal}` : '';
+    $('#pS2Wrap').textContent = s2Val ? `S2: ${s2Val}` : '';
 
     // Show/hide signature label based on whether licenses are present
     const hasAnyLicense = prcVal || ptrVal || s2Val;
@@ -1809,6 +1813,8 @@
       .map((div) => collectItem(div));
 
     for (const it of items) {
+      const li = cloneTemplate('tpl-print-item');
+
       const namePart = it.genericName && it.brandName
         ? `${it.genericName} (${it.brandName})`
         : it.genericName;
@@ -1816,21 +1822,36 @@
       const formPart = it.form || '';
       const qtyPart = it.qty ? ` #${it.qty}` : '';
       const line1Left = `${namePart} ${strengthPart} ${formPart}`.trim();
-      const line1Right = qtyPart ? `<span class="qty-right">${qtyPart}</span>` : '';
-      const line1 = line1Right
-        ? `<div class="rx-line"><span>${line1Left}</span>${line1Right}</div>`
-        : line1Left;
-      const line2 = it.sig ? `Sig. ${it.sig}` : '';
 
-      const li = document.createElement('li');
-      const sigDiv = line2 ? `<div class="rx-sig">${line2}</div>` : '';
-      li.innerHTML = line1 + sigDiv;
+      const nameSpan = li.querySelector('.rx-name');
+      const qtySpan = li.querySelector('.qty-right');
+      const sigDiv = li.querySelector('.rx-sig');
+
+      nameSpan.textContent = line1Left;
+
+      if (qtyPart) {
+        qtySpan.textContent = qtyPart;
+      } else {
+        qtySpan.remove();
+      }
+
+      if (it.sig) {
+        sigDiv.textContent = `Sig. ${it.sig}`;
+      } else {
+        sigDiv.remove();
+      }
+
       ol.appendChild(li);
     }
 
     const notes = fields.rxNotes?.value?.trim();
     $('#pNotes').textContent = notes ? `Notes: ${notes}` : '';
 
+    return fields;
+  }
+
+  function printRx() {
+    populatePrintTemplate();
     window.print();
   }
 
@@ -1846,75 +1867,8 @@
       return;
     }
 
-    // First populate the print template with current data (same as printRx)
-    const fields = {
-      clinic: $('#clinic'),
-      clinicAddr: $('#clinicAddr'),
-      docName: $('#docName'),
-      prc: $('#prc'),
-      ptr: $('#ptr'),
-      s2: $('#s2'),
-      ptName: $('#ptName'),
-      ptAge: $('#ptAge'),
-      ptSex: $('#ptSex'),
-      ptAddr: $('#ptAddr'),
-      rxDate: $('#rxDate'),
-      rxNotes: $('#rxNotes')
-    };
-
-    $('#pClinic').textContent = fields.clinic?.value || 'Clinic Name';
-    $('#pClinicAddr').textContent = fields.clinicAddr?.value || '';
-    $('#pPtName').textContent = fields.ptName?.value || '';
-
-    const ageSex = [fields.ptAge?.value, fields.ptSex?.value]
-      .filter(Boolean)
-      .join(' / ');
-    $('#pPtAgeSex').textContent = ageSex;
-
-    $('#pPtAddr').textContent = fields.ptAddr?.value || '';
-    $('#pDate').textContent =
-      fields.rxDate?.value || new Date().toISOString().slice(0, 10);
-    $('#pDoc2').textContent = fields.docName?.value || '';
-
-    const prcVal = fields.prc?.value?.trim();
-    const ptrVal = fields.ptr?.value?.trim();
-    const s2Val = fields.s2?.value?.trim();
-    $('#pPRC2Wrap').textContent = prcVal ? `PRC: ${prcVal}` : '';
-    $('#pPTR2Wrap').textContent = ptrVal ? `PTR: ${ptrVal}` : '';
-    $('#pS22Wrap').textContent = s2Val ? `S2: ${s2Val}` : '';
-
-    const hasAnyLicense = prcVal || ptrVal || s2Val;
-    $('#signatureLabel').hidden = hasAnyLicense;
-
-    const ol = $('#pItems');
-    ol.innerHTML = '';
-
-    const items = Array.from($('#rxItems').children)
-      .filter((child) => child.classList.contains('rx-item'))
-      .map((div) => collectItem(div));
-
-    for (const it of items) {
-      const namePart = it.genericName && it.brandName
-        ? `${it.genericName} (${it.brandName})`
-        : it.genericName;
-      const strengthPart = it.strength || '';
-      const formPart = it.form || '';
-      const qtyPart = it.qty ? ` #${it.qty}` : '';
-      const line1Left = `${namePart} ${strengthPart} ${formPart}`.trim();
-      const line1Right = qtyPart ? `<span class="qty-right">${qtyPart}</span>` : '';
-      const line1 = line1Right
-        ? `<div class="rx-line"><span>${line1Left}</span>${line1Right}</div>`
-        : line1Left;
-      const line2 = it.sig ? `Sig. ${it.sig}` : '';
-
-      const li = document.createElement('li');
-      const sigDiv = line2 ? `<div class="rx-sig">${line2}</div>` : '';
-      li.innerHTML = line1 + sigDiv;
-      ol.appendChild(li);
-    }
-
-    const rxNotes = fields.rxNotes?.value?.trim();
-    $('#pNotes').textContent = rxNotes ? `Notes: ${rxNotes}` : '';
+    // Populate the print template with current data
+    const fields = populatePrintTemplate();
 
     // Show loading toast
     showToast('Generating image...', 'info');

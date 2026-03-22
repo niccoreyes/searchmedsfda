@@ -733,6 +733,17 @@
     <div class="rx-preview-empty">No medications added yet</div>
   </template>
 
+  <!-- Print Prescription Item Template -->
+  <template id="tpl-print-item">
+    <li>
+      <div class="rx-line">
+        <span class="rx-name"></span>
+        <span class="qty-right"></span>
+      </div>
+      <div class="rx-sig"></div>
+    </li>
+  </template>
+
   <!-- Print Template -->
   <div class="rx-print" id="rxPrint">
     <div class="print-header">
@@ -761,9 +772,9 @@
       <div class="signature-line">
         <p id="pDoc2"></p>
         <div class="signature-licenses">
-          <div id="pPRC2Wrap"></div>
-          <div id="pPTR2Wrap"></div>
-          <div id="pS22Wrap"></div>
+          <div id="pPRCWrap"></div>
+          <div id="pPTRWrap"></div>
+          <div id="pS2Wrap"></div>
         </div>
         <p class="signature-label" id="signatureLabel">Physician Name / License No.</p>
       </div>
