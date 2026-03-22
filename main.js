@@ -18,8 +18,9 @@
     searchField: 'all',
     onlyRX: false,
     onlyOTC: false,
-    onlyVet: false,
-    includeSupplement: false,
+    showVet: false,
+    showSupplement: false,
+    showMedicalDevice: false,
     pageRows: [],
     quickIndex: [],
     isDataLoaded: false,
@@ -818,10 +819,11 @@
     const q = $('#q');
     const fieldSelect = $('#fieldSelect');
     const perPage = $('#perPage');
-    const onlyRX = $('#onlyRX');
-    const onlyOTC = $('#onlyOTC');
-    const onlyVet = $('#onlyVet');
-    const includeSupplement = $('#includeSupplement');
+    const btnOnlyRX = $('#btnOnlyRX');
+    const btnOnlyOTC = $('#btnOnlyOTC');
+    const btnShowVet = $('#btnShowVet');
+    const btnShowSupplement = $('#btnShowSupplement');
+    const btnShowMedicalDevice = $('#btnShowMedicalDevice');
     const clearSearch = $('#clearSearch');
     const clearFilters = $('#clearFilters');
 
@@ -850,12 +852,14 @@
       state.searchQ = '';
       state.onlyRX = false;
       state.onlyOTC = false;
-      state.onlyVet = false;
-      state.includeSupplement = false;
-      onlyRX.checked = false;
-      onlyOTC.checked = false;
-      onlyVet.checked = false;
-      includeSupplement.checked = false;
+      state.showVet = false;
+      state.showSupplement = false;
+      state.showMedicalDevice = false;
+      btnOnlyRX?.classList.remove('active');
+      btnOnlyOTC?.classList.remove('active');
+      btnShowVet?.classList.remove('active');
+      btnShowSupplement?.classList.remove('active');
+      btnShowMedicalDevice?.classList.remove('active');
       state.page = 1;
       filterAndRender();
     });
@@ -874,31 +878,42 @@
       renderResults();
     });
 
-    // Filters
-    onlyRX?.addEventListener('change', () => {
-      state.onlyRX = onlyRX.checked;
+    // Lock filter buttons
+    btnOnlyRX?.addEventListener('click', () => {
+      state.onlyRX = !state.onlyRX;
       if (state.onlyRX) state.onlyOTC = false;
-      onlyOTC.checked = false;
+      btnOnlyRX.classList.toggle('active', state.onlyRX);
+      btnOnlyOTC?.classList.remove('active');
       state.page = 1;
       filterAndRender();
     });
 
-    onlyOTC?.addEventListener('change', () => {
-      state.onlyOTC = onlyOTC.checked;
+    btnOnlyOTC?.addEventListener('click', () => {
+      state.onlyOTC = !state.onlyOTC;
       if (state.onlyOTC) state.onlyRX = false;
-      onlyRX.checked = false;
+      btnOnlyOTC.classList.toggle('active', state.onlyOTC);
+      btnOnlyRX?.classList.remove('active');
       state.page = 1;
       filterAndRender();
     });
 
-    onlyVet?.addEventListener('change', () => {
-      state.onlyVet = onlyVet.checked;
+    btnShowVet?.addEventListener('click', () => {
+      state.showVet = !state.showVet;
+      btnShowVet.classList.toggle('active', state.showVet);
       state.page = 1;
       filterAndRender();
     });
 
-    includeSupplement?.addEventListener('change', () => {
-      state.includeSupplement = includeSupplement.checked;
+    btnShowSupplement?.addEventListener('click', () => {
+      state.showSupplement = !state.showSupplement;
+      btnShowSupplement.classList.toggle('active', state.showSupplement);
+      state.page = 1;
+      filterAndRender();
+    });
+
+    btnShowMedicalDevice?.addEventListener('click', () => {
+      state.showMedicalDevice = !state.showMedicalDevice;
+      btnShowMedicalDevice.classList.toggle('active', state.showMedicalDevice);
       state.page = 1;
       filterAndRender();
     });
@@ -1033,15 +1048,18 @@
         if (!cls.includes('over-the-counter') && !cls.includes('otc')) return false;
       }
 
-      if (state.onlyVet) {
-        if (isHuman(row)) return false;
-      } else {
+      if (!state.showVet) {
         if (!isHuman(row)) return false;
       }
 
-      if (!state.includeSupplement) {
+      if (!state.showSupplement) {
         const cls = String(row['Classification'] || '').toLowerCase();
         if (cls.includes('supplement')) return false;
+      }
+
+      if (!state.showMedicalDevice) {
+        const cls = String(row['Classification'] || '').toLowerCase();
+        if (cls.includes('medical device') || cls.includes('medicaldevice')) return false;
       }
 
       if (!q) return true;

@@ -532,6 +532,102 @@ p {
   color: var(--primary-700);
 }
 
+/* Eye button styling */
+.chip-toggle.eye-btn {
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--border);
+  background: var(--slate-100);
+  cursor: pointer;
+}
+
+.chip-toggle.eye-btn .eye-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+}
+
+.chip-toggle.eye-btn .eye-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Default state: show closed eye (hidden), hide open eye (visible) */
+.chip-toggle.eye-btn .eye-open {
+  display: none;
+}
+
+.chip-toggle.eye-btn .eye-closed {
+  display: block;
+  opacity: 0.5;
+}
+
+/* Active state: show open eye, hide closed eye */
+.chip-toggle.eye-btn.active .eye-open {
+  display: block;
+}
+
+.chip-toggle.eye-btn.active .eye-closed {
+  display: none;
+}
+
+.chip-toggle.eye-btn.active {
+  background: var(--primary-100);
+  border-color: var(--primary-200);
+  color: var(--primary-700);
+}
+
+.chip-toggle.eye-btn .toggle-label {
+  font-size: 0.875rem;
+}
+
+/* Lock button styling */
+.chip-toggle.lock-btn {
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--border);
+  background: var(--slate-100);
+  cursor: pointer;
+}
+
+.chip-toggle.lock-btn .lock-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+}
+
+.chip-toggle.lock-btn .lock-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Default state: show open lock (unlocked), hide closed lock */
+.chip-toggle.lock-btn .lock-open {
+  display: block;
+  opacity: 0.5;
+}
+
+.chip-toggle.lock-btn .lock-closed {
+  display: none;
+}
+
+/* Active/locked state: show closed lock, hide open lock */
+.chip-toggle.lock-btn.active .lock-open {
+  display: none;
+}
+
+.chip-toggle.lock-btn.active .lock-closed {
+  display: block;
+}
+
+.chip-toggle.lock-btn.active {
+  background: var(--primary-100);
+  border-color: var(--primary-200);
+  color: var(--primary-700);
+}
+
 /* Results Summary */
 .results-summary {
   display: flex;
