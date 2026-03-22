@@ -251,6 +251,17 @@ type FDAFoodProduct = {
   IS_CANCELED: string;
 };
 
+type CprCdrrhrRecord = {
+  registration_number: string;
+  product_name: string;
+  manufacturer: string;
+  country_of_origin: string;
+  trader: string | null;
+  distributor: string;
+  issuance_date: string;
+  expiry_date: string;
+};
+
 type APISearchResponse = {
   lto_food?: unknown[];
   lto_drugs?: unknown[];
@@ -398,6 +409,34 @@ function mapFDAFoodProductToRecord(foodProduct: FDAFoodProduct): CDRRRecord {
   };
 }
 
+function mapCprCdrrhrToRecord(cprRecord: CprCdrrhrRecord): CDRRRecord {
+  // Extract application type prefix from registration number (e.g., "CMDR-2021-00053" -> "CMDR")
+  const regNumber = cprRecord.registration_number || "";
+  const appType = regNumber.includes("-") ? (regNumber.split("-")[0] ?? "") : "";
+
+  // Use manufacturer for trader if trader is null
+  const trader = cprRecord.trader || cprRecord.manufacturer || "";
+
+  return {
+    registration_number: regNumber,
+    generic_name: cprRecord.product_name || "",
+    brand_name: "",
+    dosage_strength: "",
+    dosage_form: "",
+    classification: "Medical Device",
+    packaging: "",
+    manufacturer: cprRecord.manufacturer || "",
+    country_of_origin: cprRecord.country_of_origin || "",
+    trader: trader,
+    importer: cprRecord.distributor || "",
+    distributor: cprRecord.distributor || "",
+    app_type: appType,
+    issuance_date: cprRecord.issuance_date || "",
+    expiry_date: cprRecord.expiry_date || "",
+    pharmacologic_category: "Medical Device",
+  };
+}
+
 // ============================================================================
 // CHARACTER HANDLING
 // ============================================================================
@@ -480,6 +519,25 @@ async function processQuery(
       const added = appendToCsv(validRecords, state);
       totalAdded += added;
       log(`Query ${item.query}: Found ${cdrrRecords.length} CDRR records, ${added} new added`);
+    }
+
+    // Process CPR CDRRHR records (medical devices) - processed for all queries
+    const cprCdrrhrRecords = (result.data.cpr_cdrrhr || []) as CprCdrrhrRecord[];
+    if (cprCdrrhrRecords.length > 0) {
+      const validRecords: CDRRRecord[] = [];
+
+      for (const cprRecord of cprCdrrhrRecords) {
+        if (!cprRecord) continue;
+        const record = mapCprCdrrhrToRecord(cprRecord);
+        const sanitized = sanitizeRecord(record);
+        if (sanitized) {
+          validRecords.push(sanitized);
+        }
+      }
+
+      const added = appendToCsv(validRecords, state);
+      totalAdded += added;
+      log(`Query ${item.query}: Found ${cprCdrrhrRecords.length} cpr_cdrrhr records, ${added} new added`);
     }
 
     // Process FDA Food Products (only for "Supplement" query)
