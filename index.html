@@ -25,8 +25,6 @@
   <meta property="og:url" content="https://searchmedsfda.vercel.app/" />
   <meta property="og:description" content="Local prescription builder with FDA Philippines drug search. Build prescriptions, search drugs, and print." />
   <meta property="og:image" content="/images/opengraphurl.png" />
-  <meta property="og:image:url" content="/images/opengraphurl.png" />
-  <meta property="og:image:secure_url" content="/images/opengraphurl.png" />
   <meta property="og:locale" content="en_US" />
 
   <!-- Twitter Card -->
@@ -135,79 +133,43 @@
             <div class="filter-chips">
               <button type="button" class="chip-toggle lock-btn" id="btnOnlyRX" title="Lock to Rx Only">
                 <span class="lock-icon">
-                  <svg class="lock-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                    <path d="M7 11V7a5 5 0 0 1 9.9-1"/>
-                  </svg>
-                  <svg class="lock-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                  </svg>
+                  <svg class="lock-open"><use href="#icon-lock-open"/></svg>
+                  <svg class="lock-closed"><use href="#icon-lock-closed"/></svg>
                 </span>
                 <span class="toggle-label">Rx</span>
               </button>
               <button type="button" class="chip-toggle lock-btn" id="btnOnlyOTC" title="Lock to OTC Only">
                 <span class="lock-icon">
-                  <svg class="lock-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                    <path d="M7 11V7a5 5 0 0 1 9.9-1"/>
-                  </svg>
-                  <svg class="lock-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                  </svg>
+                  <svg class="lock-open"><use href="#icon-lock-open"/></svg>
+                  <svg class="lock-closed"><use href="#icon-lock-closed"/></svg>
                 </span>
                 <span class="toggle-label">OTC</span>
               </button>
               <button type="button" class="chip-toggle lock-btn" id="btnOnlyGeneric" title="Lock to Generic Only (Brand Name = None)">
                 <span class="lock-icon">
-                  <svg class="lock-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                    <path d="M7 11V7a5 5 0 0 1 9.9-1"/>
-                  </svg>
-                  <svg class="lock-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                  </svg>
+                  <svg class="lock-open"><use href="#icon-lock-open"/></svg>
+                  <svg class="lock-closed"><use href="#icon-lock-closed"/></svg>
                 </span>
                 <span class="toggle-label">Generic</span>
               </button>
               <button type="button" class="chip-toggle eye-btn" id="btnShowVet" title="Show Veterinary products">
                 <span class="eye-icon">
-                  <svg class="eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                    <circle cx="12" cy="12" r="3"/>
-                  </svg>
-                  <svg class="eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-                    <line x1="1" y1="1" x2="23" y2="23"/>
-                  </svg>
+                  <svg class="eye-open"><use href="#icon-eye-open"/></svg>
+                  <svg class="eye-closed"><use href="#icon-eye-closed"/></svg>
                 </span>
                 <span class="toggle-label">Vet</span>
               </button>
               <button type="button" class="chip-toggle eye-btn" id="btnShowSupplement" title="Show Supplements">
                 <span class="eye-icon">
-                  <svg class="eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                    <circle cx="12" cy="12" r="3"/>
-                  </svg>
-                  <svg class="eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-                    <line x1="1" y1="1" x2="23" y2="23"/>
-                  </svg>
+                  <svg class="eye-open"><use href="#icon-eye-open"/></svg>
+                  <svg class="eye-closed"><use href="#icon-eye-closed"/></svg>
                 </span>
                 <span class="toggle-label">Suppl.</span>
               </button>
               <button type="button" class="chip-toggle eye-btn" id="btnShowMedicalDevice" title="Show Medical Devices">
                 <span class="eye-icon">
-                  <svg class="eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                    <circle cx="12" cy="12" r="3"/>
-                  </svg>
-                  <svg class="eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-                    <line x1="1" y1="1" x2="23" y2="23"/>
-                  </svg>
+                  <svg class="eye-open"><use href="#icon-eye-open"/></svg>
+                  <svg class="eye-closed"><use href="#icon-eye-closed"/></svg>
                 </span>
                 <span class="toggle-label">Device</span>
               </button>
@@ -580,51 +542,56 @@
   <!-- Toast Container -->
   <div id="toastContainer" class="toast-container"></div>
 
+  <!-- SVG Sprite Definitions -->
+  <svg style="display: none;">
+    <defs>
+      <!-- Lock Icons -->
+      <symbol id="icon-lock-open" viewBox="0 0 24 24">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/>
+        <path d="M7 11V7a5 5 0 0 1 9.9-1" fill="none" stroke="currentColor" stroke-width="2"/>
+      </symbol>
+      <symbol id="icon-lock-closed" viewBox="0 0 24 24">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4" fill="none" stroke="currentColor" stroke-width="2"/>
+      </symbol>
+      <!-- Eye Icons -->
+      <symbol id="icon-eye-open" viewBox="0 0 24 24">
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" fill="none" stroke="currentColor" stroke-width="2"/>
+        <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/>
+      </symbol>
+      <symbol id="icon-eye-closed" viewBox="0 0 24 24">
+        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" fill="none" stroke="currentColor" stroke-width="2"/>
+        <line x1="1" y1="1" x2="23" y2="23" stroke="currentColor" stroke-width="2"/>
+      </symbol>
+      <!-- Toast Icons -->
+      <symbol id="icon-toast-info" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
+        <line x1="12" y1="16" x2="12" y2="12" stroke="currentColor" stroke-width="2"/>
+        <line x1="12" y1="8" x2="12.01" y2="8" stroke="currentColor" stroke-width="2"/>
+      </symbol>
+      <symbol id="icon-toast-success" viewBox="0 0 24 24">
+        <polyline points="20,6 9,17 4,12" fill="none" stroke="currentColor" stroke-width="2"/>
+      </symbol>
+      <symbol id="icon-toast-error" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
+        <line x1="12" y1="8" x2="12" y2="12" stroke="currentColor" stroke-width="2"/>
+        <line x1="12" y1="16" x2="12.01" y2="16" stroke="currentColor" stroke-width="2"/>
+      </symbol>
+      <symbol id="icon-toast-confirm" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
+        <line x1="12" y1="8" x2="12" y2="13" stroke="currentColor" stroke-width="2"/>
+        <circle cx="12" cy="17" r="1" fill="currentColor"/>
+      </symbol>
+    </defs>
+  </svg>
+
   <!-- Templates -->
-  <!-- Toast Info Template -->
-  <template id="tpl-toast-info">
-    <div class="toast info">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-        <circle cx="12" cy="12" r="10"/>
-        <line x1="12" y1="16" x2="12" y2="12"/>
-        <line x1="12" y1="8" x2="12.01" y2="8"/>
-      </svg>
+  <!-- Unified Toast Template (type set via data attribute) -->
+  <template id="tpl-toast">
+    <div class="toast">
+      <svg class="toast-icon" viewBox="0 0 24 24" width="20" height="20"><use href=""/></svg>
       <span class="toast-message"></span>
-    </div>
-  </template>
-
-  <!-- Toast Success Template -->
-  <template id="tpl-toast-success">
-    <div class="toast success">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-        <polyline points="20,6 9,17 4,12"/>
-      </svg>
-      <span class="toast-message"></span>
-    </div>
-  </template>
-
-  <!-- Toast Error Template -->
-  <template id="tpl-toast-error">
-    <div class="toast error">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-        <circle cx="12" cy="12" r="10"/>
-        <line x1="12" y1="8" x2="12" y2="12"/>
-        <line x1="12" y1="16" x2="12.01" y2="16"/>
-      </svg>
-      <span class="toast-message"></span>
-    </div>
-  </template>
-
-  <!-- Toast Confirm Template -->
-  <template id="tpl-toast-confirm">
-    <div class="toast confirm">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-        <circle cx="12" cy="12" r="10"/>
-        <line x1="12" y1="8" x2="12" y2="13"/>
-        <circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/>
-      </svg>
-      <span class="toast-message"></span>
-      <div class="toast-actions">
+      <div class="toast-actions" hidden>
         <button class="btn btn-danger-ghost btn-sm toast-confirm">Clear</button>
         <button class="btn btn-secondary btn-sm toast-cancel">Cancel</button>
       </div>

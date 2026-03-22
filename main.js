@@ -30,9 +30,46 @@
     dataSource: null // 'fhir' or 'csv'
   };
 
+  // DOM element cache
+  const domCache = new Map();
+  function getCached(selector) {
+    if (!domCache.has(selector)) {
+      domCache.set(selector, document.querySelector(selector));
+    }
+    return domCache.get(selector);
+  }
+  function clearDomCache() {
+    domCache.clear();
+  }
+
   // DOM helpers
   const $ = (sel) => document.querySelector(sel);
   const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+
+  // ==================== Utility Functions ====================
+
+  /**
+   * Debounce function execution
+   * @param {Function} fn - Function to debounce
+   * @param {number} delay - Delay in milliseconds
+   * @returns {Function} Debounced function
+   */
+  function debounce(fn, delay) {
+    let timer;
+    return (...args) => {
+      clearTimeout(timer);
+      timer = setTimeout(() => fn.apply(this, args), delay);
+    };
+  }
+
+  /**
+   * Normalize text for case-insensitive comparison
+   * @param {string} text - Text to normalize
+   * @returns {string} Lowercase trimmed text
+   */
+  function normalizeText(text) {
+    return String(text || '').toLowerCase().trim();
+  }
 
   // ==================== Template System ====================
 
@@ -59,6 +96,14 @@
     container.innerHTML = '';
   }
 
+  // Icon mapping for toast types
+  const TOAST_ICONS = {
+    info: '#icon-toast-info',
+    success: '#icon-toast-success',
+    error: '#icon-toast-error',
+    confirm: '#icon-toast-confirm'
+  };
+
   function showConfirmToast(message, onConfirm, onCancel) {
     const container = $('#toastContainer');
     if (!container) return;
@@ -66,8 +111,11 @@
     // Clear existing toasts
     container.innerHTML = '';
 
-    const toast = cloneTemplate('tpl-toast-confirm');
+    const toast = cloneTemplate('tpl-toast');
+    toast.classList.add('confirm');
     toast.querySelector('.toast-message').textContent = message;
+    toast.querySelector('.toast-icon use').setAttribute('href', TOAST_ICONS.confirm);
+    toast.querySelector('.toast-actions').hidden = false;
 
     container.appendChild(toast);
 
@@ -94,9 +142,10 @@
     const container = $('#toastContainer');
     if (!container) return;
 
-    const templateId = type === 'success' ? 'tpl-toast-success' : type === 'error' ? 'tpl-toast-error' : 'tpl-toast-info';
-    const toast = cloneTemplate(templateId);
+    const toast = cloneTemplate('tpl-toast');
+    toast.classList.add(type);
     toast.querySelector('.toast-message').textContent = message;
+    toast.querySelector('.toast-icon use').setAttribute('href', TOAST_ICONS[type] || TOAST_ICONS.info);
 
     container.appendChild(toast);
 
@@ -379,6 +428,50 @@
     statusEl.className = `status-badge ${type}`;
   }
 
+  // Precomputed field keys for filtering
+  const FILTER_PREDICATE_KEYS = [
+    'Generic Name',
+    'Brand Name',
+    'Pharmacologic Category',
+    'Classification',
+    'Manufacturer',
+    'Dosage Form',
+    'Dosage Strength'
+  ];
+
+  /**
+   * Normalize row data for faster filtering
+   * Pre-computes lowercase values and flags
+   * @param {Array} data - Raw drug data
+   * @returns {Array} Normalized data with _norm property
+   */
+  function normalizeData(data) {
+    return data.map(row => {
+      const classification = normalizeText(row['Classification']);
+      const category = normalizeText(row['Pharmacologic Category']);
+      const brand = normalizeText(row['Brand Name']);
+      const generic = normalizeText(row['Generic Name']);
+
+      return {
+        ...row,
+        _norm: {
+          classification,
+          category,
+          brand,
+          generic,
+          isRx: classification.includes('prescription') || classification === 'rx',
+          isOtc: classification.includes('over-the-counter') || classification.includes('otc'),
+          isGeneric: brand === 'none' || brand === '',
+          isVet: category.includes('veterinary') || classification.includes('veterinary') ||
+                 brand.includes('(vet.)') || brand.includes('vet') || generic.includes('(vet.)') || generic.includes('veterinary'),
+          isSupplement: classification.includes('supplement'),
+          isMedicalDevice: classification.includes('medical device') || classification.includes('medicaldevice'),
+          searchableText: FILTER_PREDICATE_KEYS.map(k => normalizeText(row[k])).join(' ')
+        }
+      };
+    });
+  }
+
   /**
    * Centralized function to finalize data loading
    * Updates state, UI badges, summary, and triggers rendering
@@ -388,7 +481,10 @@
    * @param {string} lastUpdated - Date string for the update badge
    */
   function finalizeDataLoad(data, source, statusLabel, lastUpdated) {
-    state.data = data;
+    // Normalize data for faster filtering
+    const normalizedData = normalizeData(data);
+
+    state.data = normalizedData;
     state.page = 1;
     state.isDataLoaded = true;
     state.dataSource = source;
@@ -432,7 +528,16 @@
 
   // ==================== FHIR ValueSet Loading ====================
 
-  async function tryFHIRLoad() {
+  /**
+   * Load data from FHIR server
+   * @param {Object} options - Loading options
+   * @param {boolean} options.fromBackgroundUpdate - If true, don't show error toasts or fallback UI
+   * @param {boolean} options.skipCacheFallback - If true, don't fallback to cache on error
+   * @param {string} options.successMessage - Custom success toast message
+   */
+  async function tryFHIRLoad(options = {}) {
+    const { fromBackgroundUpdate = false, skipCacheFallback = false, successMessage = null } = options;
+
     setStatus('Loading from FHIR...', 'loading');
 
     try {
@@ -461,9 +566,20 @@
       });
 
       clearToasts();
-      showToast(`Loaded ${data.length.toLocaleString()} drugs from FHIR server`, 'success');
+      const msg = successMessage || (fromBackgroundUpdate
+        ? `Updated to ${data.length.toLocaleString()} drugs from FHIR server`
+        : `Loaded ${data.length.toLocaleString()} drugs from FHIR server`);
+      showToast(msg, 'success');
     } catch (error) {
       console.error('FHIR load failed:', error);
+
+      // If called from background update and we have data, just keep using it
+      if (fromBackgroundUpdate && state.data && state.data.length > 0) {
+        console.log('Background FHIR update failed, keeping existing data');
+        return;
+      }
+
+      if (skipCacheFallback) return;
 
       // Check if we have cached data to fall back to
       const cached = await loadCachedData();
@@ -475,14 +591,18 @@
 
         finalizeDataLoad(cached.data, 'cached', 'Cache (FHIR failed)', lastUpdated);
 
-        showToast('FHIR server unavailable, using cached data', 'warning');
+        if (!fromBackgroundUpdate) {
+          showToast('FHIR server unavailable, using cached data', 'warning');
+        }
         return;
       }
 
       // No cache - fall back to CSV
       setStatus('FHIR failed, trying CSV...', 'loading');
-      showToast('FHIR server unavailable, falling back to CSV', 'error');
-      setTimeout(tryAutoLoad, 500);
+      if (!fromBackgroundUpdate) {
+        showToast('FHIR server unavailable, falling back to CSV', 'error');
+      }
+      setTimeout(() => tryCSVLoadWithCache({ fromBackgroundUpdate }), 500);
     }
   }
 
@@ -598,50 +718,12 @@
     }).filter(item => item !== null); // Remove null entries
   }
 
-  async function tryAutoLoad() {
-    setStatus('Loading CSV...', 'loading');
-
-    // Check if we already have cached data - if so, keep it and don't show error
-    const cached = await loadCachedData();
-    const hasCache = cached.data && cached.data.length > 0;
-
-    // Fetch GitHub last commit date for the CSV file
-    let githubDate = null;
-    try {
-      githubDate = await fetchGitHubCSVLastUpdated();
-    } catch (e) {
-      console.log('Could not fetch GitHub date:', e);
-    }
-
-    try {
-      const response = await fetch('Combined_All_CPR.csv');
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-      const text = await response.text();
-      const data = parseAndLoadCSV(text, null, githubDate, false);
-
-      // Save to cache
-      if (data && data.length > 0) {
-        await saveCachedData(data, {
-          source: 'csv',
-          versionId: githubDate || new Date().toISOString(),
-          lastUpdated: githubDate || new Date().toISOString()
-        });
-      }
-    } catch (error) {
-      console.error('CSV load failed:', error);
-
-      // If we have cached data, keep using it silently
-      if (hasCache) {
-        console.log('CSV load failed but cache exists, keeping cached data');
-        setStatus(`${cached.data.length.toLocaleString()} records | Cache (offline)`, 'loaded');
-        return;
-      }
-
-      // No cache - show error
-      setStatus('Load failed', 'error');
-      showUploadUI();
-    }
+  /**
+   * Alias for tryCSVLoadWithCache for backward compatibility
+   * @deprecated Use tryCSVLoadWithCache instead
+   */
+  async function tryAutoLoad(options = {}) {
+    return tryCSVLoadWithCache(options);
   }
 
   /**
@@ -802,15 +884,11 @@
     const clearFilters = $('#clearFilters');
 
     // Search input with debounce
-    let debounceTimer;
-    q?.addEventListener('input', () => {
-      clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(() => {
-        state.searchQ = q.value.trim();
-        state.page = 1;
-        filterAndRender();
-      }, 150);
-    });
+    q?.addEventListener('input', debounce(() => {
+      state.searchQ = q.value.trim();
+      state.page = 1;
+      filterAndRender();
+    }, 150));
 
     // Clear search button
     clearSearch?.addEventListener('click', () => {
@@ -995,70 +1073,28 @@
   }
 
   function filterAndRender() {
-    const q = state.searchQ.toLowerCase().trim();
+    const q = normalizeText(state.searchQ);
     const f = state.searchField;
     const terms = q ? q.split(/\s+/).filter((t) => t.length > 0) : [];
 
-    const isHuman = (row) => {
-      const gen = (row['Pharmacologic Category'] || '').toLowerCase();
-      const cls = (row['Classification'] || '').toLowerCase();
-      const brand = (row['Brand Name'] || '').toLowerCase();
-      const generic = (row['Generic Name'] || '').toLowerCase();
-
-      if (gen.includes('veterinary') || cls.includes('veterinary') || brand.includes('(vet.)') || brand.includes('vet') || generic.includes('(vet.)') || generic.includes('veterinary')) {
-        return false;
-      }
-      return true;
-    };
-
-    const searchableFields = [
-      'Generic Name',
-      'Brand Name',
-      'Pharmacologic Category',
-      'Manufacturer',
-      'Dosage Form',
-      'Dosage Strength'
-    ];
-
     state.filtered = state.data.filter((row) => {
-      if (state.onlyRX) {
-        const cls = String(row['Classification'] || '').toLowerCase();
-        if (!cls.includes('prescription')) return false;
-      }
+      const norm = row._norm;
+      if (!norm) return false;
 
-      if (state.onlyOTC) {
-        const cls = String(row['Classification'] || '').toLowerCase();
-        if (!cls.includes('over-the-counter') && !cls.includes('otc')) return false;
-      }
-
-      if (state.onlyGeneric) {
-        const brand = String(row['Brand Name'] || '').trim();
-        if (brand.toLowerCase() !== 'none') return false;
-      }
-
-      if (!state.showVet) {
-        if (!isHuman(row)) return false;
-      }
-
-      if (!state.showSupplement) {
-        const cls = String(row['Classification'] || '').toLowerCase();
-        if (cls.includes('supplement')) return false;
-      }
-
-      if (!state.showMedicalDevice) {
-        const cls = String(row['Classification'] || '').toLowerCase();
-        if (cls.includes('medical device') || cls.includes('medicaldevice')) return false;
-      }
+      // Classification filters using pre-computed flags
+      if (state.onlyRX && !norm.isRx) return false;
+      if (state.onlyOTC && !norm.isOtc) return false;
+      if (state.onlyGeneric && !norm.isGeneric) return false;
+      if (!state.showVet && norm.isVet) return false;
+      if (!state.showSupplement && norm.isSupplement) return false;
+      if (!state.showMedicalDevice && norm.isMedicalDevice) return false;
 
       if (!q) return true;
 
       if (f === 'all') {
-        const rowText = searchableFields
-          .map((k) => String(row[k] || '').toLowerCase())
-          .join(' ');
-        return terms.every((term) => rowText.includes(term));
+        return terms.every((term) => norm.searchableText.includes(term));
       } else {
-        const fieldValue = String(row[f] || '').toLowerCase();
+        const fieldValue = normalizeText(row[f]);
         return terms.every((term) => fieldValue.includes(term));
       }
     });
@@ -1359,16 +1395,7 @@
   function buildQuickIndex() {
     state.quickIndex = state.data.map((r, i) => ({
       i,
-      t: [
-        r['Generic Name'],
-        r['Brand Name'],
-        r['Pharmacologic Category'],
-        r['Manufacturer'],
-        r['Dosage Form'],
-        r['Dosage Strength']
-      ]
-        .map((x) => String(x || '').toLowerCase())
-        .join(' | ')
+      t: r._norm?.searchableText || ''
     }));
   }
 
@@ -1386,47 +1413,43 @@
       rxDate.valueAsDate = new Date();
     }
 
-    // Quick add search
-    let searchDebounce;
-    drugQuick?.addEventListener('input', () => {
-      clearTimeout(searchDebounce);
-      searchDebounce = setTimeout(() => {
-        const q = drugQuick.value.trim().toLowerCase();
-        if (!q) {
-          sideResults.innerHTML = '';
-          return;
-        }
+    // Quick add search with debounce
+    drugQuick?.addEventListener('input', debounce(() => {
+      const q = drugQuick.value.trim().toLowerCase();
+      if (!q) {
+        sideResults.innerHTML = '';
+        return;
+      }
 
-        const terms = q.split(/\s+/).filter((t) => t.length > 0);
-        const hits = state.quickIndex
-          .filter((x) => terms.every((term) => x.t.includes(term)))
-          .slice(0, 10);
+      const terms = q.split(/\s+/).filter((t) => t.length > 0);
+      const hits = state.quickIndex
+        .filter((x) => terms.every((term) => x.t.includes(term)))
+        .slice(0, 10);
 
-        if (hits.length === 0) {
-          sideResults.innerHTML = '';
-          sideResults.appendChild(cloneTemplate('tpl-side-card-empty'));
-        } else {
-          sideResults.innerHTML = '';
-          const h = (s) => highlight(String(s || ''), q);
+      if (hits.length === 0) {
+        sideResults.innerHTML = '';
+        sideResults.appendChild(cloneTemplate('tpl-side-card-empty'));
+      } else {
+        sideResults.innerHTML = '';
+        const h = (s) => highlight(String(s || ''), q);
 
-          hits.forEach((hit) => {
-            const r = state.data[hit.i];
-            sideResults.appendChild(renderSideCard(r, q, hit.i, h));
-          });
+        hits.forEach((hit) => {
+          const r = state.data[hit.i];
+          sideResults.appendChild(renderSideCard(r, q, hit.i, h));
+        });
 
-          // Event delegation for add buttons
-          sideResults.onclick = (e) => {
-            const btn = e.target.closest('.add-side-btn');
-            if (btn) {
-              const idx = +btn.dataset.i;
-              addRxFromRecord(state.data[idx]);
-              drugQuick.value = '';
-              sideResults.innerHTML = '';
-            }
-          };
-        }
-      }, 150);
-    });
+        // Event delegation for add buttons
+        sideResults.onclick = (e) => {
+          const btn = e.target.closest('.add-side-btn');
+          if (btn) {
+            const idx = +btn.dataset.i;
+            addRxFromRecord(state.data[idx]);
+            drugQuick.value = '';
+            sideResults.innerHTML = '';
+          }
+        };
+      }
+    }, 150));
 
     // Enter key handling
     drugQuick?.addEventListener('keydown', (e) => {
@@ -1488,6 +1511,13 @@
 
     // Save as Image
     $('#saveImageRx')?.addEventListener('click', saveAsImage);
+
+    // Event delegation for prescription items (click actions and input updates)
+    const rxItems = $('#rxItems');
+    if (rxItems) {
+      rxItems.addEventListener('click', handleRxItemAction);
+      rxItems.addEventListener('input', handleRxItemInput);
+    }
   }
 
   function renderSideCard(r, q, idx, highlightFn) {
@@ -1540,46 +1570,6 @@
 
     rxItems.appendChild(div);
 
-    // Wire up actions
-    div.querySelector('.remove').addEventListener('click', () => {
-      div.remove();
-      renumberItems();
-      if (rxItems.children.length === 0) {
-        rxItems.innerHTML = '';
-        rxItems.appendChild(cloneTemplate('tpl-empty-rx'));
-        state.rxItemCount = 0;
-        updateRxBadge();
-      }
-      updateRxPreview();
-    });
-
-    div.querySelector('.duplicate').addEventListener('click', () => {
-      const vals = collectItem(div);
-      addRxItem(vals);
-    });
-
-    div.querySelector('.move-up').addEventListener('click', () => {
-      if (div.previousElementSibling) {
-        div.parentNode.insertBefore(div, div.previousElementSibling);
-        renumberItems();
-        updateRxPreview();
-      }
-    });
-
-    div.querySelector('.move-down').addEventListener('click', () => {
-      if (div.nextElementSibling) {
-        div.parentNode.insertBefore(div.nextElementSibling, div);
-        renumberItems();
-        updateRxPreview();
-      }
-    });
-
-    // Wire up live preview updates for all inputs in this item
-    const inputs = div.querySelectorAll('input');
-    inputs.forEach((input) => {
-      input.addEventListener('input', updateRxPreview);
-    });
-
     // Focus first field
     div.querySelector('.rx-generic').focus();
 
@@ -1590,6 +1580,57 @@
 
     // Update the live preview
     updateRxPreview();
+  }
+
+  /**
+   * Handle prescription item actions via event delegation
+   * @param {Event} e - Click event
+   */
+  function handleRxItemAction(e) {
+    const btn = e.target.closest('.rx-item-actions button, .rx-item input');
+    if (!btn) return;
+
+    const div = btn.closest('.rx-item');
+    if (!div) return;
+
+    const rxItems = $('#rxItems');
+
+    if (btn.classList.contains('remove')) {
+      div.remove();
+      renumberItems();
+      if (rxItems.children.length === 0) {
+        rxItems.innerHTML = '';
+        rxItems.appendChild(cloneTemplate('tpl-empty-rx'));
+        state.rxItemCount = 0;
+        updateRxBadge();
+      }
+      updateRxPreview();
+    } else if (btn.classList.contains('duplicate')) {
+      const vals = collectItem(div);
+      addRxItem(vals);
+    } else if (btn.classList.contains('move-up')) {
+      if (div.previousElementSibling) {
+        div.parentNode.insertBefore(div, div.previousElementSibling);
+        renumberItems();
+        updateRxPreview();
+      }
+    } else if (btn.classList.contains('move-down')) {
+      if (div.nextElementSibling) {
+        div.parentNode.insertBefore(div.nextElementSibling, div);
+        renumberItems();
+        updateRxPreview();
+      }
+    }
+  }
+
+  /**
+   * Handle input changes for live preview via event delegation
+   * @param {Event} e - Input event
+   */
+  function handleRxItemInput(e) {
+    if (e.target.closest('.rx-item')) {
+      updateRxPreview();
+    }
   }
 
   function renumberItems() {
@@ -1624,20 +1665,7 @@
   }
 
   function saveLocal() {
-    const fields = {
-      clinic: $('#clinic'),
-      clinicAddr: $('#clinicAddr'),
-      docName: $('#docName'),
-      prc: $('#prc'),
-      ptr: $('#ptr'),
-      s2: $('#s2'),
-      ptName: $('#ptName'),
-      ptAge: $('#ptAge'),
-      ptSex: $('#ptSex'),
-      ptAddr: $('#ptAddr'),
-      rxDate: $('#rxDate'),
-      rxNotes: $('#rxNotes')
-    };
+    const fields = getFormFields();
 
     const items = Array.from($('#rxItems').children)
       .filter((child) => child.classList.contains('rx-item'))
@@ -1663,20 +1691,7 @@
 
     try {
       const data = JSON.parse(saved);
-      const fields = {
-        clinic: $('#clinic'),
-        clinicAddr: $('#clinicAddr'),
-        docName: $('#docName'),
-        prc: $('#prc'),
-        ptr: $('#ptr'),
-        s2: $('#s2'),
-        ptName: $('#ptName'),
-        ptAge: $('#ptAge'),
-        ptSex: $('#ptSex'),
-        ptAddr: $('#ptAddr'),
-        rxDate: $('#rxDate'),
-        rxNotes: $('#rxNotes')
-      };
+      const fields = getFormFields();
 
       Object.entries(data.meta || {}).forEach(([k, v]) => {
         if (fields[k]) fields[k].value = v;
@@ -2014,7 +2029,7 @@
 
         if (isCacheStale(cachedMeta, versionId, 'fhir')) {
           showToast('New drug data available, updating...', 'info', 5000);
-          await tryFHIRLoadWithCache(true); // true = called from background update, don't fallback to CSV
+          await tryFHIRLoadWithCache({ fromBackgroundUpdate: true, skipCacheFallback: true });
         } else {
           console.log('Cache is up to date with FHIR server');
         }
@@ -2035,7 +2050,7 @@
       }
       if (isCacheStale(cachedMeta, githubDate, 'csv')) {
         // Don't show toast until we successfully fetch the data
-        await tryCSVLoadWithCache(true); // true = from background update
+        await tryCSVLoadWithCache({ fromBackgroundUpdate: true });
       } else {
         console.log('Cache is up to date with CSV');
       }
@@ -2046,60 +2061,31 @@
   }
 
   /**
-   * Load from FHIR and cache the result
-   * @param {boolean} fromBackgroundUpdate - If true, don't fallback to CSV on failure (cache already exists)
+   * Load from FHIR and cache the result (compatibility wrapper)
+   * @param {boolean|Object} options - If boolean, treated as fromBackgroundUpdate; otherwise options object
    */
-  async function tryFHIRLoadWithCache(fromBackgroundUpdate = false) {
-    setStatus('Loading from FHIR...', 'loading');
-
-    try {
-      const { concepts: allConcepts, meta } = await fetchAllValueSetConcepts();
-
-      if (allConcepts.length === 0) {
-        throw new Error('No concepts returned from FHIR server');
-      }
-
-      // Convert FHIR concepts to the same format as CSV data
-      const data = convertFHIRConceptsToData(allConcepts);
-
-      // Save to cache with version metadata
-      const versionId = meta?.versionId || meta?.lastUpdated;
-      await saveCachedData(data, {
-        source: 'fhir',
-        versionId: versionId,
-        lastUpdated: meta?.lastUpdated || new Date().toISOString()
-      });
-
-      const lastUpdated = meta?.lastUpdated
-        ? new Date(meta.lastUpdated).toLocaleDateString()
-        : new Date().toLocaleDateString();
-
-      finalizeDataLoad(data, 'fhir-fresh', 'FHIR', lastUpdated);
-
-      clearToasts();
-      showToast(`Updated to ${data.length.toLocaleString()} drugs from FHIR server`, 'success');
-    } catch (error) {
-      console.error('FHIR load failed:', error);
-
-      // If called from background update and we have cached data, just keep using cache
-      if (fromBackgroundUpdate && state.data && state.data.length > 0) {
-        console.log('Background FHIR update failed, keeping cached data');
-        return;
-      }
-
-      setStatus('FHIR failed, trying CSV...', 'loading');
-      showToast('FHIR server unavailable, falling back to CSV', 'error');
-
-      // Fall back to CSV
-      await tryCSVLoadWithCache();
-    }
+  async function tryFHIRLoadWithCache(options = false) {
+    const opts = typeof options === 'boolean'
+      ? { fromBackgroundUpdate: options, skipCacheFallback: options }
+      : options;
+    return tryFHIRLoad({
+      ...opts,
+      successMessage: opts.fromBackgroundUpdate
+        ? null
+        : `Updated to ${state.data?.length?.toLocaleString() || ''} drugs from FHIR server`
+    });
   }
 
   /**
    * Load from CSV and cache the result
-   * @param {boolean} fromBackgroundUpdate - If true, show toast only on success
+   * @param {boolean|Object} options - If boolean, treated as fromBackgroundUpdate; otherwise options object
+   * @param {boolean} options.fromBackgroundUpdate - If true, show toast only on success
    */
-  async function tryCSVLoadWithCache(fromBackgroundUpdate = false) {
+  async function tryCSVLoadWithCache(options = false) {
+    const { fromBackgroundUpdate = false } = typeof options === 'boolean'
+      ? { fromBackgroundUpdate: options }
+      : options;
+
     setStatus('Loading CSV...', 'loading');
 
     // Check if we already have cached data - if so, keep it and don't show error

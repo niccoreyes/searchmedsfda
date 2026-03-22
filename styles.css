@@ -100,6 +100,12 @@
   display: none !important;
 }
 
+/* SVG use elements inherit current color */
+svg use {
+  fill: currentColor;
+  stroke: currentColor;
+}
+
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
@@ -842,6 +848,7 @@ p {
 
 .results-table tbody tr {
   transition: background var(--transition-fast);
+  contain: content;
 }
 
 .results-table tbody tr:hover {
@@ -934,6 +941,8 @@ p {
   padding: var(--space-4);
   transition: all var(--transition-fast);
   cursor: pointer;
+  contain: content;
+  content-visibility: auto;
 }
 
 .drug-card:hover {
@@ -1253,6 +1262,7 @@ p {
   border-bottom: 1px solid var(--border);
   cursor: pointer;
   transition: background var(--transition-fast);
+  contain: content;
 }
 
 .side-card:last-child {
@@ -1309,6 +1319,7 @@ p {
   border-radius: var(--radius-lg);
   padding: var(--space-4);
   position: relative;
+  contain: content;
 }
 
 .rx-item-header {
