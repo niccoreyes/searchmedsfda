@@ -2230,3 +2230,30 @@ Received SIGINT. Saving state and exiting gracefully...
 [2026-03-22T06:07:54.787Z] Query IM: Found 3098 CDRR records, 0 new added
 [2026-03-22T06:07:54.789Z] Query IM: Found 1105 cpr_cdrrhr records, 0 new added
 [2026-03-22T06:07:56.290Z] Querying: IN (attempt 1)
+[2026-03-22T06:08:28.566Z] Error for query IN: HTTP 500
+[2026-03-22T06:08:28.567Z] Drilling down on error: IN -> [INZ, INY, INX, INW, INV, INU, INT, INS, INR, INQ, INP, INO, INN, INM, INL, INK, INJ, INI, INH, ING, INF, INE, IND, INC, INB, INA]
+[2026-03-22T06:08:30.068Z] Querying: INA (attempt 1)
+[2026-03-22T06:09:05.848Z] Query INA: Found 1054 CDRR records, 0 new added
+[2026-03-22T06:09:05.849Z] Query INA: Found 344 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:09:07.351Z] Querying: INB (attempt 1)
+[2026-03-22T06:09:17.309Z] Query INB: Found 14 CDRR records, 0 new added
+[2026-03-22T06:09:17.309Z] Query INB: Found 9 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:09:18.811Z] Querying: INC (attempt 1)
+[2026-03-22T06:10:53.005Z] Query INC: Found 896 CDRR records, 0 new added
+[2026-03-22T06:10:53.005Z] Query INC: Found 127 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:10:54.507Z] Querying: IND (attempt 1)
+[2026-03-22T06:11:34.568Z] Query IND: Found 291 CDRR records, 0 new added
+[2026-03-22T06:11:34.568Z] Query IND: Found 293 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:11:36.070Z] Querying: INE (attempt 1)
+[2026-03-22T06:13:06.248Z] Query INE: Found 7388 CDRR records, 0 new added
+[2026-03-22T06:13:06.249Z] Query INE: Found 937 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:13:07.752Z] Querying: INF (attempt 1)
+[2026-03-22T06:13:52.178Z] Query INF: Found 236 CDRR records, 0 new added
+[2026-03-22T06:13:52.179Z] Query INF: Found 574 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:13:53.681Z] Querying: ING (attempt 1)
+[2026-03-22T06:15:26.697Z] Query ING: Found 224 CDRR records, 0 new added
+[2026-03-22T06:15:26.699Z] Query ING: Found 2673 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:15:28.201Z] Querying: INH (attempt 1)
+[2026-03-22T06:15:38.480Z] Query INH: Found 7 CDRR records, 0 new added
+[2026-03-22T06:15:38.480Z] Query INH: Found 3 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:15:39.982Z] Querying: INI (attempt 1)
