@@ -2071,3 +2071,15 @@ Received SIGINT. Saving state and exiting gracefully...
 [2026-03-22T05:13:37.293Z] Query DP: Found 62 cpr_cdrrhr records, 0 new added
 [2026-03-22T05:13:38.795Z] Querying: DQ (attempt 1)
 [2026-03-22T05:13:51.853Z] Querying: DR (attempt 1)
+[2026-03-22T05:16:33.288Z] Query DR: Found 30844 CDRR records, 284 new added
+[2026-03-22T05:16:33.296Z] Query DR: Found 12307 cpr_cdrrhr records, 45 new added
+[2026-03-22T05:16:34.798Z] Querying: DS (attempt 1)
+[2026-03-22T05:17:50.928Z] Query DS: Found 551 CDRR records, 0 new added
+[2026-03-22T05:17:50.930Z] Query DS: Found 216 cpr_cdrrhr records, 0 new added
+[2026-03-22T05:17:52.431Z] Querying: DT (attempt 1)
+[2026-03-22T05:18:06.535Z] Query DT: Found 54 CDRR records, 0 new added
+[2026-03-22T05:18:06.535Z] Query DT: Found 88 cpr_cdrrhr records, 0 new added
+[2026-03-22T05:18:08.036Z] Querying: DU (attempt 1)
+[2026-03-22T05:19:34.301Z] Query DU: Found 352 CDRR records, 0 new added
+[2026-03-22T05:19:34.302Z] Query DU: Found 687 cpr_cdrrhr records, 0 new added
+[2026-03-22T05:19:35.803Z] Querying: DV (attempt 1)
