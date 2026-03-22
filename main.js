@@ -34,6 +34,23 @@
   const $ = (sel) => document.querySelector(sel);
   const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
+  // ==================== Template System ====================
+
+  const templateCache = new Map();
+
+  function getTemplate(id) {
+    if (templateCache.has(id)) return templateCache.get(id);
+    const el = document.getElementById(id);
+    if (!el) throw new Error(`Template ${id} not found`);
+    templateCache.set(id, el);
+    return el;
+  }
+
+  function cloneTemplate(id) {
+    const tpl = getTemplate(id);
+    return tpl.content.cloneNode(true).firstElementChild;
+  }
+
   // ==================== Toast Notifications ====================
 
   function clearToasts() {
@@ -49,20 +66,8 @@
     // Clear existing toasts
     container.innerHTML = '';
 
-    const toast = document.createElement('div');
-    toast.className = 'toast confirm';
-    toast.innerHTML = `
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-        <circle cx="12" cy="12" r="10"/>
-        <line x1="12" y1="8" x2="12" y2="13"/>
-        <circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/>
-      </svg>
-      <span>${escapeHTML(message)}</span>
-      <div class="toast-actions">
-        <button class="btn btn-danger-ghost btn-sm toast-confirm">Clear</button>
-        <button class="btn btn-secondary btn-sm toast-cancel">Cancel</button>
-      </div>
-    `;
+    const toast = cloneTemplate('tpl-toast-confirm');
+    toast.querySelector('.toast-message').textContent = message;
 
     container.appendChild(toast);
 
@@ -89,19 +94,9 @@
     const container = $('#toastContainer');
     if (!container) return;
 
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.innerHTML = `
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-        ${type === 'success'
-          ? '<polyline points="20,6 9,17 4,12"/>'
-          : type === 'error'
-            ? '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>'
-            : '<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>'
-        }
-      </svg>
-      <span>${escapeHTML(message)}</span>
-    `;
+    const templateId = type === 'success' ? 'tpl-toast-success' : type === 'error' ? 'tpl-toast-error' : 'tpl-toast-info';
+    const toast = cloneTemplate(templateId);
+    toast.querySelector('.toast-message').textContent = message;
 
     container.appendChild(toast);
 
@@ -1104,48 +1099,59 @@
       emptyEl.style.display = 'block';
     } else {
       emptyEl.style.display = 'none';
+      const h = (s) => highlight(String(s || ''), state.searchQ.trim().toLowerCase());
 
       if (state.viewMode === 'cards') {
         // Card view
         listEl.style.display = '';
         tableContainer.style.display = 'none';
-        listEl.innerHTML = state.pageRows.map((r, idx) => drugCardHTML(r, idx)).join('');
+        listEl.innerHTML = '';
 
-        // Wire up card clicks
-        $$('.drug-card').forEach((card) => {
-          card.addEventListener('click', (e) => {
-            if (e.target.closest('.add-rx-btn')) return;
-            const idx = +card.dataset.idx;
-            const record = state.pageRows[idx];
-            addRxFromRecord(record);
-            showToast('Added to prescription', 'success');
-          });
+        const fragment = document.createDocumentFragment();
+        state.pageRows.forEach((r, idx) => {
+          fragment.appendChild(renderDrugCard(r, idx, h));
         });
+        listEl.appendChild(fragment);
 
-        $$('.add-rx-btn').forEach((btn) => {
-          btn.addEventListener('click', (e) => {
+        // Event delegation for card interactions
+        listEl.onclick = (e) => {
+          const btn = e.target.closest('.add-rx-btn');
+          if (btn) {
             e.stopPropagation();
             const idx = +btn.dataset.idx;
-            const record = state.pageRows[idx];
-            addRxFromRecord(record);
+            addRxFromRecord(state.pageRows[idx]);
             showToast('Added to prescription', 'success');
-          });
-        });
+            return;
+          }
+
+          const card = e.target.closest('.drug-card');
+          if (card) {
+            const idx = +card.dataset.idx;
+            addRxFromRecord(state.pageRows[idx]);
+            showToast('Added to prescription', 'success');
+          }
+        };
       } else {
         // Table view
         listEl.style.display = 'none';
         tableContainer.style.display = '';
-        tableBody.innerHTML = state.pageRows.map((r, idx) => drugTableRowHTML(r, idx)).join('');
+        tableBody.innerHTML = '';
 
-        // Wire up table add buttons
-        $$('.add-table-btn').forEach((btn) => {
-          btn.addEventListener('click', () => {
-            const idx = +btn.dataset.idx;
-            const record = state.pageRows[idx];
-            addRxFromRecord(record);
-            showToast('Added to prescription', 'success');
-          });
+        const fragment = document.createDocumentFragment();
+        state.pageRows.forEach((r, idx) => {
+          fragment.appendChild(renderDrugTableRow(r, idx, h));
         });
+        tableBody.appendChild(fragment);
+
+        // Event delegation for table buttons
+        tableBody.onclick = (e) => {
+          const btn = e.target.closest('.add-table-btn');
+          if (btn) {
+            const idx = +btn.dataset.idx;
+            addRxFromRecord(state.pageRows[idx]);
+            showToast('Added to prescription', 'success');
+          }
+        };
       }
     }
 
@@ -1156,116 +1162,130 @@
     $('#filterSummary').textContent = `${total.toLocaleString()} shown`;
   }
 
-  function drugCardHTML(r, idx) {
-    const textQ = state.searchQ.trim().toLowerCase();
-    const h = (s) => highlight(String(s || ''), textQ);
+  function renderDrugCard(r, idx, highlightFn) {
+    const card = cloneTemplate('tpl-drug-card');
+    card.dataset.idx = idx;
 
-    const generic = r['Generic Name'] || '';
-    const brand = r['Brand Name'] || '';
-    const strength = r['Dosage Strength'] || '';
-    const form = r['Dosage Form'] || '';
     const classification = r['Classification'] || '';
-    const manufacturer = r['Manufacturer'] || '';
-    const regNo = r['Registration Number'] || '';
-    const expiry = r['Expiry Date'] || '';
-
     const isRx = classification.toLowerCase().includes('rx');
     const isOtc = classification.toLowerCase().includes('over-the-counter');
     const isHousehold = classification.toLowerCase().includes('household');
     const isHumanDrug = classification.toLowerCase().includes('human drug');
     const expiryStatus = getExpiryStatus(r['Expiry Date']);
 
-    let chipClass = '';
-    let chipText = classification;
-    if (isRx) {
-      chipClass = 'rx';
-      chipText = 'Rx';
-    } else if (isOtc) {
-      chipClass = 'otc';
-      chipText = 'OTC';
-    } else if (isHousehold) {
-      chipClass = 'household';
-      chipText = 'Household Remedy';
+    // Set chip
+    const chipEl = card.querySelector('[data-field="chip"]');
+    if (isHumanDrug) {
+      chipEl.remove();
+    } else {
+      let chipClass = '';
+      let chipText = classification;
+      if (isRx) { chipClass = 'rx'; chipText = 'Rx'; }
+      else if (isOtc) { chipClass = 'otc'; chipText = 'OTC'; }
+      else if (isHousehold) { chipClass = 'household'; chipText = 'Household Remedy'; }
+      chipEl.className = `drug-class ${chipClass}`;
+      chipEl.textContent = chipText;
     }
 
-    const chipHtml = isHumanDrug ? '' : `<span class="drug-class ${chipClass}">${escapeHTML(chipText)}</span>`;
-
-    return `
-      <div class="drug-card" data-idx="${idx}">
-        <div class="drug-header">
-          <div class="drug-name">
-            <div class="drug-generic">${h(generic)}</div>
-            <div class="drug-brand">${h(brand)}</div>
-          </div>
-          ${chipHtml}
-        </div>
-        <div class="drug-details">
-          ${strength ? `<div class="drug-detail"><strong>${h(strength)}</strong></div>` : ''}
-          ${form ? `<div class="drug-detail">${h(form)}</div>` : ''}
-          ${manufacturer ? `<div class="drug-detail">${h(manufacturer.slice(0, 30))}</div>` : ''}
-        </div>
-        <div class="drug-footer">
-          <div class="drug-meta">
-            <span>Reg: ${h(regNo)}</span>
-            <span class="drug-expiry ${expiryStatus.class}">Exp: ${h(expiry) || 'N/A'}</span>
-          </div>
-          <button class="btn btn-primary btn-sm add-rx-btn" data-idx="${idx}">
-            Add to Rx
-          </button>
-        </div>
-      </div>
-    `;
-  }
-
-  function drugTableRowHTML(r, idx) {
-    const textQ = state.searchQ.trim().toLowerCase();
-    const h = (s) => highlight(String(s || ''), textQ);
-
+    // Set text fields with highlighting
     const generic = r['Generic Name'] || '';
     const brand = r['Brand Name'] || '';
-    const strength = r['Dosage Strength'] || '';
-    const form = r['Dosage Form'] || '';
-    const classification = r['Classification'] || '';
-    const manufacturer = r['Manufacturer'] || '';
-    const regNo = r['Registration Number'] || '';
-    const expiry = r['Expiry Date'] || '';
+    card.querySelector('[data-field="generic"]').innerHTML = highlightFn(generic);
+    card.querySelector('[data-field="brand"]').innerHTML = highlightFn(brand);
 
+    // Strength
+    const strengthEl = card.querySelector('[data-field="strength"]');
+    const strength = r['Dosage Strength'];
+    if (strength) {
+      strengthEl.innerHTML = `<strong>${highlightFn(strength)}</strong>`;
+    } else {
+      strengthEl.remove();
+    }
+
+    // Form
+    const formEl = card.querySelector('[data-field="form"]');
+    const form = r['Dosage Form'];
+    if (form) {
+      formEl.textContent = form;
+    } else {
+      formEl.remove();
+    }
+
+    // Manufacturer
+    const mfrEl = card.querySelector('[data-field="manufacturer"]');
+    const manufacturer = r['Manufacturer'];
+    if (manufacturer) {
+      mfrEl.textContent = manufacturer.slice(0, 30);
+    } else {
+      mfrEl.remove();
+    }
+
+    // Registration and expiry
+    card.querySelector('[data-field="regNo"]').textContent = r['Registration Number'] || '';
+    const expiryEl = card.querySelector('[data-field="expiry"]');
+    expiryEl.className = `drug-expiry ${expiryStatus.class}`;
+    expiryEl.textContent = `Exp: ${r['Expiry Date'] || 'N/A'}`;
+
+    // Set button index
+    card.querySelector('.add-rx-btn').dataset.idx = idx;
+
+    return card;
+  }
+
+  function renderDrugTableRow(r, idx, highlightFn) {
+    const row = cloneTemplate('tpl-table-row');
+    row.dataset.idx = idx;
+
+    const classification = r['Classification'] || '';
     const isRx = classification.toLowerCase() === 'rx';
     const isOtc = classification.toLowerCase().includes('over-the-counter');
     const isHousehold = classification.toLowerCase().includes('household');
     const isHumanDrug = classification.toLowerCase().includes('human drug');
     const expiryStatus = getExpiryStatus(r['Expiry Date']);
 
-    let tableBadgeClass = '';
-    let badgeText = classification;
-    if (isRx) {
-      tableBadgeClass = 'rx';
-      badgeText = 'Rx';
-    } else if (isOtc) {
-      tableBadgeClass = 'otc';
-      badgeText = 'OTC';
-    } else if (isHousehold) {
-      tableBadgeClass = 'household';
-      badgeText = 'Household Remedy';
+    // Set text fields with highlighting and tooltips
+    const generic = r['Generic Name'] || '';
+    const brand = r['Brand Name'] || '';
+    const manufacturer = r['Manufacturer'] || '';
+
+    const genericCell = row.querySelector('[data-field="generic"]');
+    genericCell.innerHTML = highlightFn(generic);
+    genericCell.title = generic;
+
+    const brandCell = row.querySelector('[data-field="brand"]');
+    brandCell.innerHTML = highlightFn(brand);
+    brandCell.title = brand;
+
+    row.querySelector('[data-field="strength"]').innerHTML = highlightFn(r['Dosage Strength'] || '');
+    row.querySelector('[data-field="form"]').textContent = r['Dosage Form'] || '';
+
+    // Classification badge
+    const clsCell = row.querySelector('[data-field="classification"]');
+    if (isHumanDrug) {
+      clsCell.textContent = '';
+    } else {
+      let badgeClass = '';
+      let badgeText = classification;
+      if (isRx) { badgeClass = 'rx'; badgeText = 'Rx'; }
+      else if (isOtc) { badgeClass = 'otc'; badgeText = 'OTC'; }
+      else if (isHousehold) { badgeClass = 'household'; badgeText = 'Household Remedy'; }
+      clsCell.innerHTML = `<span class="rx-badge ${badgeClass}">${badgeText}</span>`;
     }
 
-    const badgeHtml = isHumanDrug ? '' : `<span class="rx-badge ${tableBadgeClass}">${escapeHTML(badgeText)}</span>`;
+    const mfrCell = row.querySelector('[data-field="manufacturer"]');
+    mfrCell.innerHTML = highlightFn(manufacturer);
+    mfrCell.title = manufacturer;
 
-    return `
-      <tr data-idx="${idx}">
-        <td class="truncate" title="${escapeHTML(generic)}">${h(generic)}</td>
-        <td class="truncate" title="${escapeHTML(brand)}">${h(brand)}</td>
-        <td>${h(strength)}</td>
-        <td>${h(form)}</td>
-        <td>${badgeHtml}</td>
-        <td class="truncate" title="${escapeHTML(manufacturer)}">${h(manufacturer)}</td>
-        <td>${h(regNo)}</td>
-        <td class="${expiryStatus.class}">${h(expiry) || '—'}</td>
-        <td class="actions">
-          <button class="btn btn-primary btn-sm add-table-btn" data-idx="${idx}">Add</button>
-        </td>
-      </tr>
-    `;
+    row.querySelector('[data-field="regNo"]').textContent = r['Registration Number'] || '';
+
+    const expiryCell = row.querySelector('[data-field="expiry"]');
+    expiryCell.className = expiryStatus.class;
+    expiryCell.textContent = r['Expiry Date'] || '—';
+
+    // Set button index
+    row.querySelector('.add-table-btn').dataset.idx = idx;
+
+    return row;
   }
 
   function getExpiryStatus(expiryDate) {
@@ -1383,29 +1403,27 @@
           .slice(0, 10);
 
         if (hits.length === 0) {
-          sideResults.innerHTML = `
-            <div class="side-card">
-              <div class="side-card-title">No matches found</div>
-              <div class="side-card-subtitle">Press Enter to add as custom item</div>
-            </div>
-          `;
+          sideResults.innerHTML = '';
+          sideResults.appendChild(cloneTemplate('tpl-side-card-empty'));
         } else {
-          sideResults.innerHTML = hits
-            .map((h) => {
-              const r = state.data[h.i];
-              return sideCardHTML(r, q, h.i);
-            })
-            .join('');
+          sideResults.innerHTML = '';
+          const h = (s) => highlight(String(s || ''), q);
 
-          // Wire up add buttons
-          $$('.add-side-btn').forEach((btn) => {
-            btn.addEventListener('click', () => {
+          hits.forEach((hit) => {
+            const r = state.data[hit.i];
+            sideResults.appendChild(renderSideCard(r, q, hit.i, h));
+          });
+
+          // Event delegation for add buttons
+          sideResults.onclick = (e) => {
+            const btn = e.target.closest('.add-side-btn');
+            if (btn) {
               const idx = +btn.dataset.i;
               addRxFromRecord(state.data[idx]);
               drugQuick.value = '';
               sideResults.innerHTML = '';
-            });
-          });
+            }
+          };
         }
       }, 150);
     });
@@ -1448,18 +1466,8 @@
       showConfirmToast(
         `Remove all ${itemCount} medication${itemCount > 1 ? 's' : ''}?`,
         () => {
-          rxItems.innerHTML = `
-            <div class="empty-rx">
-              <div class="empty-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <path d="M8 21h8a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2z"/>
-                  <path d="M12 11v6M9 14h6"/>
-                </svg>
-              </div>
-              <p>No medications added yet</p>
-              <p class="text-muted">Search above or add a custom item</p>
-            </div>
-          `;
+          rxItems.innerHTML = '';
+          rxItems.appendChild(cloneTemplate('tpl-empty-rx'));
           state.rxItemCount = 0;
           updateRxBadge();
           updateRxPreview();
@@ -1482,18 +1490,20 @@
     $('#saveImageRx')?.addEventListener('click', saveAsImage);
   }
 
-  function sideCardHTML(r, q, idx) {
-    const h = (s) => highlight(String(s || ''), q);
+  function renderSideCard(r, q, idx, highlightFn) {
+    const card = cloneTemplate('tpl-side-card');
     const expiry = r['Expiry Date'] || '';
 
-    return `
-      <div class="side-card">
-        <div class="side-card-title">${h(r['Generic Name'])}</div>
-        <div class="side-card-subtitle">${h(r['Brand Name'])} • ${h(r['Dosage Strength'])}</div>
-        <div class="side-card-meta">${h(r['Dosage Form'])} • Exp: ${h(expiry) || 'N/A'}</div>
-        <button class="btn btn-primary btn-sm add-side-btn" data-i="${idx}">Add to Rx</button>
-      </div>
-    `;
+    card.querySelector('[data-field="generic"]').innerHTML = highlightFn(r['Generic Name'] || '');
+    card.querySelector('[data-field="brandStrength"]').innerHTML =
+      `${highlightFn(r['Brand Name'] || '')} • ${highlightFn(r['Dosage Strength'] || '')}`;
+    card.querySelector('[data-field="formExpiry"]').textContent =
+      `${r['Dosage Form'] || ''} • Exp: ${expiry || 'N/A'}`;
+
+    const btn = card.querySelector('.add-side-btn');
+    btn.dataset.i = idx;
+
+    return card;
   }
 
   function addRxFromRecord(r) {
@@ -1519,27 +1529,14 @@
     state.rxItemCount++;
     updateRxBadge();
 
-    const div = document.createElement('div');
-    div.className = 'rx-item with-number';
-    div.innerHTML = `
-      <div class="rx-item-number">${state.rxItemCount}</div>
-      <div class="rx-item-header">
-        <input class="rx-generic" value="${escapeHTML(genericName)}" placeholder="Generic Name">
-        <input class="rx-brand" value="${escapeHTML(brandName)}" placeholder="Brand Name">
-        <input class="rx-strength small" value="${escapeHTML(strength)}" placeholder="Strength">
-        <input class="rx-form small" value="${escapeHTML(form)}" placeholder="Form">
-        <input class="rx-qty small" value="${escapeHTML(qty)}" placeholder="Qty">
-      </div>
-      <div class="rx-item-body">
-        <input class="rx-sig" value="${escapeHTML(sig)}" placeholder="Sig (e.g., 1 tab PO BID)">
-      </div>
-      <div class="rx-item-actions">
-        <button class="btn btn-ghost btn-sm move-up">↑</button>
-        <button class="btn btn-ghost btn-sm move-down">↓</button>
-        <button class="btn btn-secondary btn-sm duplicate">Duplicate</button>
-        <button class="btn btn-danger-ghost btn-sm remove">Remove</button>
-      </div>
-    `;
+    const div = cloneTemplate('tpl-rx-item');
+    div.querySelector('.rx-item-number').textContent = state.rxItemCount;
+    div.querySelector('.rx-generic').value = genericName;
+    div.querySelector('.rx-brand').value = brandName;
+    div.querySelector('.rx-strength').value = strength;
+    div.querySelector('.rx-form').value = form;
+    div.querySelector('.rx-qty').value = qty;
+    div.querySelector('.rx-sig').value = sig;
 
     rxItems.appendChild(div);
 
@@ -1548,18 +1545,8 @@
       div.remove();
       renumberItems();
       if (rxItems.children.length === 0) {
-        rxItems.innerHTML = `
-          <div class="empty-rx">
-            <div class="empty-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <path d="M8 21h8a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2z"/>
-                <path d="M12 11v6M9 14h6"/>
-              </svg>
-            </div>
-            <p>No medications added yet</p>
-            <p class="text-muted">Search above or add a custom item</p>
-          </div>
-        `;
+        rxItems.innerHTML = '';
+        rxItems.appendChild(cloneTemplate('tpl-empty-rx'));
         state.rxItemCount = 0;
         updateRxBadge();
       }
@@ -1699,7 +1686,12 @@
       rxItems.innerHTML = '';
       state.rxItemCount = 0;
 
-      (data.items || []).forEach((item) => addRxItem(item));
+      const items = data.items || [];
+      if (items.length === 0) {
+        rxItems.appendChild(cloneTemplate('tpl-empty-rx'));
+      } else {
+        items.forEach((item) => addRxItem(item));
+      }
 
       updateRxPreview();
       showToast('Draft restored', 'success');
@@ -1747,7 +1739,8 @@
       .map((div) => collectItem(div));
 
     if (items.length === 0) {
-      previewEl.innerHTML = '<div class="rx-preview-empty">No medications added yet</div>';
+      previewEl.innerHTML = '';
+      previewEl.appendChild(cloneTemplate('tpl-rx-preview-empty'));
       return;
     }
 

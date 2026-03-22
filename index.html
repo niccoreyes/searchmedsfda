@@ -580,6 +580,159 @@
   <!-- Toast Container -->
   <div id="toastContainer" class="toast-container"></div>
 
+  <!-- Templates -->
+  <!-- Toast Info Template -->
+  <template id="tpl-toast-info">
+    <div class="toast info">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="16" x2="12" y2="12"/>
+        <line x1="12" y1="8" x2="12.01" y2="8"/>
+      </svg>
+      <span class="toast-message"></span>
+    </div>
+  </template>
+
+  <!-- Toast Success Template -->
+  <template id="tpl-toast-success">
+    <div class="toast success">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+        <polyline points="20,6 9,17 4,12"/>
+      </svg>
+      <span class="toast-message"></span>
+    </div>
+  </template>
+
+  <!-- Toast Error Template -->
+  <template id="tpl-toast-error">
+    <div class="toast error">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      <span class="toast-message"></span>
+    </div>
+  </template>
+
+  <!-- Toast Confirm Template -->
+  <template id="tpl-toast-confirm">
+    <div class="toast confirm">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="13"/>
+        <circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/>
+      </svg>
+      <span class="toast-message"></span>
+      <div class="toast-actions">
+        <button class="btn btn-danger-ghost btn-sm toast-confirm">Clear</button>
+        <button class="btn btn-secondary btn-sm toast-cancel">Cancel</button>
+      </div>
+    </div>
+  </template>
+
+  <!-- Drug Card Template -->
+  <template id="tpl-drug-card">
+    <div class="drug-card">
+      <div class="drug-header">
+        <div class="drug-name">
+          <div class="drug-generic" data-field="generic"></div>
+          <div class="drug-brand" data-field="brand"></div>
+        </div>
+        <span class="drug-class" data-field="chip"></span>
+      </div>
+      <div class="drug-details">
+        <div class="drug-detail" data-field="strength"></div>
+        <div class="drug-detail" data-field="form"></div>
+        <div class="drug-detail" data-field="manufacturer"></div>
+      </div>
+      <div class="drug-footer">
+        <div class="drug-meta">
+          <span>Reg: <span data-field="regNo"></span></span>
+          <span class="drug-expiry" data-field="expiry"></span>
+        </div>
+        <button class="btn btn-primary btn-sm add-rx-btn">Add to Rx</button>
+      </div>
+    </div>
+  </template>
+
+  <!-- Table Row Template -->
+  <template id="tpl-table-row">
+    <tr>
+      <td class="truncate" data-field="generic"></td>
+      <td class="truncate" data-field="brand"></td>
+      <td data-field="strength"></td>
+      <td data-field="form"></td>
+      <td data-field="classification"></td>
+      <td class="truncate" data-field="manufacturer"></td>
+      <td data-field="regNo"></td>
+      <td data-field="expiry"></td>
+      <td class="actions">
+        <button class="btn btn-primary btn-sm add-table-btn">Add</button>
+      </td>
+    </tr>
+  </template>
+
+  <!-- Side Card Template -->
+  <template id="tpl-side-card">
+    <div class="side-card">
+      <div class="side-card-title" data-field="generic"></div>
+      <div class="side-card-subtitle" data-field="brandStrength"></div>
+      <div class="side-card-meta" data-field="formExpiry"></div>
+      <button class="btn btn-primary btn-sm add-side-btn">Add to Rx</button>
+    </div>
+  </template>
+
+  <!-- No Matches Side Card Template -->
+  <template id="tpl-side-card-empty">
+    <div class="side-card">
+      <div class="side-card-title">No matches found</div>
+      <div class="side-card-subtitle">Press Enter to add as custom item</div>
+    </div>
+  </template>
+
+  <!-- Rx Item Template -->
+  <template id="tpl-rx-item">
+    <div class="rx-item with-number">
+      <div class="rx-item-number"></div>
+      <div class="rx-item-header">
+        <input class="rx-generic" placeholder="Generic Name">
+        <input class="rx-brand" placeholder="Brand Name">
+        <input class="rx-strength small" placeholder="Strength">
+        <input class="rx-form small" placeholder="Form">
+        <input class="rx-qty small" placeholder="Qty">
+      </div>
+      <div class="rx-item-body">
+        <input class="rx-sig" placeholder="Sig (e.g., 1 tab PO BID)">
+      </div>
+      <div class="rx-item-actions">
+        <button class="btn btn-ghost btn-sm move-up">↑</button>
+        <button class="btn btn-ghost btn-sm move-down">↓</button>
+        <button class="btn btn-secondary btn-sm duplicate">Duplicate</button>
+        <button class="btn btn-danger-ghost btn-sm remove">Remove</button>
+      </div>
+    </div>
+  </template>
+
+  <!-- Empty Rx Template -->
+  <template id="tpl-empty-rx">
+    <div class="empty-rx">
+      <div class="empty-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M8 21h8a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2z"/>
+          <path d="M12 11v6M9 14h6"/>
+        </svg>
+      </div>
+      <p>No medications added yet</p>
+      <p class="text-muted">Search above or add a custom item</p>
+    </div>
+  </template>
+
+  <!-- Rx Preview Empty Template -->
+  <template id="tpl-rx-preview-empty">
+    <div class="rx-preview-empty">No medications added yet</div>
+  </template
+
   <!-- Print Template -->
   <div class="rx-print" id="rxPrint">
     <div class="print-header">
