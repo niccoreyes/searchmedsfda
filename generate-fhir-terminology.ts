@@ -303,9 +303,13 @@ function generateCodeSystem(products: DrugProduct[]): CodeSystemResult {
         createPropertyValue("expiryDate", product.expiryDate),
       ].filter((p): p is { code: string; valueString: string } => p !== null);
 
+      // For display: use brand name if available, otherwise empty string
+      // (don't fall back to generic name - keep empty if brand is empty)
+      const display = product.brandName.trim();
+
       return {
         code: product.registrationNumber.trim(),
-        display: product.brandName.trim() || product.genericName.trim() || product.registrationNumber.trim(),
+        display: display,
         property: properties,
       };
     });

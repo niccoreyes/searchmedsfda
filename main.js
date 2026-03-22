@@ -384,6 +384,31 @@
     statusEl.className = `status-badge ${type}`;
   }
 
+  /**
+   * Centralized function to finalize data loading
+   * Updates state, UI badges, summary, and triggers rendering
+   * @param {Array} data - The drug data array
+   * @param {string} source - Data source identifier ('fhir-fresh', 'fhir', 'csv-fresh', 'csv', 'cached')
+   * @param {string} statusLabel - Label for the status bar (e.g., 'FHIR', 'CSV', 'Cache')
+   * @param {string} lastUpdated - Date string for the update badge
+   */
+  function finalizeDataLoad(data, source, statusLabel, lastUpdated) {
+    state.data = data;
+    state.page = 1;
+    state.isDataLoaded = true;
+    state.dataSource = source;
+    state.lastUpdatedText = lastUpdated;
+
+    updateDataSourceBadge();
+    setStatus(`${data.length.toLocaleString()} records | ${statusLabel}`, 'loaded');
+    $('#summary').textContent = `${data.length.toLocaleString()} records`;
+    $('#updateBadge').textContent = `Updated: ${lastUpdated}`;
+
+    showSearchUI();
+    buildQuickIndex();
+    filterAndRender();
+  }
+
   function updateDataSourceBadge() {
     const badgeEl = $('#dataSourceBadge');
     if (!badgeEl) return;
@@ -425,32 +450,12 @@
       // Convert FHIR concepts to the same format as CSV data
       const data = convertFHIRConceptsToData(allConcepts);
 
-      state.data = data;
-      state.page = 1;
-      state.isDataLoaded = true;
-      state.dataSource = 'fhir-fresh';
-      updateDataSourceBadge();
-
-      setStatus(`${data.length.toLocaleString()} records | FHIR`, 'loaded');
-      $('#summary').textContent = `${data.length.toLocaleString()} records`;
-
       // Use FHIR CodeSystem meta.lastUpdated for the badge
-      const lastUpdated = meta?.lastUpdated;
-      if (lastUpdated) {
-        // Parse ISO date and format as locale date
-        const date = new Date(lastUpdated);
-        state.lastUpdatedText = date.toLocaleDateString();
-      } else {
-        state.lastUpdatedText = new Date().toLocaleDateString();
-      }
-      $('#updateBadge').textContent = `Updated: ${state.lastUpdatedText}`;
+      const lastUpdated = meta?.lastUpdated
+        ? new Date(meta.lastUpdated).toLocaleDateString()
+        : new Date().toLocaleDateString();
 
-      // Show search UI
-      showSearchUI();
-
-      // Build index and render
-      buildQuickIndex();
-      filterAndRender();
+      finalizeDataLoad(data, 'fhir-fresh', 'FHIR', lastUpdated);
 
       // Save to cache
       const versionId = meta?.versionId || meta?.lastUpdated;
@@ -469,22 +474,11 @@
       const cached = await loadCachedData();
       if (cached.data && cached.data.length > 0) {
         // Keep using cached data
-        state.data = cached.data;
-        state.page = 1;
-        state.isDataLoaded = true;
-        state.dataSource = 'cached';
-        state.lastUpdatedText = cached.meta?.lastUpdated
+        const lastUpdated = cached.meta?.lastUpdated
           ? new Date(cached.meta.lastUpdated).toLocaleDateString()
           : new Date(cached.meta?.timestamp).toLocaleDateString();
 
-        updateDataSourceBadge();
-        setStatus(`${cached.data.length.toLocaleString()} records | Cache (FHIR failed)`, 'loaded');
-        $('#summary').textContent = `${cached.data.length.toLocaleString()} records`;
-        $('#updateBadge').textContent = `Updated: ${state.lastUpdatedText}`;
-
-        showSearchUI();
-        buildQuickIndex();
-        filterAndRender();
+        finalizeDataLoad(cached.data, 'cached', 'Cache (FHIR failed)', lastUpdated);
 
         showToast('FHIR server unavailable, using cached data', 'warning');
         return;
@@ -729,15 +723,6 @@
       data.push(obj);
     }
 
-    state.data = data;
-    state.page = 1;
-    state.isDataLoaded = true;
-    state.dataSource = 'csv-fresh';
-    updateDataSourceBadge();
-
-    setStatus(`${data.length.toLocaleString()} records | CSV`, 'loaded');
-    $('#summary').textContent = `${data.length.toLocaleString()} records`;
-
     // Determine last updated date for the badge
     // Priority: 1. CSV header date, 2. GitHub API date, 3. Fallback message
     const csvHeaderMatch = text.match(/Updated\s+as\s+of\s+([^\r\n]+)/i);
@@ -752,15 +737,7 @@
       lastUpdatedText = date.toLocaleDateString();
     }
 
-    state.lastUpdatedText = lastUpdatedText;
-    $('#updateBadge').textContent = `Updated: ${state.lastUpdatedText}`;
-
-    // Show search UI
-    showSearchUI();
-
-    // Build index and render
-    buildQuickIndex();
-    filterAndRender();
+    finalizeDataLoad(data, 'csv-fresh', 'CSV', lastUpdatedText);
 
     return data;
   }
@@ -2009,22 +1986,11 @@
     const cached = await loadCachedData();
     if (cached.data && cached.data.length > 0) {
       // Load cached data immediately
-      state.data = cached.data;
-      state.page = 1;
-      state.isDataLoaded = true;
-      state.dataSource = 'cached';
-      state.lastUpdatedText = cached.meta?.lastUpdated
+      const lastUpdated = cached.meta?.lastUpdated
         ? new Date(cached.meta.lastUpdated).toLocaleDateString()
         : new Date(cached.meta?.timestamp).toLocaleDateString();
 
-      updateDataSourceBadge();
-      setStatus(`${cached.data.length.toLocaleString()} records | Cache`, 'loaded');
-      $('#summary').textContent = `${cached.data.length.toLocaleString()} records`;
-      $('#updateBadge').textContent = `Updated: ${state.lastUpdatedText}`;
-
-      showSearchUI();
-      buildQuickIndex();
-      filterAndRender();
+      finalizeDataLoad(cached.data, 'cached', 'Cache', lastUpdated);
 
       // Check for updates in the background (silent - no toasts for connection issues)
       setTimeout(() => checkForUpdates(cached.meta), 1000);
@@ -2059,31 +2025,11 @@
         lastUpdated: meta?.lastUpdated || new Date().toISOString()
       });
 
-      state.data = data;
-      state.page = 1;
-      state.isDataLoaded = true;
-      state.dataSource = 'fhir-fresh';
-      updateDataSourceBadge();
+      const lastUpdated = meta?.lastUpdated
+        ? new Date(meta.lastUpdated).toLocaleDateString()
+        : new Date().toLocaleDateString();
 
-      setStatus(`${data.length.toLocaleString()} records | FHIR`, 'loaded');
-      $('#summary').textContent = `${data.length.toLocaleString()} records`;
-
-      // Use FHIR CodeSystem meta.lastUpdated for the badge
-      const lastUpdated = meta?.lastUpdated;
-      if (lastUpdated) {
-        const date = new Date(lastUpdated);
-        state.lastUpdatedText = date.toLocaleDateString();
-      } else {
-        state.lastUpdatedText = new Date().toLocaleDateString();
-      }
-      $('#updateBadge').textContent = `Updated: ${state.lastUpdatedText}`;
-
-      // Show search UI
-      showSearchUI();
-
-      // Build index and render
-      buildQuickIndex();
-      filterAndRender();
+      finalizeDataLoad(data, 'fhir-fresh', 'FHIR', lastUpdated);
 
       clearToasts();
       showToast(`Loaded ${data.length.toLocaleString()} drugs from FHIR server`, 'success');
@@ -2177,31 +2123,11 @@
         lastUpdated: meta?.lastUpdated || new Date().toISOString()
       });
 
-      state.data = data;
-      state.page = 1;
-      state.isDataLoaded = true;
-      state.dataSource = 'fhir-fresh';
-      updateDataSourceBadge();
+      const lastUpdated = meta?.lastUpdated
+        ? new Date(meta.lastUpdated).toLocaleDateString()
+        : new Date().toLocaleDateString();
 
-      setStatus(`${data.length.toLocaleString()} records | FHIR`, 'loaded');
-      $('#summary').textContent = `${data.length.toLocaleString()} records`;
-
-      // Use FHIR CodeSystem meta.lastUpdated for the badge
-      const lastUpdated = meta?.lastUpdated;
-      if (lastUpdated) {
-        const date = new Date(lastUpdated);
-        state.lastUpdatedText = date.toLocaleDateString();
-      } else {
-        state.lastUpdatedText = new Date().toLocaleDateString();
-      }
-      $('#updateBadge').textContent = `Updated: ${state.lastUpdatedText}`;
-
-      // Show search UI
-      showSearchUI();
-
-      // Build index and render
-      buildQuickIndex();
-      filterAndRender();
+      finalizeDataLoad(data, 'fhir-fresh', 'FHIR', lastUpdated);
 
       clearToasts();
       showToast(`Updated to ${data.length.toLocaleString()} drugs from FHIR server`, 'success');

@@ -2197,3 +2197,36 @@ Received SIGINT. Saving state and exiting gracefully...
 [2026-03-22T05:58:06.752Z] Query IB: Found 1470 CDRR records, 0 new added
 [2026-03-22T05:58:06.753Z] Query IB: Found 550 cpr_cdrrhr records, 0 new added
 [2026-03-22T05:58:08.254Z] Querying: IC (attempt 1)
+[2026-03-22T05:59:18.103Z] Query IC: Found 6652 CDRR records, 0 new added
+[2026-03-22T05:59:18.106Z] Query IC: Found 3773 cpr_cdrrhr records, 0 new added
+[2026-03-22T05:59:19.608Z] Querying: ID (attempt 1)
+[2026-03-22T06:00:34.385Z] Query ID: Found 11137 CDRR records, 0 new added
+[2026-03-22T06:00:34.386Z] Query ID: Found 1582 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:00:35.888Z] Querying: IE (attempt 1)
+[2026-03-22T06:02:33.865Z] Query IE: Found 313 CDRR records, 0 new added
+[2026-03-22T06:02:33.866Z] Query IE: Found 835 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:02:35.368Z] Querying: IF (attempt 1)
+[2026-03-22T06:03:30.931Z] Query IF: Found 1516 CDRR records, 0 new added
+[2026-03-22T06:03:30.932Z] Query IF: Found 517 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:03:32.433Z] Querying: IG (attempt 1)
+[2026-03-22T06:03:59.442Z] Query IG: Found 652 CDRR records, 0 new added
+[2026-03-22T06:03:59.443Z] Query IG: Found 1185 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:04:00.944Z] Querying: IH (attempt 1)
+[2026-03-22T06:04:20.298Z] Query IH: Found 1918 CDRR records, 0 new added
+[2026-03-22T06:04:20.299Z] Query IH: Found 20 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:04:21.801Z] Querying: II (attempt 1)
+[2026-03-22T06:04:55.357Z] Query II: Found 62 CDRR records, 0 new added
+[2026-03-22T06:04:55.357Z] Query II: Found 279 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:04:56.859Z] Querying: IJ (attempt 1)
+[2026-03-22T06:05:07.300Z] Query IJ: Found 8 CDRR records, 0 new added
+[2026-03-22T06:05:07.301Z] Query IJ: Found 6 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:05:08.802Z] Querying: IK (attempt 1)
+[2026-03-22T06:05:26.073Z] Query IK: Found 163 CDRR records, 0 new added
+[2026-03-22T06:05:26.074Z] Query IK: Found 171 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:05:27.576Z] Querying: IL (attempt 1)
+[2026-03-22T06:06:56.033Z] Query IL: Found 4669 CDRR records, 0 new added
+[2026-03-22T06:06:56.035Z] Query IL: Found 2665 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:06:57.536Z] Querying: IM (attempt 1)
+[2026-03-22T06:07:54.787Z] Query IM: Found 3098 CDRR records, 0 new added
+[2026-03-22T06:07:54.789Z] Query IM: Found 1105 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:07:56.290Z] Querying: IN (attempt 1)
