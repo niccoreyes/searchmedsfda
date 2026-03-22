@@ -95,6 +95,11 @@
   padding: 0;
 }
 
+/* Hidden attribute support */
+[hidden] {
+  display: none !important;
+}
+
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;

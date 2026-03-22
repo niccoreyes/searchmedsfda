@@ -738,13 +738,13 @@
   }
 
   function showUploadUI() {
-    $('#uploadArea').style.display = 'block';
-    $('#searchInterface').style.display = 'none';
+    $('#uploadArea').hidden = false;
+    $('#searchInterface').hidden = true;
   }
 
   function showSearchUI() {
-    $('#uploadArea').style.display = 'none';
-    $('#searchInterface').style.display = 'block';
+    $('#uploadArea').hidden = true;
+    $('#searchInterface').hidden = false;
   }
 
   // Simple CSV parser (handles quoted fields)
@@ -935,11 +935,11 @@
         const tableContainer = $('#tableContainer');
 
         if (view === 'cards') {
-          listEl.style.display = '';
-          tableContainer.style.display = 'none';
+          listEl.hidden = false;
+          tableContainer.hidden = true;
         } else {
-          listEl.style.display = 'none';
-          tableContainer.style.display = '';
+          listEl.hidden = true;
+          tableContainer.hidden = false;
         }
 
         renderResults();
@@ -979,11 +979,11 @@
     const listEl = $('#resultsList');
     const tableContainer = $('#tableContainer');
     if (state.viewMode === 'cards') {
-      listEl.style.display = '';
-      tableContainer.style.display = 'none';
+      listEl.hidden = false;
+      tableContainer.hidden = true;
     } else {
-      listEl.style.display = 'none';
-      tableContainer.style.display = '';
+      listEl.hidden = true;
+      tableContainer.hidden = false;
     }
   }
 
@@ -1096,15 +1096,15 @@
     if (state.pageRows.length === 0) {
       listEl.innerHTML = '';
       if (tableBody) tableBody.innerHTML = '';
-      emptyEl.style.display = 'block';
+      emptyEl.hidden = false;
     } else {
-      emptyEl.style.display = 'none';
+      emptyEl.hidden = true;
       const h = (s) => highlight(String(s || ''), state.searchQ.trim().toLowerCase());
 
       if (state.viewMode === 'cards') {
         // Card view
-        listEl.style.display = '';
-        tableContainer.style.display = 'none';
+        listEl.hidden = false;
+        tableContainer.hidden = true;
         listEl.innerHTML = '';
 
         const fragment = document.createDocumentFragment();
@@ -1133,8 +1133,8 @@
         };
       } else {
         // Table view
-        listEl.style.display = 'none';
-        tableContainer.style.display = '';
+        listEl.hidden = true;
+        tableContainer.hidden = false;
         tableBody.innerHTML = '';
 
         const fragment = document.createDocumentFragment();
@@ -1608,7 +1608,7 @@
     const badge = $('#rxBadge');
     if (badge) {
       badge.textContent = state.rxItemCount;
-      badge.style.display = state.rxItemCount > 0 ? 'flex' : 'none';
+      badge.hidden = state.rxItemCount === 0;
     }
   }
 
@@ -1799,7 +1799,7 @@
 
     // Show/hide signature label based on whether licenses are present
     const hasAnyLicense = prcVal || ptrVal || s2Val;
-    $('#signatureLabel').style.display = hasAnyLicense ? 'none' : 'block';
+    $('#signatureLabel').hidden = hasAnyLicense;
 
     const ol = $('#pItems');
     ol.innerHTML = '';
@@ -1884,7 +1884,7 @@
     $('#pS22Wrap').textContent = s2Val ? `S2: ${s2Val}` : '';
 
     const hasAnyLicense = prcVal || ptrVal || s2Val;
-    $('#signatureLabel').style.display = hasAnyLicense ? 'none' : 'block';
+    $('#signatureLabel').hidden = hasAnyLicense;
 
     const ol = $('#pItems');
     ol.innerHTML = '';

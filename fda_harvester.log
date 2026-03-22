@@ -2464,3 +2464,159 @@ Received SIGINT. Saving state and exiting gracefully...
 [2026-03-22T06:56:35.345Z] 
 Received SIGINT. Saving state and exiting gracefully...
 [2026-03-22T06:56:35.364Z] State saved: 54578 processed, 39 pending
+[2026-03-22T07:27:00.895Z] ============================================================
+[2026-03-22T07:27:00.897Z] FDA Philippines Drug Product Harvester Starting
+[2026-03-22T07:27:00.897Z] ============================================================
+[2026-03-22T07:27:00.903Z] Resumed from save point: 54578 records processed
+[2026-03-22T07:27:00.911Z] State saved: 54578 processed, 39 pending
+[2026-03-22T07:27:00.912Z] Querying: LB (attempt 1)
+[2026-03-22T07:27:15.830Z] Query LB: Found 921 CDRR records, 0 new added
+[2026-03-22T07:27:15.832Z] Query LB: Found 38 cpr_cdrrhr records, 0 new added
+[2026-03-22T07:27:17.337Z] Querying: LC (attempt 1)
+[2026-03-22T07:27:35.918Z] Query LC: Found 2005 CDRR records, 0 new added
+[2026-03-22T07:27:35.919Z] Query LC: Found 260 cpr_cdrrhr records, 0 new added
+[2026-03-22T07:27:37.420Z] Querying: LD (attempt 1)
+[2026-03-22T07:28:23.917Z] Query LD: Found 459 CDRR records, 0 new added
+[2026-03-22T07:28:23.918Z] Query LD: Found 276 cpr_cdrrhr records, 0 new added
+[2026-03-22T07:28:25.419Z] Querying: LE (attempt 1)
+[2026-03-22T07:29:54.310Z] Query LE: Found 5961 CDRR records, 0 new added
+[2026-03-22T07:29:54.314Z] Query LE: Found 5059 cpr_cdrrhr records, 0 new added
+[2026-03-22T07:29:55.817Z] Querying: LF (attempt 1)
+[2026-03-22T07:30:12.374Z] Query LF: Found 1417 CDRR records, 0 new added
+[2026-03-22T07:30:12.374Z] Query LF: Found 157 cpr_cdrrhr records, 0 new added
+[2026-03-22T07:30:13.876Z] Querying: LG (attempt 1)
+[2026-03-22T07:30:39.542Z] Query LG: Found 133 CDRR records, 0 new added
+[2026-03-22T07:30:39.543Z] Query LG: Found 24 cpr_cdrrhr records, 0 new added
+[2026-03-22T07:30:41.045Z] Querying: LH (attempt 1)
+[2026-03-22T07:30:51.249Z] Query LH: Found 6 CDRR records, 0 new added
+[2026-03-22T07:30:51.249Z] Query LH: Found 4 cpr_cdrrhr records, 0 new added
+[2026-03-22T07:30:52.752Z] Querying: LI (attempt 1)
+[2026-03-22T07:32:21.064Z] Query LI: Found 5840 CDRR records, 0 new added
+[2026-03-22T07:32:21.066Z] Query LI: Found 2709 cpr_cdrrhr records, 0 new added
+[2026-03-22T07:32:22.568Z] Querying: LJ (attempt 1)
+[2026-03-22T07:32:34.290Z] Query LJ: Found 7 CDRR records, 0 new added
+[2026-03-22T07:32:35.792Z] Querying: LK (attempt 1)
+[2026-03-22T07:32:50.137Z] Query LK: Found 59 CDRR records, 0 new added
+[2026-03-22T07:32:50.137Z] Query LK: Found 48 cpr_cdrrhr records, 0 new added
+[2026-03-22T07:32:51.639Z] Querying: LL (attempt 1)
+[2026-03-22T07:33:34.987Z] Query LL: Found 1795 CDRR records, 0 new added
+[2026-03-22T07:33:34.989Z] Query LL: Found 1364 cpr_cdrrhr records, 0 new added
+[2026-03-22T07:33:36.490Z] Querying: LM (attempt 1)
+[2026-03-22T07:33:48.610Z] Query LM: Found 952 CDRR records, 0 new added
+[2026-03-22T07:33:48.611Z] Query LM: Found 297 cpr_cdrrhr records, 0 new added
+[2026-03-22T07:33:50.112Z] Querying: LN (attempt 1)
+[2026-03-22T07:34:02.655Z] Query LN: Found 54 CDRR records, 0 new added
+[2026-03-22T07:34:02.656Z] Query LN: Found 6 cpr_cdrrhr records, 0 new added
+[2026-03-22T07:34:04.158Z] Querying: LO (attempt 1)
+[2026-03-22T07:35:03.416Z] Query LO: Found 10156 CDRR records, 0 new added
+[2026-03-22T07:35:03.417Z] Query LO: Found 2517 cpr_cdrrhr records, 0 new added
+[2026-03-22T07:35:04.919Z] Querying: LP (attempt 1)
+[2026-03-22T07:35:21.734Z] Query LP: Found 614 CDRR records, 0 new added
+[2026-03-22T07:35:21.736Z] Query LP: Found 138 cpr_cdrrhr records, 0 new added
+[2026-03-22T07:35:23.237Z] Querying: LQ (attempt 1)
+[2026-03-22T07:35:33.433Z] Query LQ: Found 6 CDRR records, 0 new added
+[2026-03-22T07:35:34.935Z] Querying: LR (attempt 1)
+[2026-03-22T07:35:49.192Z] Query LR: Found 45 CDRR records, 0 new added
+[2026-03-22T07:35:49.193Z] Query LR: Found 28 cpr_cdrrhr records, 0 new added
+[2026-03-22T07:35:50.694Z] Querying: LS (attempt 1)
+[2026-03-22T07:36:35.525Z] Query LS: Found 662 CDRR records, 0 new added
+[2026-03-22T07:36:35.526Z] Query LS: Found 257 cpr_cdrrhr records, 0 new added
+[2026-03-22T07:36:37.029Z] Querying: LT (attempt 1)
+[2026-03-22T07:37:18.302Z] Query LT: Found 1288 CDRR records, 0 new added
+[2026-03-22T07:37:18.305Z] Query LT: Found 1029 cpr_cdrrhr records, 0 new added
+[2026-03-22T07:37:19.806Z] Querying: LU (attempt 1)
+[2026-03-22T07:37:53.543Z] Query LU: Found 2422 CDRR records, 0 new added
+[2026-03-22T07:37:53.544Z] Query LU: Found 1778 cpr_cdrrhr records, 0 new added
+[2026-03-22T07:37:55.045Z] Querying: LV (attempt 1)
+[2026-03-22T07:38:06.080Z] Query LV: Found 331 CDRR records, 0 new added
+[2026-03-22T07:38:06.080Z] Query LV: Found 244 cpr_cdrrhr records, 0 new added
+[2026-03-22T07:38:07.582Z] Querying: LW (attempt 1)
+[2026-03-22T07:38:27.039Z] Query LW: Found 1 CDRR records, 0 new added
+[2026-03-22T07:38:27.040Z] Query LW: Found 5 cpr_cdrrhr records, 0 new added
+[2026-03-22T07:38:28.542Z] Querying: LX (attempt 1)
+[2026-03-22T07:38:38.152Z] Query LX: Found 20 CDRR records, 0 new added
+[2026-03-22T07:38:38.153Z] Query LX: Found 52 cpr_cdrrhr records, 0 new added
+[2026-03-22T07:38:39.654Z] Querying: LY (attempt 1)
+[2026-03-22T07:39:26.986Z] Query LY: Found 854 CDRR records, 0 new added
+[2026-03-22T07:39:26.987Z] Query LY: Found 1011 cpr_cdrrhr records, 0 new added
+[2026-03-22T07:39:28.489Z] Querying: LZ (attempt 1)
+[2026-03-22T07:39:38.488Z] Query LZ: Found 101 CDRR records, 0 new added
+[2026-03-22T07:39:39.990Z] Querying: M (attempt 1)
+[2026-03-22T07:40:19.768Z] Error for query M: HTTP 500
+[2026-03-22T07:40:19.770Z] Drilling down on error: M -> [MZ, MY, MX, MW, MV, MU, MT, MS, MR, MQ, MP, MO, MN, MM, ML, MK, MJ, MI, MH, MG, MF, ME, MD, MC, MB, MA]
+[2026-03-22T07:40:21.272Z] Querying: MA (attempt 1)
+[2026-03-22T07:42:16.595Z] Query MA: Found 3102 CDRR records, 0 new added
+[2026-03-22T07:42:16.597Z] Query MA: Found 1854 cpr_cdrrhr records, 0 new added
+[2026-03-22T07:42:18.099Z] Querying: MB (attempt 1)
+[2026-03-22T07:42:44.377Z] Query MB: Found 645 CDRR records, 0 new added
+[2026-03-22T07:42:44.377Z] Query MB: Found 359 cpr_cdrrhr records, 0 new added
+[2026-03-22T07:42:45.879Z] Querying: MC (attempt 1)
+[2026-03-22T07:43:00.562Z] Query MC: Found 170 CDRR records, 0 new added
+[2026-03-22T07:43:00.562Z] Query MC: Found 70 cpr_cdrrhr records, 0 new added
+[2026-03-22T07:43:02.064Z] Querying: MD (attempt 1)
+[2026-03-22T07:43:29.025Z] Query MD: Found 248 CDRR records, 0 new added
+[2026-03-22T07:43:29.038Z] Query MD: Found 11970 cpr_cdrrhr records, 0 new added
+[2026-03-22T07:43:30.540Z] Querying: ME (attempt 1)
+[2026-03-22T07:44:46.090Z] Query ME: Found 6691 CDRR records, 0 new added
+[2026-03-22T07:44:46.092Z] Query ME: Found 2580 cpr_cdrrhr records, 0 new added
+[2026-03-22T07:44:47.594Z] Querying: MF (attempt 1)
+[2026-03-22T07:44:59.975Z] Query MF: Found 29 CDRR records, 0 new added
+[2026-03-22T07:44:59.976Z] Query MF: Found 52 cpr_cdrrhr records, 0 new added
+[2026-03-22T07:45:01.477Z] Querying: MG (attempt 1)
+[2026-03-22T07:45:16.417Z] Query MG: Found 96 CDRR records, 0 new added
+[2026-03-22T07:45:16.418Z] Query MG: Found 56 cpr_cdrrhr records, 0 new added
+[2026-03-22T07:45:17.920Z] Querying: MH (attempt 1)
+[2026-03-22T07:45:27.766Z] Query MH: Found 96 CDRR records, 0 new added
+[2026-03-22T07:45:27.766Z] Query MH: Found 18 cpr_cdrrhr records, 0 new added
+[2026-03-22T07:45:29.269Z] Querying: MI (attempt 1)
+[2026-03-22T07:46:35.412Z] Query MI: Found 6611 CDRR records, 0 new added
+[2026-03-22T07:46:35.413Z] Query MI: Found 1538 cpr_cdrrhr records, 0 new added
+[2026-03-22T07:46:36.915Z] Querying: MJ (attempt 1)
+[2026-03-22T07:46:46.765Z] Query MJ: Found 4 CDRR records, 0 new added
+[2026-03-22T07:46:46.765Z] Query MJ: Found 1 cpr_cdrrhr records, 0 new added
+[2026-03-22T07:46:48.267Z] Querying: MK (attempt 1)
+[2026-03-22T07:46:58.299Z] Query MK: Found 24 CDRR records, 0 new added
+[2026-03-22T07:46:58.300Z] Query MK: Found 9 cpr_cdrrhr records, 0 new added
+[2026-03-22T07:46:59.802Z] Querying: ML (attempt 1)
+[2026-03-22T07:47:12.399Z] Query ML: Found 852 CDRR records, 0 new added
+[2026-03-22T07:47:12.400Z] Query ML: Found 153 cpr_cdrrhr records, 0 new added
+[2026-03-22T07:47:13.902Z] Querying: MM (attempt 1)
+[2026-03-22T07:47:30.675Z] Query MM: Found 194 CDRR records, 0 new added
+[2026-03-22T07:47:30.676Z] Query MM: Found 461 cpr_cdrrhr records, 0 new added
+[2026-03-22T07:47:32.178Z] Querying: MN (attempt 1)
+[2026-03-22T07:47:43.284Z] Query MN: Found 29 CDRR records, 0 new added
+[2026-03-22T07:47:43.285Z] Query MN: Found 43 cpr_cdrrhr records, 0 new added
+[2026-03-22T07:47:44.787Z] Querying: MO (attempt 1)
+[2026-03-22T07:48:35.743Z] Query MO: Found 4955 CDRR records, 0 new added
+[2026-03-22T07:48:35.745Z] Query MO: Found 1686 cpr_cdrrhr records, 0 new added
+[2026-03-22T07:48:37.247Z] Querying: MP (attempt 1)
+[2026-03-22T07:49:09.724Z] Query MP: Found 1359 CDRR records, 0 new added
+[2026-03-22T07:49:09.726Z] Query MP: Found 1542 cpr_cdrrhr records, 0 new added
+[2026-03-22T07:49:11.227Z] Querying: MQ (attempt 1)
+[2026-03-22T07:49:23.466Z] Querying: MR (attempt 1)
+[2026-03-22T07:49:34.112Z] Query MR: Found 209 CDRR records, 0 new added
+[2026-03-22T07:49:34.113Z] Query MR: Found 313 cpr_cdrrhr records, 0 new added
+[2026-03-22T07:49:35.615Z] Querying: MS (attempt 1)
+[2026-03-22T07:50:03.064Z] Query MS: Found 194 CDRR records, 0 new added
+[2026-03-22T07:50:03.064Z] Query MS: Found 245 cpr_cdrrhr records, 0 new added
+[2026-03-22T07:50:04.566Z] Querying: MT (attempt 1)
+[2026-03-22T07:50:15.595Z] Query MT: Found 50 CDRR records, 0 new added
+[2026-03-22T07:50:15.595Z] Query MT: Found 56 cpr_cdrrhr records, 0 new added
+[2026-03-22T07:50:17.097Z] Querying: MU (attempt 1)
+[2026-03-22T07:50:39.959Z] Query MU: Found 1487 CDRR records, 0 new added
+[2026-03-22T07:50:39.960Z] Query MU: Found 448 cpr_cdrrhr records, 0 new added
+[2026-03-22T07:50:41.461Z] Querying: MV (attempt 1)
+[2026-03-22T07:50:52.048Z] Query MV: Found 141 CDRR records, 0 new added
+[2026-03-22T07:50:52.049Z] Query MV: Found 13 cpr_cdrrhr records, 0 new added
+[2026-03-22T07:50:53.551Z] Querying: MW (attempt 1)
+[2026-03-22T07:51:04.054Z] Query MW: Found 3 CDRR records, 0 new added
+[2026-03-22T07:51:04.055Z] Query MW: Found 16 cpr_cdrrhr records, 0 new added
+[2026-03-22T07:51:05.557Z] Querying: MX (attempt 1)
+[2026-03-22T07:51:15.321Z] Query MX: Found 16 CDRR records, 0 new added
+[2026-03-22T07:51:15.322Z] Query MX: Found 6 cpr_cdrrhr records, 0 new added
+[2026-03-22T07:51:16.823Z] Querying: MY (attempt 1)
+[2026-03-22T07:51:33.594Z] Query MY: Found 1359 CDRR records, 0 new added
+[2026-03-22T07:51:33.595Z] Query MY: Found 160 cpr_cdrrhr records, 0 new added
+[2026-03-22T07:51:35.096Z] Querying: MZ (attempt 1)
+[2026-03-22T07:51:45.054Z] Query MZ: Found 45 CDRR records, 0 new added
+[2026-03-22T07:51:46.557Z] Querying: N (attempt 1)

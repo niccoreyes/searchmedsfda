@@ -98,7 +98,7 @@
       </div>
 
       <!-- Search Interface (shown when data loaded) -->
-      <div id="searchInterface" class="search-container" style="display:none">
+      <div id="searchInterface" class="search-container" hidden>
         <!-- Search Bar -->
         <div class="search-bar-card">
           <div class="search-input-wrap">
@@ -252,7 +252,7 @@
           <div id="resultsList" class="drug-list"></div>
 
           <!-- Table View Container -->
-          <div id="tableContainer" class="table-container" style="display:none">
+          <div id="tableContainer" class="table-container" hidden>
             <div class="table-scroll">
               <table id="resultsTable" class="results-table">
                 <thead>
@@ -274,7 +274,7 @@
           </div>
 
           <!-- Empty State -->
-          <div id="emptyState" class="empty-state" style="display:none">
+          <div id="emptyState" class="empty-state" hidden>
             <div class="empty-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                 <circle cx="11" cy="11" r="8"/>
@@ -351,8 +351,8 @@
             <input id="ptAge" type="text" placeholder="Age">
           </div>
           <div class="form-field xs">
-            <label>Sex</label>
-            <select id="ptSex">
+            <label for="ptSex">Sex</label>
+            <select id="ptSex" title="Patient sex">
               <option value="">—</option>
               <option>Male</option>
               <option>Female</option>
@@ -363,8 +363,8 @@
             <input id="ptAddr" type="text" placeholder="Patient address">
           </div>
           <div class="form-field small">
-            <label>Date</label>
-            <input id="rxDate" type="date">
+            <label for="rxDate">Date</label>
+            <input id="rxDate" type="date" title="Prescription date">
           </div>
         </div>
       </div>
@@ -547,7 +547,7 @@
       <span>Search</span>
     </button>
     <button class="nav-item" data-tab="rx">
-      <div class="nav-badge" id="rxBadge" style="display:none">0</div>
+      <div class="nav-badge" id="rxBadge" hidden>0</div>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M8 21h8a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2z"/>
         <path d="M12 11v6M9 14h6"/>
@@ -565,7 +565,7 @@
   </nav>
 
   <!-- File Input Hidden -->
-  <input id="fileInput" type="file" accept=".csv" style="display:none">
+  <input id="fileInput" type="file" accept=".csv" hidden>
 
   <!-- Drop Zone Overlay -->
   <div id="dropOverlay" class="drop-overlay">
@@ -731,7 +731,7 @@
   <!-- Rx Preview Empty Template -->
   <template id="tpl-rx-preview-empty">
     <div class="rx-preview-empty">No medications added yet</div>
-  </template
+  </template>
 
   <!-- Print Template -->
   <div class="rx-print" id="rxPrint">
