@@ -432,7 +432,7 @@
       updateDataSourceBadge();
 
       setStatus(`${data.length.toLocaleString()} records | FHIR`, 'loaded');
-      $('#summary').textContent = `${data.length.toLocaleString()} drugs`;
+      $('#summary').textContent = `${data.length.toLocaleString()} records`;
 
       // Use FHIR CodeSystem meta.lastUpdated for the badge
       const lastUpdated = meta?.lastUpdated;
@@ -479,7 +479,7 @@
 
         updateDataSourceBadge();
         setStatus(`${cached.data.length.toLocaleString()} records | Cache (FHIR failed)`, 'loaded');
-        $('#summary').textContent = `${cached.data.length.toLocaleString()} drugs`;
+        $('#summary').textContent = `${cached.data.length.toLocaleString()} records`;
         $('#updateBadge').textContent = `Updated: ${state.lastUpdatedText}`;
 
         showSearchUI();
@@ -736,7 +736,7 @@
     updateDataSourceBadge();
 
     setStatus(`${data.length.toLocaleString()} records | CSV`, 'loaded');
-    $('#summary').textContent = `${data.length.toLocaleString()} drugs`;
+    $('#summary').textContent = `${data.length.toLocaleString()} records`;
 
     // Determine last updated date for the badge
     // Priority: 1. CSV header date, 2. GitHub API date, 3. Fallback message
@@ -2019,7 +2019,7 @@
 
       updateDataSourceBadge();
       setStatus(`${cached.data.length.toLocaleString()} records | Cache`, 'loaded');
-      $('#summary').textContent = `${cached.data.length.toLocaleString()} drugs`;
+      $('#summary').textContent = `${cached.data.length.toLocaleString()} records`;
       $('#updateBadge').textContent = `Updated: ${state.lastUpdatedText}`;
 
       showSearchUI();
@@ -2066,7 +2066,7 @@
       updateDataSourceBadge();
 
       setStatus(`${data.length.toLocaleString()} records | FHIR`, 'loaded');
-      $('#summary').textContent = `${data.length.toLocaleString()} drugs`;
+      $('#summary').textContent = `${data.length.toLocaleString()} records`;
 
       // Use FHIR CodeSystem meta.lastUpdated for the badge
       const lastUpdated = meta?.lastUpdated;
@@ -2184,7 +2184,7 @@
       updateDataSourceBadge();
 
       setStatus(`${data.length.toLocaleString()} records | FHIR`, 'loaded');
-      $('#summary').textContent = `${data.length.toLocaleString()} drugs`;
+      $('#summary').textContent = `${data.length.toLocaleString()} records`;
 
       // Use FHIR CodeSystem meta.lastUpdated for the badge
       const lastUpdated = meta?.lastUpdated;
