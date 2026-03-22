@@ -503,7 +503,7 @@ p {
     grid-column: 1 / -1;
     grid-row: 2;
     justify-content: flex-start;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
   }
 }
 
@@ -526,7 +526,16 @@ p {
 
 .filter-chips {
   display: flex;
+  flex-wrap: nowrap;
   gap: var(--space-2);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.filter-chips::-webkit-scrollbar {
+  display: none;
 }
 
 .chip-toggle {
