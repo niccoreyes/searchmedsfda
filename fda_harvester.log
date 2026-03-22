@@ -2083,3 +2083,21 @@ Received SIGINT. Saving state and exiting gracefully...
 [2026-03-22T05:19:34.301Z] Query DU: Found 352 CDRR records, 0 new added
 [2026-03-22T05:19:34.302Z] Query DU: Found 687 cpr_cdrrhr records, 0 new added
 [2026-03-22T05:19:35.803Z] Querying: DV (attempt 1)
+[2026-03-22T05:20:50.027Z] Query DV: Found 118 CDRR records, 0 new added
+[2026-03-22T05:20:50.029Z] Query DV: Found 707 cpr_cdrrhr records, 9 new added
+[2026-03-22T05:20:51.530Z] Querying: DW (attempt 1)
+[2026-03-22T05:21:11.658Z] Query DW: Found 5 CDRR records, 0 new added
+[2026-03-22T05:21:11.659Z] Query DW: Found 44 cpr_cdrrhr records, 0 new added
+[2026-03-22T05:21:13.161Z] Querying: DX (attempt 1)
+[2026-03-22T05:21:23.789Z] Query DX: Found 9 CDRR records, 0 new added
+[2026-03-22T05:21:23.789Z] Query DX: Found 15 cpr_cdrrhr records, 0 new added
+[2026-03-22T05:21:25.291Z] Querying: DY (attempt 1)
+[2026-03-22T05:21:51.218Z] Query DY: Found 213 CDRR records, 0 new added
+[2026-03-22T05:21:51.219Z] Query DY: Found 216 cpr_cdrrhr records, 0 new added
+[2026-03-22T05:21:52.721Z] Querying: DZ (attempt 1)
+[2026-03-22T05:22:02.673Z] Query DZ: Found 55 CDRR records, 0 new added
+[2026-03-22T05:22:02.673Z] Query DZ: Found 2 cpr_cdrrhr records, 0 new added
+[2026-03-22T05:22:04.175Z] Querying: E (attempt 1)
+[2026-03-22T05:22:43.726Z] Error for query E: HTTP 500
+[2026-03-22T05:22:43.727Z] Drilling down on error: E -> [EZ, EY, EX, EW, EV, EU, ET, ES, ER, EQ, EP, EO, EN, EM, EL, EK, EJ, EI, EH, EG, EF, EE, ED, EC, EB, EA]
+[2026-03-22T05:22:45.229Z] Querying: EA (attempt 1)

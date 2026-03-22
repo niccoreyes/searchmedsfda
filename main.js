@@ -1207,11 +1207,9 @@
           ${chipHtml}
         </div>
         <div class="drug-details">
-          <div class="drug-detail">
-            <strong>${h(strength)}</strong>
-          </div>
-          <div class="drug-detail">${h(form)}</div>
-          <div class="drug-detail">${h(manufacturer.slice(0, 30))}</div>
+          ${strength ? `<div class="drug-detail"><strong>${h(strength)}</strong></div>` : ''}
+          ${form ? `<div class="drug-detail">${h(form)}</div>` : ''}
+          ${manufacturer ? `<div class="drug-detail">${h(manufacturer.slice(0, 30))}</div>` : ''}
         </div>
         <div class="drug-footer">
           <div class="drug-meta">
