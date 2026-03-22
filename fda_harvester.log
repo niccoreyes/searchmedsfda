@@ -2257,3 +2257,210 @@ Received SIGINT. Saving state and exiting gracefully...
 [2026-03-22T06:15:38.480Z] Query INH: Found 7 CDRR records, 0 new added
 [2026-03-22T06:15:38.480Z] Query INH: Found 3 cpr_cdrrhr records, 0 new added
 [2026-03-22T06:15:39.982Z] Querying: INI (attempt 1)
+[2026-03-22T06:16:58.210Z] Query INI: Found 299 CDRR records, 0 new added
+[2026-03-22T06:16:58.211Z] Query INI: Found 258 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:16:59.713Z] Querying: INJ (attempt 1)
+[2026-03-22T06:17:15.758Z] Query INJ: Found 76 CDRR records, 0 new added
+[2026-03-22T06:17:15.759Z] Query INJ: Found 200 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:17:17.260Z] Querying: INK (attempt 1)
+[2026-03-22T06:17:44.496Z] Query INK: Found 65 CDRR records, 0 new added
+[2026-03-22T06:17:44.496Z] Query INK: Found 102 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:17:45.999Z] Querying: INL (attempt 1)
+[2026-03-22T06:17:56.659Z] Query INL: Found 19 CDRR records, 0 new added
+[2026-03-22T06:17:56.660Z] Query INL: Found 104 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:17:58.162Z] Querying: INM (attempt 1)
+[2026-03-22T06:18:08.148Z] Query INM: Found 18 CDRR records, 0 new added
+[2026-03-22T06:18:08.148Z] Query INM: Found 7 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:18:09.651Z] Querying: INN (attempt 1)
+[2026-03-22T06:18:21.645Z] Query INN: Found 61 CDRR records, 0 new added
+[2026-03-22T06:18:21.645Z] Query INN: Found 70 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:18:23.147Z] Querying: INO (attempt 1)
+[2026-03-22T06:18:44.715Z] Query INO: Found 942 CDRR records, 0 new added
+[2026-03-22T06:18:44.715Z] Query INO: Found 60 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:18:46.216Z] Querying: INP (attempt 1)
+[2026-03-22T06:18:56.014Z] Query INP: Found 9 CDRR records, 0 new added
+[2026-03-22T06:18:56.015Z] Query INP: Found 6 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:18:57.517Z] Querying: INQ (attempt 1)
+[2026-03-22T06:19:43.662Z] Query INQ: Found 4 CDRR records, 0 new added
+[2026-03-22T06:19:43.662Z] Query INQ: Found 3 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:19:45.164Z] Querying: INR (attempt 1)
+[2026-03-22T06:19:57.516Z] Query INR: Found 6 CDRR records, 0 new added
+[2026-03-22T06:19:59.018Z] Querying: INS (attempt 1)
+[2026-03-22T06:23:48.874Z] Parse error for query INS: JSON Parse error: Expected '}'
+[2026-03-22T06:23:48.875Z] Drilling down on error: INS -> [INSZ, INSY, INSX, INSW, INSV, INSU, INST, INSS, INSR, INSQ, INSP, INSO, INSN, INSM, INSL, INSK, INSJ, INSI, INSH, INSG, INSF, INSE, INSD, INSC, INSB, INSA]
+[2026-03-22T06:23:50.377Z] Querying: INSA (attempt 1)
+[2026-03-22T06:24:01.144Z] Query INSA: Found 10 CDRR records, 0 new added
+[2026-03-22T06:24:02.646Z] Querying: INSB (attempt 1)
+[2026-03-22T06:24:16.261Z] Querying: INSC (attempt 1)
+[2026-03-22T06:24:27.593Z] Querying: INSD (attempt 1)
+[2026-03-22T06:24:38.670Z] Querying: INSE (attempt 1)
+[2026-03-22T06:24:53.547Z] Query INSE: Found 48 CDRR records, 0 new added
+[2026-03-22T06:24:53.548Z] Query INSE: Found 140 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:24:55.050Z] Querying: INSF (attempt 1)
+[2026-03-22T06:25:05.035Z] Query INSF: Found 1 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:25:06.537Z] Querying: INSG (attempt 1)
+[2026-03-22T06:25:17.459Z] Querying: INSH (attempt 1)
+[2026-03-22T06:25:29.086Z] Querying: INSI (attempt 1)
+[2026-03-22T06:25:39.937Z] Query INSI: Found 5 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:25:41.438Z] Querying: INSJ (attempt 1)
+[2026-03-22T06:25:52.488Z] Querying: INSK (attempt 1)
+[2026-03-22T06:26:01.957Z] Query INSK: Found 1 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:26:03.459Z] Querying: INSL (attempt 1)
+[2026-03-22T06:26:14.890Z] Querying: INSM (attempt 1)
+[2026-03-22T06:26:25.748Z] Querying: INSN (attempt 1)
+[2026-03-22T06:26:36.964Z] Querying: INSO (attempt 1)
+[2026-03-22T06:26:49.487Z] Query INSO: Found 8 CDRR records, 0 new added
+[2026-03-22T06:26:49.487Z] Query INSO: Found 2 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:26:50.990Z] Querying: INSP (attempt 1)
+[2026-03-22T06:27:02.532Z] Query INSP: Found 2 CDRR records, 0 new added
+[2026-03-22T06:27:02.532Z] Query INSP: Found 16 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:27:04.034Z] Querying: INSQ (attempt 1)
+[2026-03-22T06:27:14.941Z] Querying: INSR (attempt 1)
+[2026-03-22T06:27:26.143Z] Querying: INSS (attempt 1)
+[2026-03-22T06:27:37.033Z] Querying: INST (attempt 1)
+[2026-03-22T06:29:16.453Z] Query INST: Found 15 CDRR records, 0 new added
+[2026-03-22T06:29:16.453Z] Query INST: Found 102 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:29:17.955Z] Querying: INSU (attempt 1)
+[2026-03-22T06:29:36.452Z] Query INSU: Found 106 CDRR records, 0 new added
+[2026-03-22T06:29:36.452Z] Query INSU: Found 58 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:29:37.954Z] Querying: INSV (attempt 1)
+[2026-03-22T06:29:48.083Z] Query INSV: Found 1 CDRR records, 0 new added
+[2026-03-22T06:29:49.585Z] Querying: INSW (attempt 1)
+[2026-03-22T06:30:01.286Z] Querying: INSX (attempt 1)
+[2026-03-22T06:30:13.517Z] Querying: INSY (attempt 1)
+[2026-03-22T06:30:23.998Z] Query INSY: Found 7 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:30:25.500Z] Querying: INSZ (attempt 1)
+[2026-03-22T06:30:37.168Z] Querying: INT (attempt 1)
+[2026-03-22T06:31:41.221Z] Query INT: Found 206 CDRR records, 0 new added
+[2026-03-22T06:31:41.221Z] Query INT: Found 788 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:31:42.724Z] Querying: INU (attempt 1)
+[2026-03-22T06:32:01.915Z] Query INU: Found 153 CDRR records, 0 new added
+[2026-03-22T06:32:01.915Z] Query INU: Found 85 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:32:03.417Z] Querying: INV (attempt 1)
+[2026-03-22T06:32:16.021Z] Query INV: Found 23 CDRR records, 0 new added
+[2026-03-22T06:32:16.021Z] Query INV: Found 48 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:32:17.523Z] Querying: INW (attempt 1)
+[2026-03-22T06:32:27.834Z] Query INW: Found 1 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:32:29.335Z] Querying: INX (attempt 1)
+[2026-03-22T06:32:38.920Z] Query INX: Found 5 CDRR records, 0 new added
+[2026-03-22T06:32:38.921Z] Query INX: Found 3 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:32:40.423Z] Querying: INY (attempt 1)
+[2026-03-22T06:32:52.088Z] Query INY: Found 44 CDRR records, 0 new added
+[2026-03-22T06:32:52.088Z] Query INY: Found 14 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:32:53.590Z] Querying: INZ (attempt 1)
+[2026-03-22T06:33:06.830Z] Query INZ: Found 18 CDRR records, 0 new added
+[2026-03-22T06:33:06.831Z] Query INZ: Found 1 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:33:08.333Z] Querying: IO (attempt 1)
+[2026-03-22T06:37:49.928Z] Parse error for query IO: JSON Parse error: Expected '}'
+[2026-03-22T06:37:49.929Z] Drilling down on error: IO -> [IOZ, IOY, IOX, IOW, IOV, IOU, IOT, IOS, IOR, IOQ, IOP, IOO, ION, IOM, IOL, IOK, IOJ, IOI, IOH, IOG, IOF, IOE, IOD, IOC, IOB, IOA]
+[2026-03-22T06:37:51.430Z] Querying: IOA (attempt 1)
+[2026-03-22T06:38:01.076Z] Query IOA: Found 4 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:38:02.578Z] Querying: IOB (attempt 1)
+[2026-03-22T06:38:12.117Z] Query IOB: Found 11 CDRR records, 0 new added
+[2026-03-22T06:38:12.118Z] Query IOB: Found 33 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:38:13.619Z] Querying: IOC (attempt 1)
+[2026-03-22T06:38:23.629Z] Query IOC: Found 57 CDRR records, 0 new added
+[2026-03-22T06:38:23.630Z] Query IOC: Found 34 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:38:25.131Z] Querying: IOD (attempt 1)
+[2026-03-22T06:38:37.813Z] Query IOD: Found 203 CDRR records, 0 new added
+[2026-03-22T06:38:37.814Z] Query IOD: Found 12 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:38:39.316Z] Querying: IOE (attempt 1)
+[2026-03-22T06:38:52.128Z] Querying: IOF (attempt 1)
+[2026-03-22T06:39:06.588Z] Query IOF: Found 34 CDRR records, 0 new added
+[2026-03-22T06:39:06.589Z] Query IOF: Found 8 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:39:08.091Z] Querying: IOG (attempt 1)
+[2026-03-22T06:39:20.923Z] Query IOG: Found 103 CDRR records, 0 new added
+[2026-03-22T06:39:20.924Z] Query IOG: Found 127 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:39:22.426Z] Querying: IOH (attempt 1)
+[2026-03-22T06:39:33.981Z] Query IOH: Found 23 CDRR records, 0 new added
+[2026-03-22T06:39:33.982Z] Query IOH: Found 3 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:39:35.484Z] Querying: IOI (attempt 1)
+[2026-03-22T06:39:47.018Z] Query IOI: Found 2 CDRR records, 0 new added
+[2026-03-22T06:39:48.521Z] Querying: IOJ (attempt 1)
+[2026-03-22T06:39:59.805Z] Query IOJ: Found 6 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:40:01.306Z] Querying: IOK (attempt 1)
+[2026-03-22T06:40:13.346Z] Query IOK: Found 2 CDRR records, 0 new added
+[2026-03-22T06:40:13.346Z] Query IOK: Found 2 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:40:14.848Z] Querying: IOL (attempt 1)
+[2026-03-22T06:40:56.205Z] Query IOL: Found 145 CDRR records, 0 new added
+[2026-03-22T06:40:56.205Z] Query IOL: Found 139 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:40:57.707Z] Querying: IOM (attempt 1)
+[2026-03-22T06:41:10.905Z] Query IOM: Found 28 CDRR records, 0 new added
+[2026-03-22T06:41:10.906Z] Query IOM: Found 33 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:41:12.408Z] Querying: ION (attempt 1)
+[2026-03-22T06:42:29.540Z] Query ION: Found 876 CDRR records, 0 new added
+[2026-03-22T06:42:29.542Z] Query ION: Found 2610 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:42:31.043Z] Querying: IOO (attempt 1)
+[2026-03-22T06:42:43.207Z] Querying: IOP (attempt 1)
+[2026-03-22T06:42:54.219Z] Query IOP: Found 53 CDRR records, 0 new added
+[2026-03-22T06:42:54.220Z] Query IOP: Found 182 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:42:55.723Z] Querying: IOQ (attempt 1)
+[2026-03-22T06:43:07.885Z] Query IOQ: Found 6 CDRR records, 0 new added
+[2026-03-22T06:43:07.885Z] Query IOQ: Found 1 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:43:09.388Z] Querying: IOR (attempt 1)
+[2026-03-22T06:43:22.302Z] Query IOR: Found 22 CDRR records, 0 new added
+[2026-03-22T06:43:22.303Z] Query IOR: Found 131 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:43:23.806Z] Querying: IOS (attempt 1)
+[2026-03-22T06:43:36.801Z] Query IOS: Found 117 CDRR records, 0 new added
+[2026-03-22T06:43:36.802Z] Query IOS: Found 41 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:43:38.303Z] Querying: IOT (attempt 1)
+[2026-03-22T06:43:51.337Z] Query IOT: Found 58 CDRR records, 0 new added
+[2026-03-22T06:43:51.337Z] Query IOT: Found 156 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:43:52.841Z] Querying: IOU (attempt 1)
+[2026-03-22T06:44:07.310Z] Query IOU: Found 121 CDRR records, 0 new added
+[2026-03-22T06:44:07.310Z] Query IOU: Found 1 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:44:08.813Z] Querying: IOV (attempt 1)
+[2026-03-22T06:44:21.862Z] Query IOV: Found 32 CDRR records, 0 new added
+[2026-03-22T06:44:21.863Z] Query IOV: Found 109 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:44:23.365Z] Querying: IOW (attempt 1)
+[2026-03-22T06:44:36.758Z] Querying: IOX (attempt 1)
+[2026-03-22T06:44:46.766Z] Query IOX: Found 34 CDRR records, 0 new added
+[2026-03-22T06:44:46.767Z] Query IOX: Found 94 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:44:48.270Z] Querying: IOY (attempt 1)
+[2026-03-22T06:45:01.737Z] Querying: IOZ (attempt 1)
+[2026-03-22T06:45:14.984Z] Query IOZ: Found 28 CDRR records, 0 new added
+[2026-03-22T06:45:16.487Z] Querying: IP (attempt 1)
+[2026-03-22T06:46:13.531Z] Query IP: Found 3024 CDRR records, 0 new added
+[2026-03-22T06:46:13.532Z] Query IP: Found 1140 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:46:15.036Z] Querying: IQ (attempt 1)
+[2026-03-22T06:46:29.025Z] Query IQ: Found 120 CDRR records, 0 new added
+[2026-03-22T06:46:29.026Z] Query IQ: Found 134 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:46:30.528Z] Querying: IR (attempt 1)
+[2026-03-22T06:47:14.199Z] Query IR: Found 3115 CDRR records, 0 new added
+[2026-03-22T06:47:14.201Z] Query IR: Found 1146 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:47:15.703Z] Querying: IS (attempt 1)
+[2026-03-22T06:48:23.270Z] Query IS: Found 3346 CDRR records, 0 new added
+[2026-03-22T06:48:23.271Z] Query IS: Found 2459 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:48:24.774Z] Querying: IT (attempt 1)
+[2026-03-22T06:49:29.295Z] Query IT: Found 5286 CDRR records, 0 new added
+[2026-03-22T06:49:29.298Z] Query IT: Found 3960 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:49:30.801Z] Querying: IU (attempt 1)
+[2026-03-22T06:49:48.526Z] Query IU: Found 5820 CDRR records, 0 new added
+[2026-03-22T06:49:48.527Z] Query IU: Found 500 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:49:50.030Z] Querying: IV (attempt 1)
+[2026-03-22T06:50:29.311Z] Query IV: Found 2112 CDRR records, 0 new added
+[2026-03-22T06:50:29.312Z] Query IV: Found 1317 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:50:30.815Z] Querying: IW (attempt 1)
+[2026-03-22T06:50:41.440Z] Query IW: Found 24 CDRR records, 0 new added
+[2026-03-22T06:50:41.441Z] Query IW: Found 14 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:50:42.944Z] Querying: IX (attempt 1)
+[2026-03-22T06:50:56.427Z] Query IX: Found 1148 CDRR records, 0 new added
+[2026-03-22T06:50:56.427Z] Query IX: Found 407 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:50:57.929Z] Querying: IY (attempt 1)
+[2026-03-22T06:51:09.263Z] Query IY: Found 8 CDRR records, 0 new added
+[2026-03-22T06:51:10.764Z] Querying: IZ (attempt 1)
+[2026-03-22T06:52:03.582Z] Query IZ: Found 1158 CDRR records, 0 new added
+[2026-03-22T06:52:03.582Z] Query IZ: Found 431 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:52:05.084Z] Querying: J (attempt 1)
+[2026-03-22T06:53:10.197Z] Query J: Found 490 CDRR records, 0 new added
+[2026-03-22T06:53:10.198Z] Query J: Found 845 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:53:11.701Z] Querying: K (attempt 1)
+[2026-03-22T06:55:13.975Z] Query K: Found 2367 CDRR records, 0 new added
+[2026-03-22T06:55:13.977Z] Query K: Found 3281 cpr_cdrrhr records, 0 new added
+[2026-03-22T06:55:15.480Z] Querying: L (attempt 1)
+[2026-03-22T06:56:01.444Z] Error for query L: HTTP 500
+[2026-03-22T06:56:01.445Z] Drilling down on error: L -> [LZ, LY, LX, LW, LV, LU, LT, LS, LR, LQ, LP, LO, LN, LM, LL, LK, LJ, LI, LH, LG, LF, LE, LD, LC, LB, LA]
+[2026-03-22T06:56:02.949Z] Querying: LA (attempt 1)
+[2026-03-22T06:56:35.345Z] 
+Received SIGINT. Saving state and exiting gracefully...
+[2026-03-22T06:56:35.364Z] State saved: 54578 processed, 39 pending
