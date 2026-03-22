@@ -96,7 +96,8 @@
 }
 
 /* Hidden attribute support */
-[hidden] {
+[hidden],
+.svg-defs {
   display: none !important;
 }
 
