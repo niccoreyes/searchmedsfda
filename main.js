@@ -18,6 +18,7 @@
     searchField: 'all',
     onlyRX: false,
     onlyOTC: false,
+    onlyGeneric: false,
     showVet: false,
     showSupplement: false,
     showMedicalDevice: false,
@@ -821,6 +822,7 @@
     const perPage = $('#perPage');
     const btnOnlyRX = $('#btnOnlyRX');
     const btnOnlyOTC = $('#btnOnlyOTC');
+    const btnOnlyGeneric = $('#btnOnlyGeneric');
     const btnShowVet = $('#btnShowVet');
     const btnShowSupplement = $('#btnShowSupplement');
     const btnShowMedicalDevice = $('#btnShowMedicalDevice');
@@ -852,11 +854,13 @@
       state.searchQ = '';
       state.onlyRX = false;
       state.onlyOTC = false;
+      state.onlyGeneric = false;
       state.showVet = false;
       state.showSupplement = false;
       state.showMedicalDevice = false;
       btnOnlyRX?.classList.remove('active');
       btnOnlyOTC?.classList.remove('active');
+      btnOnlyGeneric?.classList.remove('active');
       btnShowVet?.classList.remove('active');
       btnShowSupplement?.classList.remove('active');
       btnShowMedicalDevice?.classList.remove('active');
@@ -893,6 +897,13 @@
       if (state.onlyOTC) state.onlyRX = false;
       btnOnlyOTC.classList.toggle('active', state.onlyOTC);
       btnOnlyRX?.classList.remove('active');
+      state.page = 1;
+      filterAndRender();
+    });
+
+    btnOnlyGeneric?.addEventListener('click', () => {
+      state.onlyGeneric = !state.onlyGeneric;
+      btnOnlyGeneric.classList.toggle('active', state.onlyGeneric);
       state.page = 1;
       filterAndRender();
     });
@@ -1046,6 +1057,11 @@
       if (state.onlyOTC) {
         const cls = String(row['Classification'] || '').toLowerCase();
         if (!cls.includes('over-the-counter') && !cls.includes('otc')) return false;
+      }
+
+      if (state.onlyGeneric) {
+        const brand = String(row['Brand Name'] || '').trim();
+        if (brand.toLowerCase() !== 'none') return false;
       }
 
       if (!state.showVet) {
@@ -1504,9 +1520,11 @@
   }
 
   function addRxFromRecord(r) {
+    const rawBrand = r['Brand Name'] || '';
+    const brandName = rawBrand.toLowerCase() === 'none' ? '' : rawBrand;
     addRxItem({
       genericName: r['Generic Name'] || '',
-      brandName: r['Brand Name'] || '',
+      brandName: brandName,
       strength: r['Dosage Strength'] || '',
       form: r['Dosage Form'] || ''
     });
