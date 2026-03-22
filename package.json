@@ -8,7 +8,9 @@
     "harvest:status": "bun run fda_harvester.ts status",
     "harvest:reset": "bun run fda_harvester.ts reset",
     "harvest:validate": "bun run validate_csv.ts",
-    "harvest:stats": "bun run stats.ts"
+    "harvest:stats": "bun run stats.ts",
+    "merge-csv": "python merge_csv.py",
+    "generate-fhir-terminology": "bun generate-fhir-terminology.ts --upload"
   },
   "devDependencies": {
     "@types/bun": "latest",
