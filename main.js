@@ -1699,8 +1699,11 @@
   function addRxFromRecord(r) {
     const rawBrand = r['Brand Name'] || '';
     const brandName = rawBrand.toLowerCase() === 'none' ? '' : rawBrand;
+    const rawGeneric = r['Generic Name'] || '';
+    // Remove parenthetical content from generic name (e.g., "Esomeprazole (as magnesium trihydrate)" -> "Esomeprazole")
+    const genericName = rawGeneric.replace(/\s*\([^)]*\)/g, '').trim();
     addRxItem({
-      genericName: r['Generic Name'] || '',
+      genericName: genericName,
       brandName: brandName,
       strength: r['Dosage Strength'] || '',
       form: r['Dosage Form'] || ''
