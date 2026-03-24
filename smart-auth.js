@@ -276,6 +276,23 @@
         localStorage.setItem(STORAGE_PRACTITIONER, practitionerId);
       }
 
+      // Also check id_token for user info (OpenID Connect)
+      if (tokenData.id_token && !practitionerId) {
+        try {
+          // Decode JWT payload (base64)
+          const payload = JSON.parse(atob(tokenData.id_token.split('.')[1]));
+          if (payload.profile) {
+            const ref = payload.profile;
+            if (ref.startsWith('Practitioner/')) {
+              practitionerId = ref.split('/')[1];
+              localStorage.setItem(STORAGE_PRACTITIONER, practitionerId);
+            }
+          }
+        } catch (e) {
+          console.error('[SMART] Failed to decode id_token:', e);
+        }
+      }
+
       // Clean up URL (remove code and state)
       const cleanUrl = window.location.origin + window.location.pathname;
       window.history.replaceState({}, document.title, cleanUrl);
@@ -486,11 +503,57 @@
    * Get current practitioner
    */
   async function getPractitioner() {
-    if (!practitionerId) {
-      // Try to get from fhirUser claim
-      throw new Error('No practitioner context');
+    if (practitionerId) {
+      return await fetchResource('Practitioner', practitionerId);
     }
-    return await fetchResource('Practitioner', practitionerId);
+
+    // Try to get current user from Medplum /auth/me endpoint
+    try {
+      const response = await fetch(`${SMART_CONFIG.baseUrl}/auth/me`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Accept': 'application/fhir+json'
+        }
+      });
+
+      if (response.ok) {
+        const userData = await response.json();
+        // Medplum returns profile as a reference like "Practitioner/xxx"
+        if (userData.profile && userData.profile.reference) {
+          const ref = userData.profile.reference;
+          if (ref.startsWith('Practitioner/')) {
+            practitionerId = ref.split('/')[1];
+            localStorage.setItem(STORAGE_PRACTITIONER, practitionerId);
+            return await fetchResource('Practitioner', practitionerId);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('[SMART] Failed to get user from /auth/me:', error);
+    }
+
+    // Last resort: try /Practitioner/me endpoint
+    try {
+      const response = await fetch(`${SMART_CONFIG.fhirUrl}/Practitioner/me`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Accept': 'application/fhir+json'
+        }
+      });
+
+      if (response.ok) {
+        const practitioner = await response.json();
+        if (practitioner.id) {
+          practitionerId = practitioner.id;
+          localStorage.setItem(STORAGE_PRACTITIONER, practitionerId);
+          return practitioner;
+        }
+      }
+    } catch (error) {
+      console.error('[SMART] Failed to get Practitioner/me:', error);
+    }
+
+    throw new Error('No practitioner context');
   }
 
   /**
