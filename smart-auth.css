@@ -422,3 +422,92 @@
   color: #1e40af;
   border: 1px solid #60a5fa;
 }
+
+/* Patient Picker Styles */
+.patient-search-section {
+  margin-bottom: 1rem;
+}
+
+.search-input-wrapper {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.search-input-wrapper .form-input {
+  flex: 1;
+}
+
+.patients-list-container {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.patients-loading,
+.patients-error,
+.patients-empty {
+  padding: 2rem;
+  text-align: center;
+  color: #6b7280;
+}
+
+.patients-error {
+  color: #dc2626;
+}
+
+.patients-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.patient-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.patient-list-item:last-child {
+  border-bottom: none;
+}
+
+.patient-list-item:hover {
+  background-color: #f9fafb;
+}
+
+.patient-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.patient-name {
+  font-weight: 600;
+  color: #111827;
+  font-size: 0.9375rem;
+  margin-bottom: 0.25rem;
+}
+
+.patient-details {
+  display: flex;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.patient-gender {
+  font-weight: 500;
+}
+
+.patient-age {
+  color: #374151;
+}
+
+.patient-birthdate {
+  color: #9ca3af;
+  font-size: 0.8125rem;
+}

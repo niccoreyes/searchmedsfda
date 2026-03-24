@@ -2636,12 +2636,13 @@
   }
 
   /**
-   * Show patient selection dialog when no patient context from EHR
+   * Show patient selection dialog with search and create options
    */
   function showPatientSelectionDialog() {
     // Create modal for patient selection
     const modal = document.createElement('div');
     modal.className = 'smart-modal';
+    modal.id = 'patientPickerModal';
     modal.innerHTML = `
       <div class="smart-modal-content">
         <div class="smart-modal-header">
@@ -2649,14 +2650,27 @@
           <button class="smart-modal-close" aria-label="Close">&times;</button>
         </div>
         <div class="smart-modal-body">
-          <p>No patient was selected during EHR login. Please enter a Patient ID or select a patient.</p>
-          <div class="form-group">
-            <label for="patientIdInput">Patient ID</label>
-            <input type="text" id="patientIdInput" class="form-input" placeholder="e.g., 12345">
-            <small class="form-help">Enter the FHIR Patient resource ID</small>
+          <p>Search for an existing patient or create a new one.</p>
+          <div class="patient-search-section">
+            <div class="form-group">
+              <label for="patientSearchInput">Search Patients</label>
+              <div class="search-input-wrapper">
+                <input type="text" id="patientSearchInput" class="form-input" placeholder="Enter name to search...">
+                <button id="searchPatientsBtn" class="btn btn-primary">Search</button>
+              </div>
+            </div>
+          </div>
+          <div id="patientsListContainer" class="patients-list-container">
+            <div class="patients-loading">Loading patients...</div>
           </div>
           <div class="smart-modal-actions">
-            <button id="selectPatientBtn" class="btn btn-primary">Select Patient</button>
+            <button id="createPatientBtn" class="btn btn-secondary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              Create New Patient
+            </button>
             <button id="cancelPatientBtn" class="btn btn-secondary">Cancel</button>
           </div>
         </div>
@@ -2675,32 +2689,276 @@
       modal.remove();
     });
 
-    // Select patient button
-    modal.querySelector('#selectPatientBtn').addEventListener('click', async () => {
-      const patientId = $('#patientIdInput').value.trim();
-      if (!patientId) {
-        showToast('Please enter a Patient ID', 'error');
-        return;
+    // Search button
+    modal.querySelector('#searchPatientsBtn').addEventListener('click', () => {
+      searchAndDisplayPatients();
+    });
+
+    // Enter key in search input
+    modal.querySelector('#patientSearchInput').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        searchAndDisplayPatients();
       }
+    });
 
-      // Set the patient ID
-      window.SMARTAuth.setPatient(patientId);
-      smartState.patient = { id: patientId };
-
-      // Update UI to show patient context
-      updatePatientContextUI(patientId);
-
-      modal.remove();
-      showToast('Patient selected', 'success');
-
-      // Now proceed with submission
-      await submitPrescriptionToEHR();
+    // Create new patient button
+    modal.querySelector('#createPatientBtn').addEventListener('click', () => {
+      showCreatePatientDialog(modal);
     });
 
     // Close on backdrop click
     modal.addEventListener('click', (e) => {
       if (e.target === modal) {
         modal.remove();
+      }
+    });
+
+    // Load initial patient list
+    loadInitialPatients();
+  }
+
+  /**
+   * Calculate age from birthdate
+   */
+  function calculateAge(birthDate) {
+    if (!birthDate) return null;
+    const birth = new Date(birthDate);
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+      age--;
+    }
+    return age;
+  }
+
+  /**
+   * Format patient name
+   */
+  function formatPatientName(name) {
+    if (!name || !name.length) return 'Unknown';
+    const official = name.find(n => n.use === 'official') || name[0];
+    const given = official.given ? official.given.join(' ') : '';
+    const family = official.family || '';
+    return [given, family].filter(Boolean).join(' ');
+  }
+
+  /**
+   * Load initial patient list
+   */
+  async function loadInitialPatients() {
+    const container = $('#patientsListContainer');
+    if (!container) return;
+
+    container.innerHTML = '<div class="patients-loading">Loading patients...</div>';
+
+    try {
+      const result = await window.SMARTAuth.searchPatients('');
+      displayPatients(result);
+    } catch (error) {
+      console.error('[SMART] Failed to load patients:', error);
+      container.innerHTML = '<div class="patients-error">Failed to load patients. Please try searching.</div>';
+    }
+  }
+
+  /**
+   * Search and display patients
+   */
+  async function searchAndDisplayPatients() {
+    const searchInput = $('#patientSearchInput');
+    const container = $('#patientsListContainer');
+    const searchText = searchInput.value.trim();
+
+    container.innerHTML = '<div class="patients-loading">Searching...</div>';
+
+    try {
+      const result = await window.SMARTAuth.searchPatients(searchText);
+      displayPatients(result);
+    } catch (error) {
+      console.error('[SMART] Search failed:', error);
+      container.innerHTML = '<div class="patients-error">Search failed. Please try again.</div>';
+    }
+  }
+
+  /**
+   * Display patients in the list
+   */
+  function displayPatients(bundle) {
+    const container = $('#patientsListContainer');
+    if (!container) return;
+
+    const patients = bundle.entry?.map(e => e.resource) || [];
+
+    if (patients.length === 0) {
+      container.innerHTML = `
+        <div class="patients-empty">
+          <p>No patients found.</p>
+          <button id="createPatientFromEmptyBtn" class="btn btn-primary btn-sm">Create New Patient</button>
+        </div>
+      `;
+      container.querySelector('#createPatientFromEmptyBtn')?.addEventListener('click', () => {
+        showCreatePatientDialog($('#patientPickerModal'));
+      });
+      return;
+    }
+
+    const listHtml = patients.map(patient => {
+      const name = formatPatientName(patient.name);
+      const age = calculateAge(patient.birthDate);
+      const ageText = age !== null ? `${age} yrs` : 'Age unknown';
+      const gender = patient.gender || 'unknown';
+      const genderIcon = gender === 'male' ? '♂' : gender === 'female' ? '♀' : '○';
+
+      return `
+        <div class="patient-list-item" data-patient-id="${patient.id}">
+          <div class="patient-info">
+            <div class="patient-name">${name}</div>
+            <div class="patient-details">
+              <span class="patient-gender">${genderIcon} ${gender}</span>
+              <span class="patient-age">${ageText}</span>
+              ${patient.birthDate ? `<span class="patient-birthdate">(${patient.birthDate})</span>` : ''}
+            </div>
+          </div>
+          <button class="btn btn-primary btn-sm select-patient-btn">Select</button>
+        </div>
+      `;
+    }).join('');
+
+    container.innerHTML = `<div class="patients-list">${listHtml}</div>`;
+
+    // Add click handlers for select buttons
+    container.querySelectorAll('.select-patient-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const item = e.target.closest('.patient-list-item');
+        const patientId = item.dataset.patientId;
+
+        // Set the patient ID
+        window.SMARTAuth.setPatient(patientId);
+        smartState.patient = { id: patientId };
+
+        // Update UI to show patient context
+        updatePatientContextUI(patientId);
+
+        $('#patientPickerModal').remove();
+        showToast('Patient selected', 'success');
+
+        // Now proceed with submission
+        await submitPrescriptionToEHR();
+      });
+    });
+  }
+
+  /**
+   * Show create patient dialog
+   */
+  function showCreatePatientDialog(parentModal) {
+    // Hide parent modal temporarily
+    parentModal.style.display = 'none';
+
+    const modal = document.createElement('div');
+    modal.className = 'smart-modal';
+    modal.id = 'createPatientModal';
+    modal.innerHTML = `
+      <div class="smart-modal-content">
+        <div class="smart-modal-header">
+          <h3>Create New Patient</h3>
+          <button class="smart-modal-close" aria-label="Close">&times;</button>
+        </div>
+        <div class="smart-modal-body">
+          <div class="form-group">
+            <label for="newPatientFamilyName">Last Name *</label>
+            <input type="text" id="newPatientFamilyName" class="form-input" placeholder="e.g., Doe">
+          </div>
+          <div class="form-group">
+            <label for="newPatientGivenName">First Name *</label>
+            <input type="text" id="newPatientGivenName" class="form-input" placeholder="e.g., John">
+          </div>
+          <div class="form-group">
+            <label for="newPatientBirthDate">Birth Date</label>
+            <input type="date" id="newPatientBirthDate" class="form-input">
+          </div>
+          <div class="form-group">
+            <label for="newPatientGender">Gender</label>
+            <select id="newPatientGender" class="form-input">
+              <option value="">-- Select --</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="other">Other</option>
+              <option value="unknown">Unknown</option>
+            </select>
+          </div>
+          <div class="smart-modal-actions">
+            <button id="savePatientBtn" class="btn btn-primary">Create Patient</button>
+            <button id="cancelCreatePatientBtn" class="btn btn-secondary">Back</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Close button
+    modal.querySelector('.smart-modal-close').addEventListener('click', () => {
+      modal.remove();
+      parentModal.style.display = 'flex';
+    });
+
+    // Cancel button
+    modal.querySelector('#cancelCreatePatientBtn').addEventListener('click', () => {
+      modal.remove();
+      parentModal.style.display = 'flex';
+    });
+
+    // Save button
+    modal.querySelector('#savePatientBtn').addEventListener('click', async () => {
+      const familyName = $('#newPatientFamilyName').value.trim();
+      const givenName = $('#newPatientGivenName').value.trim();
+      const birthDate = $('#newPatientBirthDate').value;
+      const gender = $('#newPatientGender').value;
+
+      if (!familyName || !givenName) {
+        showToast('Please enter first and last name', 'error');
+        return;
+      }
+
+      try {
+        const newPatient = {
+          resourceType: 'Patient',
+          name: [{
+            use: 'official',
+            family: familyName,
+            given: [givenName]
+          }],
+          ...(birthDate && { birthDate }),
+          ...(gender && { gender })
+        };
+
+        const created = await window.SMARTAuth.createResource(newPatient);
+
+        // Set the new patient ID
+        window.SMARTAuth.setPatient(created.id);
+        smartState.patient = { id: created.id, name: `${givenName} ${familyName}` };
+
+        // Update UI to show patient context
+        updatePatientContextUI(created.id);
+
+        modal.remove();
+        parentModal.remove();
+        showToast('Patient created and selected', 'success');
+
+        // Now proceed with submission
+        await submitPrescriptionToEHR();
+      } catch (error) {
+        console.error('[SMART] Failed to create patient:', error);
+        showToast('Failed to create patient: ' + error.message, 'error');
+      }
+    });
+
+    // Close on backdrop click
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        modal.remove();
+        parentModal.style.display = 'flex';
       }
     });
   }
