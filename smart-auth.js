@@ -21,14 +21,14 @@
     },
     aidbox: {
       key: 'aidbox',
-      name: 'Aidbox FHIRLab',
-      baseUrl: 'https://aidbox.fhirlab.net',
-      fhirUrl: 'https://aidbox.fhirlab.net/fhir',
-      authorizeUrl: 'https://aidbox.fhirlab.net/auth/authorize',
-      tokenUrl: 'https://aidbox.fhirlab.net/auth/token',
-      discoveryUrl: 'https://aidbox.fhirlab.net/.well-known/smart-configuration',
-      defaultClientId: '',
-      description: 'Aidbox FHIRLab sandbox'
+      name: 'Aidbox',
+      baseUrl: '',
+      fhirUrl: '',
+      authorizeUrl: '',
+      tokenUrl: '',
+      discoveryUrl: '',
+      defaultClientId: 'rx-builder-dev',
+      description: 'Aidbox FHIR server (custom URL)'
     },
     custom: {
       key: 'custom',
@@ -46,6 +46,7 @@
   // ============ Storage Keys ============
   const STORAGE_PROVIDER = 'smart_provider';
   const STORAGE_CUSTOM_CONFIG = 'smart_custom_config';
+  const STORAGE_AIDBOX_CONFIG = 'smart_aidbox_config';
   const STORAGE_TOKEN = 'smart_access_token';
   const STORAGE_REFRESH = 'smart_refresh_token';
   const STORAGE_EXPIRES = 'smart_token_expires';
@@ -115,17 +116,33 @@
 
     currentProvider = { ...PROVIDERS[providerKey] };
 
-    // For custom provider, merge in custom config
-    if (providerKey === 'custom' && customConfig) {
-      currentProvider.baseUrl = customConfig.baseUrl || '';
-      currentProvider.fhirUrl = customConfig.fhirUrl || '';
-      currentProvider.authorizeUrl = customConfig.authorizeUrl || '';
-      currentProvider.tokenUrl = customConfig.tokenUrl || '';
-      localStorage.setItem(STORAGE_CUSTOM_CONFIG, JSON.stringify(customConfig));
+    // For custom/aidbox provider, load saved config if no customConfig provided
+    if ((providerKey === 'custom' || providerKey === 'aidbox')) {
+      if (customConfig) {
+        // Use provided config
+        currentProvider.baseUrl = customConfig.baseUrl || '';
+        currentProvider.fhirUrl = customConfig.fhirUrl || '';
+        currentProvider.authorizeUrl = customConfig.authorizeUrl || '';
+        currentProvider.tokenUrl = customConfig.tokenUrl || '';
+
+        const storageKey = providerKey === 'aidbox' ? STORAGE_AIDBOX_CONFIG : STORAGE_CUSTOM_CONFIG;
+        localStorage.setItem(storageKey, JSON.stringify(customConfig));
+      } else {
+        // Load saved config from storage
+        const storageKey = providerKey === 'aidbox' ? STORAGE_AIDBOX_CONFIG : STORAGE_CUSTOM_CONFIG;
+        const savedConfig = localStorage.getItem(storageKey);
+        if (savedConfig) {
+          const parsed = JSON.parse(savedConfig);
+          currentProvider.baseUrl = parsed.baseUrl || '';
+          currentProvider.fhirUrl = parsed.fhirUrl || '';
+          currentProvider.authorizeUrl = parsed.authorizeUrl || '';
+          currentProvider.tokenUrl = parsed.tokenUrl || '';
+        }
+      }
     }
 
-    // Try SMART discovery for custom servers
-    if (providerKey === 'custom' && currentProvider.baseUrl) {
+    // Try SMART discovery for custom/aidbox servers
+    if ((providerKey === 'custom' || providerKey === 'aidbox') && currentProvider.baseUrl) {
       const discovered = await discoverSmartConfig(currentProvider.baseUrl);
       if (discovered) {
         currentProvider.authorizeUrl = discovered.authorization_endpoint;
@@ -159,6 +176,11 @@
       if (hostname === 'devrxbuilder.vercel.app') {
         SMART_CONFIG.clientId = '217f9e4b-4980-470c-9b09-c1bab39154db';
       }
+    }
+
+    // Default Aidbox client ID
+    if (providerKey === 'aidbox' && !SMART_CONFIG.clientId) {
+      SMART_CONFIG.clientId = PROVIDERS.aidbox.defaultClientId;
     }
 
     return currentProvider;
@@ -1083,6 +1105,7 @@
     saveClientId,
     getClientIdKey,
     discoverSmartConfig,
+    STORAGE_AIDBOX_CONFIG,
     // Direct access to config (read-only recommended)
     get config() { return SMART_CONFIG; },
     get provider() { return currentProvider; },

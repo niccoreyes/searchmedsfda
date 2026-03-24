@@ -955,7 +955,7 @@
           <div class="form-group">
             <label for="customBaseUrl">FHIR Base URL</label>
             <input type="url" id="customBaseUrl" class="form-input" placeholder="https://your-server.com/fhir">
-            <p class="help-text">The base URL of your FHIR server (e.g., https://aidbox.fhirlab.net/fhir)</p>
+            <p class="help-text">The base URL of your FHIR server (e.g., https://your-aidbox.edge.aidbox.app or https://aidbox.fhirlab.net)</p>
           </div>
           <div class="form-group">
             <label for="customAuthUrl">Authorization URL (optional)</label>
@@ -975,33 +975,71 @@
             <!-- Populated by JS -->
           </div>
 
-          <!-- Template for Aidbox code block -->
-          <template id="aidboxCodeTemplate">
+          <!-- Guide Templates -->
+          <template id="tpl-guide-medplum">
+            <ol>
+              <li>Go to <a href="https://app.medplum.com/signin" target="_blank">Medplum Console</a> and sign in or create an account</li>
+              <li>Navigate to "Resource Type" → "ClientApplication" → "New Client"</li>
+              <li>Enter a name for your application (e.g., "Rx Builder")</li>
+              <li>Set Redirect URI to: <code class="redirect-uri"></code></li>
+              <li>Search for the "ClientApplication" resource</li>
+              <li>Copy the Client ID for the generated client and paste it in the field above</li>
+              <li>Click "Save Settings" and then "Connect EHR"</li>
+            </ol>
+          </template>
+
+          <template id="tpl-guide-aidbox">
+            <ol>
+              <li>Enter your Aidbox base URL above (e.g., <code>https://your-aidbox.edge.aidbox.app</code> or <code>https://aidbox.fhirlab.net</code>)</li>
+              <li>Go to your Aidbox instance and sign in or create an account</li>
+              <li>Navigate to <strong>REST Console</strong> (in the left sidebar)</li>
+              <li>Copy and paste the JSON below, then click <strong>Save</strong>:</li>
+            </ol>
             <div class="code-block-container collapsed">
               <div class="code-block-header">
                 <span class="code-block-title">Client Resource JSON</span>
                 <div class="code-block-actions">
-                  <button type="button" class="btn-copy" title="Copy to clipboard" onclick="copyAidboxCode(this)">
+                  <button type="button" class="btn-copy" title="Copy to clipboard">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
                       <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
                       <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
                     </svg>
                     <span>Copy</span>
                   </button>
-                  <button type="button" class="btn-toggle-expand" title="Expand/Collapse" onclick="toggleCodeBlock(this)">
+                  <button type="button" class="btn-toggle-expand" title="Expand/Collapse">
                     <svg class="icon-expand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
                       <polyline points="6 9 12 15 18 9"/>
                     </svg>
-                    <svg class="icon-collapse" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                    <svg class="icon-collapse" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" style="display:none">
                       <polyline points="18 15 12 9 6 15"/>
                     </svg>
                   </button>
                 </div>
               </div>
               <div class="code-block-content">
-                <pre><code id="aidboxCodeContent"></code></pre>
+                <pre><code class="aidbox-json"></code></pre>
               </div>
             </div>
+            <ol start="5">
+              <li>Enter your chosen Client ID (default: <code>rx-builder-dev</code>) in the field above</li>
+              <li>Click <strong>Save Settings</strong> and then <strong>Connect EHR</strong></li>
+            </ol>
+            <p class="setup-hint">
+              <strong>Tip:</strong> You can also use the UI: Go to <strong>Client → New</strong> and fill in the same fields.
+              <a href="https://docs.aidbox.app/modules-1/security-and-access-control/client-management" target="_blank">Learn more →</a>
+            </p>
+          </template>
+
+          <template id="tpl-guide-custom">
+            <ol>
+              <li>Enter your FHIR server's base URL (e.g., <code>https://your-server.com/fhir</code>)</li>
+              <li>The app will attempt to auto-discover OAuth endpoints via <code>/.well-known/smart-configuration</code></li>
+              <li>If auto-discovery fails, manually enter the Authorization and Token URLs</li>
+              <li>Get a Client ID from your FHIR server's admin console</li>
+              <li>Set the redirect URI to: <code class="redirect-uri"></code></li>
+              <li>Copy the Client ID and paste it in the field above</li>
+              <li>Click "Save Settings" and then "Connect EHR"</li>
+            </ol>
           </template>
         </div>
       </div>
