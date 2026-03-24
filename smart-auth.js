@@ -143,11 +143,18 @@
 
     // Try SMART discovery for custom/aidbox servers
     if ((providerKey === 'custom' || providerKey === 'aidbox') && currentProvider.baseUrl) {
+      console.log('[SMART] Attempting discovery for:', currentProvider.baseUrl);
       const discovered = await discoverSmartConfig(currentProvider.baseUrl);
       if (discovered) {
+        console.log('[SMART] Discovery successful:', discovered.authorization_endpoint);
         currentProvider.authorizeUrl = discovered.authorization_endpoint;
         currentProvider.tokenUrl = discovered.token_endpoint;
         currentProvider.fhirUrl = discovered.issuer || currentProvider.baseUrl;
+      } else {
+        console.log('[SMART] Discovery failed, using manual URLs:', {
+          authorizeUrl: currentProvider.authorizeUrl,
+          tokenUrl: currentProvider.tokenUrl
+        });
       }
     }
 
@@ -272,6 +279,12 @@
       throw new Error('No provider selected. Call setProvider() first.');
     }
 
+    console.log('[SMART] Authorizing with config:', {
+      authorizeUrl: SMART_CONFIG.authorizeUrl,
+      clientId: SMART_CONFIG.clientId,
+      baseUrl: SMART_CONFIG.baseUrl
+    });
+
     if (!SMART_CONFIG.clientId) {
       const providerName = currentProvider.name;
       const clientId = prompt(`Enter your ${providerName} Client ID:`);
@@ -279,6 +292,10 @@
         return { success: false, error: 'no_client_id' };
       }
       saveClientId(clientId);
+    }
+
+    if (!SMART_CONFIG.authorizeUrl) {
+      throw new Error('No authorization URL configured. Please check your provider settings.');
     }
 
     // Generate state and PKCE verifier
@@ -338,18 +355,31 @@
 
   /**
    * Discover SMART configuration from FHIR server
+   * Tries both root and /fhir paths
    */
   async function discoverSmartConfig(iss) {
+    // Try root path first
     try {
       const response = await fetch(`${iss}/.well-known/smart-configuration`);
-      if (!response.ok) {
-        throw new Error(`Discovery failed: ${response.status}`);
+      if (response.ok) {
+        return await response.json();
       }
-      return await response.json();
     } catch (error) {
-      console.error('[SMART] Discovery failed:', error);
-      return null;
+      console.log('[SMART] Discovery failed at root, trying /fhir path...');
     }
+
+    // Try /fhir path (common for Aidbox and other servers)
+    try {
+      const response = await fetch(`${iss}/fhir/.well-known/smart-configuration`);
+      if (response.ok) {
+        return await response.json();
+      }
+    } catch (error) {
+      console.log('[SMART] Discovery failed at /fhir path');
+    }
+
+    console.error('[SMART] Discovery failed at all paths');
+    return null;
   }
 
   /**

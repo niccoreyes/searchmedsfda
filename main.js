@@ -2655,8 +2655,20 @@
         showToast('Disconnected from previous EHR', 'info');
       }
 
-      // Set the new provider
-      await window.SMARTAuth.setProvider(providerKey);
+      // For custom/aidbox providers, load saved config and pass to setProvider
+      let config = null;
+      if (providerKey === 'custom' || providerKey === 'aidbox') {
+        const storageKey = providerKey === 'aidbox'
+          ? (window.SMARTAuth?.STORAGE_AIDBOX_CONFIG || 'smart_aidbox_config')
+          : 'smart_custom_config';
+        const savedConfig = localStorage.getItem(storageKey);
+        if (savedConfig) {
+          config = JSON.parse(savedConfig);
+        }
+      }
+
+      // Set the new provider (with config if available)
+      await window.SMARTAuth.setProvider(providerKey, config);
       localStorage.setItem('smart_provider', providerKey);
 
       const providers = window.SMARTAuth.getAvailableProviders();
@@ -2717,9 +2729,19 @@
         const customAuthUrl = $('#customAuthUrl');
         const customTokenUrl = $('#customTokenUrl');
 
-        if (customBaseUrl) customBaseUrl.value = customConfig.baseUrl || config?.baseUrl || '';
-        if (customAuthUrl) customAuthUrl.value = customConfig.authorizeUrl || config?.authorizeUrl || '';
-        if (customTokenUrl) customTokenUrl.value = customConfig.tokenUrl || config?.tokenUrl || '';
+        const baseUrl = customConfig.baseUrl || config?.baseUrl || '';
+        if (customBaseUrl) customBaseUrl.value = baseUrl;
+
+        // For Aidbox, auto-derive auth URLs if not set
+        if (currentProviderKey === 'aidbox' && baseUrl) {
+          const derivedAuthUrl = `${baseUrl}/auth/authorize`;
+          const derivedTokenUrl = `${baseUrl}/auth/token`;
+          if (customAuthUrl) customAuthUrl.value = customConfig.authorizeUrl || config?.authorizeUrl || derivedAuthUrl;
+          if (customTokenUrl) customTokenUrl.value = customConfig.tokenUrl || config?.tokenUrl || derivedTokenUrl;
+        } else {
+          if (customAuthUrl) customAuthUrl.value = customConfig.authorizeUrl || config?.authorizeUrl || '';
+          if (customTokenUrl) customTokenUrl.value = customConfig.tokenUrl || config?.tokenUrl || '';
+        }
       }
     }
 
@@ -2760,11 +2782,23 @@
       const customAuthUrl = $('#customAuthUrl');
       const customTokenUrl = $('#customTokenUrl');
 
+      const baseUrl = customBaseUrl?.value.trim() || '';
+      // For Aidbox, auto-derive auth URLs if not provided
+      let authUrl = customAuthUrl?.value.trim() || '';
+      let tokenUrl = customTokenUrl?.value.trim() || '';
+
+      if (currentProviderKey === 'aidbox' && baseUrl && !authUrl) {
+        authUrl = `${baseUrl}/auth/authorize`;
+      }
+      if (currentProviderKey === 'aidbox' && baseUrl && !tokenUrl) {
+        tokenUrl = `${baseUrl}/auth/token`;
+      }
+
       const customConfig = {
-        baseUrl: customBaseUrl?.value.trim() || '',
-        fhirUrl: customBaseUrl?.value.trim() || '',
-        authorizeUrl: customAuthUrl?.value.trim() || '',
-        tokenUrl: customTokenUrl?.value.trim() || ''
+        baseUrl: baseUrl,
+        fhirUrl: baseUrl,
+        authorizeUrl: authUrl,
+        tokenUrl: tokenUrl
       };
 
       const storageKey = currentProviderKey === 'aidbox'
