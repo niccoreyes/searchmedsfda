@@ -2425,13 +2425,6 @@
     }
   }
 
-  // Start
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
-
   // ==================== SMART on FHIR Integration ====================
 
   /**
@@ -2746,5 +2739,12 @@
     await originalInit();
     await initSMARTIntegration();
   };
+
+  // Start the app
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
 
 })();
