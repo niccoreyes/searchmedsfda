@@ -13,8 +13,10 @@
     fhirUrl: 'https://api.medplum.com/fhir/R4',
     authorizeUrl: 'https://api.medplum.com/oauth2/authorize',
     tokenUrl: 'https://api.medplum.com/oauth2/token',
-    // Client configuration - should be configured per deployment
-    clientId: '', // Will be set from localStorage or prompt
+    // Client configuration - auto-detected based on hostname
+    // Dev environment: 217f9e4b-4980-470c-9b09-c1bab39154db
+    // Prod environment: configure via localStorage 'smart_client_id'
+    clientId: '', // Auto-set in initSMART() based on hostname or localStorage
     redirectUri: '', // Auto-detected from current URL
     scopes: [
       'openid',
@@ -55,10 +57,22 @@
     // Set redirect URI to current origin
     SMART_CONFIG.redirectUri = window.location.origin + window.location.pathname;
 
-    // Load saved client ID if exists
-    const savedClientId = localStorage.getItem(STORAGE_CLIENT_ID);
-    if (savedClientId) {
-      SMART_CONFIG.clientId = savedClientId;
+    // Auto-detect client ID based on hostname
+    const hostname = window.location.hostname;
+    if (hostname === 'devrxbuilder.vercel.app') {
+      SMART_CONFIG.clientId = '217f9e4b-4980-470c-9b09-c1bab39154db';
+    } else if (hostname === 'rxbuilder.vercel.app') {
+      // Production client ID - set via localStorage or prompt
+      const savedClientId = localStorage.getItem(STORAGE_CLIENT_ID);
+      if (savedClientId) {
+        SMART_CONFIG.clientId = savedClientId;
+      }
+    } else {
+      // Local development or other - use localStorage or prompt
+      const savedClientId = localStorage.getItem(STORAGE_CLIENT_ID);
+      if (savedClientId) {
+        SMART_CONFIG.clientId = savedClientId;
+      }
     }
 
     // Check if we're handling an OAuth callback

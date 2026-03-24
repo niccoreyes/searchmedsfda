@@ -1,0 +1,8 @@
+{
+  "resourceType": "ClientApplication",
+  "name": "Rx Builder Dev",
+  "description": "Rx Builder SMART on FHIR integration - Dev environment",
+  "redirectUri": "https://devrxbuilder.vercel.app/",
+  "launchUri": "https://devrxbuilder.vercel.app/",
+  "pkceOptional": false
+}
