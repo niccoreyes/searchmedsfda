@@ -357,10 +357,20 @@
         </div>
         <div class="form-grid">
           <div class="form-field patient-search-field">
-            <label>Patient Name</label>
+            <div class="field-label-row">
+              <label>Patient Name</label>
+              <button id="clearPatientBtn" type="button" class="btn-clear-field" title="Clear patient details" hidden>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+                Clear
+              </button>
+            </div>
             <input id="ptName" type="text" placeholder="Full name" autocomplete="off">
             <div id="patientSearchResults" class="patient-search-results"></div>
             <div id="patientEhrStatus" class="patient-ehr-status" hidden></div>
+            <div id="patientManualStatus" class="patient-manual-status" hidden></div>
           </div>
           <div class="form-field xs">
             <label>Age</label>

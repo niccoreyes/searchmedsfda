@@ -2434,7 +2434,9 @@
     isConnected: false,
     practitioner: null,
     patient: null,
-    isLoading: false
+    isLoading: false,
+    manualPatient: null, // Stores manually entered patient details
+    patientCheckTimeout: null // Debounce timeout for patient existence check
   };
 
   /**
@@ -2526,6 +2528,24 @@
           searchPatientsFromEHR('');
         }
       });
+
+      // Blur event to check if patient exists when user finishes typing
+      ptNameInput.addEventListener('blur', debounce(() => {
+        if (smartState.isConnected && ptNameInput.value.trim()) {
+          checkPatientExistsAndPrompt(ptNameInput.value.trim());
+        }
+      }, 500));
+
+      // Input event to update clear button visibility
+      ptNameInput.addEventListener('input', () => {
+        updateSMARTUI(smartState.isConnected);
+      });
+    }
+
+    // Clear patient button
+    const clearPatientBtn = $('#clearPatientBtn');
+    if (clearPatientBtn) {
+      clearPatientBtn.addEventListener('click', handleClearPatient);
     }
   }
 
@@ -2794,6 +2814,393 @@
   }
 
   /**
+   * Handle clear patient button click - clears all patient details
+   */
+  function handleClearPatient() {
+    // Clear SMART state
+    smartState.patient = null;
+    smartState.manualPatient = null;
+
+    // Clear patient from SMART Auth if connected
+    if (window.SMARTAuth) {
+      window.SMARTAuth.setPatient(null);
+    }
+
+    // Clear patient form fields
+    const ptName = $('#ptName');
+    const ptAge = $('#ptAge');
+    const ptSex = $('#ptSex');
+    const ptAddr = $('#ptAddr');
+
+    if (ptName) ptName.value = '';
+    if (ptAge) ptAge.value = '';
+    if (ptSex) ptSex.value = '';
+    if (ptAddr) ptAddr.value = '';
+
+    // Hide any status indicators
+    hidePatientManualStatus();
+
+    updateSMARTUI(true);
+    showToast('Patient details cleared', 'info');
+
+    // Focus the name input
+    if (ptName) ptName.focus();
+  }
+
+  /**
+   * Check if patient exists in EHR and prompt user if not found
+   * Called when user finishes typing patient name
+   */
+  async function checkPatientExistsAndPrompt(patientName) {
+    if (!window.SMARTAuth || !smartState.isConnected) return;
+    if (!patientName || patientName.length < 2) return;
+
+    // Don't check if we already have this patient selected
+    if (smartState.patient && smartState.patient.name === patientName) return;
+
+    try {
+      // Search for exact match
+      const result = await window.SMARTAuth.searchPatients(patientName);
+      const patients = result.entry?.map(e => e.resource) || [];
+
+      // Check for exact name match
+      const exactMatch = patients.find(p => {
+        const pName = formatPatientName(p.name);
+        return pName.toLowerCase() === patientName.toLowerCase();
+      });
+
+      if (exactMatch) {
+        // Patient exists - ask if user wants to link to existing or create new
+        promptPatientExists(exactMatch, patientName);
+      } else if (patients.length > 0) {
+        // Similar patients found - show options
+        promptSimilarPatients(patients, patientName);
+      } else {
+        // No patients found - ask to create new
+        promptCreateNewPatient(patientName);
+      }
+    } catch (error) {
+      console.error('[SMART] Patient check failed:', error);
+    }
+  }
+
+  /**
+   * Prompt user when exact patient match exists
+   */
+  function promptPatientExists(existingPatient, enteredName) {
+    const pName = formatPatientName(existingPatient.name);
+    const age = calculateAge(existingPatient.birthDate);
+    const ageText = age !== null ? `${age} yrs` : 'Age unknown';
+    const gender = existingPatient.gender || 'unknown';
+
+    showPatientManualStatus(
+      `A patient named "${pName}" already exists (${gender}, ${ageText}).`,
+      [
+        { label: 'Use Existing', action: () => linkToExistingPatient(existingPatient), primary: true },
+        { label: 'Create New', action: () => showCreatePatientWithName(enteredName) },
+        { label: 'Clear', action: () => handleClearPatient() }
+      ]
+    );
+  }
+
+  /**
+   * Prompt user when similar patients are found
+   */
+  function promptSimilarPatients(similarPatients, enteredName) {
+    const topMatches = similarPatients.slice(0, 3);
+    const matchNames = topMatches.map(p => formatPatientName(p.name)).join(', ');
+
+    showPatientManualStatus(
+      `Similar patients found: ${matchNames}. Select one or create new?`,
+      [
+        { label: 'View Matches', action: () => showPatientPickerForSelection(similarPatients, enteredName) },
+        { label: 'Create New', action: () => showCreatePatientWithName(enteredName) },
+        { label: 'Clear', action: () => handleClearPatient() }
+      ]
+    );
+  }
+
+  /**
+   * Prompt user to create new patient when no matches found
+   */
+  function promptCreateNewPatient(patientName) {
+    showPatientManualStatus(
+      `"${patientName}" was not found in the EHR.`,
+      [
+        { label: 'Create Patient', action: () => showCreatePatientWithName(patientName), primary: true },
+        { label: 'Search Again', action: () => { $('#ptName')?.focus(); } },
+        { label: 'Clear', action: () => handleClearPatient() }
+      ]
+    );
+  }
+
+  /**
+   * Show patient manual status with action buttons
+   */
+  function showPatientManualStatus(message, actions) {
+    const statusEl = $('#patientManualStatus');
+    if (!statusEl) return;
+
+    const buttonsHtml = actions.map(btn => `
+      <button class="btn ${btn.primary ? 'btn-primary' : 'btn-secondary'} btn-sm" data-action="${actions.indexOf(btn)}">
+        ${btn.label}
+      </button>
+    `).join('');
+
+    statusEl.innerHTML = `
+      <div class="patient-manual-status unlinked">
+        <span class="status-text">${message}</span>
+        <div class="status-actions">
+          ${buttonsHtml}
+        </div>
+      </div>
+    `;
+
+    statusEl.hidden = false;
+
+    // Add click handlers
+    statusEl.querySelectorAll('button[data-action]').forEach((btn, idx) => {
+      btn.addEventListener('click', () => {
+        actions[idx].action();
+      });
+    });
+  }
+
+  /**
+   * Hide patient manual status
+   */
+  function hidePatientManualStatus() {
+    const statusEl = $('#patientManualStatus');
+    if (statusEl) {
+      statusEl.hidden = true;
+      statusEl.innerHTML = '';
+    }
+  }
+
+  /**
+   * Link form to existing patient
+   */
+  function linkToExistingPatient(patient) {
+    const patientId = patient.id;
+    const patientName = formatPatientName(patient.name);
+    const patientGender = patient.gender || '';
+    const patientBirthDate = patient.birthDate || '';
+
+    // Set patient in SMART state
+    window.SMARTAuth.setPatient(patientId);
+    smartState.patient = { id: patientId, name: patientName };
+    smartState.manualPatient = null;
+
+    // Update form fields
+    const ptName = $('#ptName');
+    const ptAge = $('#ptAge');
+    const ptSex = $('#ptSex');
+
+    if (ptName) ptName.value = patientName;
+    if (ptAge && patientBirthDate) ptAge.value = calculateAge(patientBirthDate) || '';
+    if (ptSex && patientGender) {
+      ptSex.value = patientGender.charAt(0).toUpperCase() + patientGender.slice(1);
+    }
+
+    hidePatientManualStatus();
+    updateSMARTUI(true);
+    showToast(`Linked to existing patient: ${patientName}`, 'success');
+  }
+
+  /**
+   * Show create patient dialog pre-filled with name
+   */
+  function showCreatePatientWithName(patientName) {
+    // Parse name into parts (simple parsing)
+    const nameParts = patientName.trim().split(/\s+/);
+    const givenName = nameParts[0] || '';
+    const familyName = nameParts.slice(1).join(' ') || '';
+
+    // Pre-fill and show the create dialog
+    showCreatePatientDialogInlineWithData(givenName, familyName);
+  }
+
+  /**
+   * Show create patient dialog with pre-filled data
+   */
+  function showCreatePatientDialogInlineWithData(givenName, familyName) {
+    const modal = document.createElement('div');
+    modal.className = 'smart-modal';
+    modal.id = 'createPatientModal';
+    modal.innerHTML = `
+      <div class="smart-modal-content">
+        <div class="smart-modal-header">
+          <h3>Create New Patient</h3>
+          <button class="smart-modal-close" aria-label="Close">&times;</button>
+        </div>
+        <div class="smart-modal-body">
+          <p class="modal-hint">Creating patient: <strong>${givenName} ${familyName}</strong></p>
+          <div class="form-group">
+            <label for="newPatientFamilyName">Last Name *</label>
+            <input type="text" id="newPatientFamilyName" class="form-input" placeholder="e.g., Doe" value="${familyName}">
+          </div>
+          <div class="form-group">
+            <label for="newPatientGivenName">First Name *</label>
+            <input type="text" id="newPatientGivenName" class="form-input" placeholder="e.g., John" value="${givenName}">
+          </div>
+          <div class="form-group">
+            <label for="newPatientBirthDate">Birth Date</label>
+            <input type="date" id="newPatientBirthDate" class="form-input">
+          </div>
+          <div class="form-group">
+            <label for="newPatientGender">Gender</label>
+            <select id="newPatientGender" class="form-input">
+              <option value="">-- Select --</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="other">Other</option>
+              <option value="unknown">Unknown</option>
+            </select>
+          </div>
+          <div class="smart-modal-actions">
+            <button id="savePatientBtn" class="btn btn-primary">Create Patient</button>
+            <button id="cancelCreatePatientBtn" class="btn btn-secondary">Cancel</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    modal.querySelector('.smart-modal-close').addEventListener('click', () => modal.remove());
+    modal.querySelector('#cancelCreatePatientBtn').addEventListener('click', () => modal.remove());
+
+    modal.querySelector('#savePatientBtn').addEventListener('click', async () => {
+      const familyName = $('#newPatientFamilyName').value.trim();
+      const givenName = $('#newPatientGivenName').value.trim();
+      const birthDate = $('#newPatientBirthDate').value;
+      const gender = $('#newPatientGender').value;
+
+      if (!familyName || !givenName) {
+        showToast('Please enter first and last name', 'error');
+        return;
+      }
+
+      try {
+        const newPatient = {
+          resourceType: 'Patient',
+          name: [{
+            use: 'official',
+            family: familyName,
+            given: [givenName]
+          }],
+          ...(birthDate && { birthDate }),
+          ...(gender && { gender })
+        };
+
+        const created = await window.SMARTAuth.createResource(newPatient);
+
+        window.SMARTAuth.setPatient(created.id);
+        smartState.patient = { id: created.id, name: `${givenName} ${familyName}` };
+        smartState.manualPatient = null;
+
+        // Update form fields
+        const ptName = $('#ptName');
+        const ptAge = $('#ptAge');
+        const ptSex = $('#ptSex');
+
+        if (ptName) ptName.value = `${givenName} ${familyName}`;
+        if (ptAge && birthDate) ptAge.value = calculateAge(birthDate) || '';
+        if (ptSex && gender) {
+          ptSex.value = gender.charAt(0).toUpperCase() + gender.slice(1);
+        }
+
+        hidePatientManualStatus();
+        updateSMARTUI(true);
+        modal.remove();
+        showToast('Patient created and selected', 'success');
+      } catch (error) {
+        console.error('[SMART] Failed to create patient:', error);
+        showToast('Failed to create patient: ' + error.message, 'error');
+      }
+    });
+
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) modal.remove();
+    });
+  }
+
+  /**
+   * Show patient picker for selecting from similar matches
+   */
+  function showPatientPickerForSelection(patients, enteredName) {
+    const modal = document.createElement('div');
+    modal.className = 'smart-modal';
+    modal.id = 'patientPickerModal';
+
+    const listHtml = patients.map(patient => {
+      const name = formatPatientName(patient.name);
+      const age = calculateAge(patient.birthDate);
+      const ageText = age !== null ? `${age} yrs` : 'Age unknown';
+      const gender = patient.gender || 'unknown';
+      const genderIcon = gender === 'male' ? '♂' : gender === 'female' ? '♀' : '○';
+
+      return `
+        <div class="patient-picker-item" data-patient-id="${patient.id}">
+          <div class="patient-picker-item-info">
+            <div class="patient-picker-item-name">${name}</div>
+            <div class="patient-picker-item-details">
+              <span class="patient-gender">${genderIcon} ${gender}</span>
+              <span class="patient-age">${ageText}</span>
+              ${patient.birthDate ? `<span class="patient-birthdate">(${patient.birthDate})</span>` : ''}
+            </div>
+          </div>
+          <button class="btn btn-primary btn-sm select-patient-btn">Select</button>
+        </div>
+      `;
+    }).join('');
+
+    modal.innerHTML = `
+      <div class="smart-modal-content">
+        <div class="smart-modal-header">
+          <h3>Select Matching Patient</h3>
+          <button class="smart-modal-close" aria-label="Close">&times;</button>
+        </div>
+        <div class="smart-modal-body">
+          <p class="modal-hint">You entered: <strong>${enteredName}</strong></p>
+          <p>Select an existing patient or create a new one:</p>
+          <div class="patient-picker-list">
+            ${listHtml}
+          </div>
+          <div class="smart-modal-actions">
+            <button id="createNewFromPickerBtn" class="btn btn-secondary">Create New Patient</button>
+            <button id="cancelPickerBtn" class="btn btn-ghost">Cancel</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Close button
+    modal.querySelector('.smart-modal-close').addEventListener('click', () => modal.remove());
+    modal.querySelector('#cancelPickerBtn').addEventListener('click', () => modal.remove());
+
+    // Create new button
+    modal.querySelector('#createNewFromPickerBtn').addEventListener('click', () => {
+      modal.remove();
+      showCreatePatientWithName(enteredName);
+    });
+
+    // Select patient buttons
+    modal.querySelectorAll('.select-patient-btn').forEach((btn, idx) => {
+      btn.addEventListener('click', () => {
+        linkToExistingPatient(patients[idx]);
+        modal.remove();
+      });
+    });
+
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) modal.remove();
+    });
+  }
+
+  /**
    * Search patients from EHR and display in dropdown
    */
   async function searchPatientsFromEHR(searchText) {
@@ -2899,6 +3306,9 @@
         // Hide results
         resultsContainer.innerHTML = '';
         resultsContainer.classList.remove('active');
+
+        // Hide any manual status indicators
+        hidePatientManualStatus();
 
         // Update UI
         updateSMARTUI(true);
@@ -3469,6 +3879,14 @@
     }
     if (changePatientBtn) {
       changePatientBtn.hidden = !isConnected || !smartState.patient;
+    }
+
+    // Clear patient button - show when there's patient data (EHR linked or manual entry)
+    const clearPatientBtn = $('#clearPatientBtn');
+    const ptName = $('#ptName');
+    const hasPatientData = smartState.patient || (ptName && ptName.value.trim());
+    if (clearPatientBtn) {
+      clearPatientBtn.hidden = !hasPatientData;
     }
 
     // Update patient EHR status indicator
