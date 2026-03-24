@@ -1295,6 +1295,191 @@ p {
   width: 100%;
 }
 
+/* Patient Search Results */
+.patient-search-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: var(--space-2);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  z-index: 50;
+  max-height: 400px;
+  overflow: hidden;
+  display: none;
+}
+
+.patient-search-results.active {
+  display: block;
+  animation: fadeIn 0.2s ease;
+}
+
+.patient-search-list {
+  max-height: 400px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.patient-search-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.patient-search-list::-webkit-scrollbar-track {
+  background: var(--slate-100);
+  border-radius: var(--radius-full);
+}
+
+.patient-search-list::-webkit-scrollbar-thumb {
+  background: var(--slate-300);
+  border-radius: var(--radius-full);
+}
+
+.patient-search-item {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  contain: content;
+}
+
+.patient-search-item:last-child {
+  border-bottom: none;
+}
+
+.patient-search-item:hover {
+  background: var(--primary-50);
+}
+
+.patient-search-item:active {
+  background: var(--primary-100);
+}
+
+.patient-search-item.selected {
+  background: var(--primary-100);
+  border-left: 3px solid var(--primary-600);
+}
+
+.patient-search-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.patient-search-item-name {
+  font-weight: 600;
+  font-size: 0.9375rem;
+  color: var(--text-primary);
+}
+
+.patient-search-item-details {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.patient-gender {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-weight: 500;
+}
+
+.patient-gender.female {
+  color: var(--primary-600);
+}
+
+.patient-gender.male {
+  color: var(--blue-600);
+}
+
+.patient-age {
+  background: var(--slate-100);
+  color: var(--slate-600);
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.patient-birthdate {
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+}
+
+.patient-search-footer {
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--border);
+  background: var(--slate-50);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  display: flex;
+  justify-content: center;
+}
+
+.patient-search-footer .btn {
+  width: 100%;
+}
+
+.patient-search-empty {
+  padding: var(--space-8) var(--space-4);
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.patient-search-empty svg {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto var(--space-3);
+  color: var(--slate-300);
+}
+
+/* Patient Search Input Wrapper */
+.patient-search-container {
+  position: relative;
+}
+
+.patient-search-input-wrap {
+  position: relative;
+}
+
+.patient-search-input-wrap input {
+  width: 100%;
+  padding: var(--space-3) var(--space-10);
+  font-size: 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--slate-50);
+  transition: all var(--transition-fast);
+}
+
+.patient-search-input-wrap input:focus {
+  outline: none;
+  border-color: var(--border-focus);
+  background: var(--surface);
+  box-shadow: 0 0 0 3px var(--primary-100);
+}
+
+.patient-search-input-wrap input.has-results {
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  border-bottom-color: transparent;
+}
+
+.patient-search-icon {
+  position: absolute;
+  left: var(--space-3);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
 /* Prescription Items */
 .rx-items {
   display: flex;
