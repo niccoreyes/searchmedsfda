@@ -9,6 +9,7 @@
   <link rel="icon" type="image/png" href="favicon.png">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="smart-auth.css">
   <link rel="manifest" href="manifest.json">
 
   <!-- Apple Touch Icon -->
@@ -48,6 +49,7 @@
         <span class="logo-text">Rx Builder</span>
       </div>
       <div class="header-badges">
+        <span id="smartStatusBadge" class="status-badge smart-disconnected" title="SMART on FHIR Status">EHR</span>
         <span id="dataSourceBadge" class="status-badge offline">Offline</span>
         <button id="shareBadge" class="status-badge share-badge" title="Share this app">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
@@ -281,7 +283,29 @@
     <section id="view-rx" class="view">
       <!-- Prescription Header Info -->
       <div class="rx-section">
-        <h3 class="section-title">Prescriber Information</h3>
+        <div class="section-header">
+          <h3 class="section-title">Prescriber Information</h3>
+          <div class="smart-controls">
+            <button id="smartConnectBtn" type="button" class="btn btn-smart-outline" title="Connect to EHR via SMART on FHIR">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                <path d="M9 12l2 2 4-4"/>
+              </svg>
+              <span id="smartConnectText">Connect EHR</span>
+            </button>
+            <button id="smartSyncPractitionerBtn" type="button" class="btn btn-smart-outline" title="Load practitioner from EHR" hidden>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              Load from EHR
+            </button>
+            <div id="smartContextInfo" class="smart-context-info" hidden>
+              <span class="smart-patient-badge" title="Patient loaded from EHR">Patient</span>
+            </div>
+          </div>
+        </div>
         <div class="form-grid">
           <div class="form-field">
             <label>Clinic / Facility</label>
@@ -455,6 +479,13 @@
           </svg>
           <span class="btn-text">Copy</span>
         </button>
+        <button id="submitToEHR" class="btn btn-smart" title="Submit Prescription to EHR via SMART on FHIR" hidden>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <polyline points="12 8 12 12 15 15"/>
+          </svg>
+          <span class="btn-text">Submit to EHR</span>
+        </button>
         <div class="btn-group">
           <button id="printRx" class="btn btn-primary btn-lg">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -514,6 +545,18 @@
           <h3>FHIR Terminology Server</h3>
           <p>This app queries drug data using the FHIR (Fast Healthcare Interoperability Resources) standard. It fetches concepts from a <strong>CodeSystem</strong> resource which contains all drug properties (generic name, brand name, strength, form, classification, manufacturer, etc.) and validates codes against a <strong>ValueSet</strong> for the complete FDA Philippines drug database.</p>
           <p>The terminology server is powered by <strong>Ontoserver</strong> on <strong>FHIRLab</strong> by the SSCP project (Strengthening Standards Capability Project), a capacity development program for Digital Health Standards and Interoperability in the Southeast Asia and Pacific Region.</p>
+        </div>
+
+        <div class="about-section">
+          <h3>SMART on FHIR Integration</h3>
+          <p>This app supports <strong>SMART on FHIR</strong> (Substitutable Medical Applications, Reusable Technologies), enabling seamless integration with Electronic Health Record (EHR) systems that support the standard.</p>
+          <ul>
+            <li><strong>EHR Launch:</strong> Launch directly from your EHR with patient and practitioner context</li>
+            <li><strong>Practitioner Preload:</strong> Automatically load prescriber information from the EHR</li>
+            <li><strong>Prescription Submission:</strong> Submit completed prescriptions as FHIR MedicationRequest resources</li>
+            <li><strong>Medplum Support:</strong> Compatible with Medplum and other SMART on FHIR compliant servers</li>
+          </ul>
+          <p>To use SMART on FHIR, click the "Connect EHR" button in the Prescription tab and authenticate with your EHR credentials. The app uses OAuth2 with PKCE for secure authentication.</p>
         </div>
 
         <div class="about-section">
@@ -842,6 +885,7 @@
     import * as htmlToImage from 'https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/+esm';
     window.htmlToImage = htmlToImage;
   </script>
+  <script src="smart-auth.js"></script>
   <script src="main.js"></script>
 
   <!-- Service Worker Registration -->

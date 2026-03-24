@@ -2431,4 +2431,320 @@
   } else {
     init();
   }
+
+  // ==================== SMART on FHIR Integration ====================
+
+  /**
+   * SMART on FHIR state
+   */
+  const smartState = {
+    isConnected: false,
+    practitioner: null,
+    patient: null,
+    isLoading: false
+  };
+
+  /**
+   * Initialize SMART on FHIR integration
+   * Called during app initialization
+   */
+  async function initSMARTIntegration() {
+    // Check if SMARTAuth is available
+    if (typeof window.SMARTAuth === 'undefined') {
+      console.log('[SMART] SMARTAuth module not loaded');
+      return;
+    }
+
+    try {
+      // Initialize SMART - check for existing session
+      const result = await window.SMARTAuth.init();
+
+      if (result.success) {
+        console.log('[SMART] Session restored:', result);
+        await handleSMARTConnected();
+      } else {
+        console.log('[SMART] No active session:', result.reason || result.error);
+        updateSMARTUI(false);
+      }
+    } catch (error) {
+      console.error('[SMART] Initialization failed:', error);
+      updateSMARTUI(false);
+    }
+
+    // Set up event listeners
+    setupSMARTEventListeners();
+  }
+
+  /**
+   * Set up SMART on FHIR event listeners
+   */
+  function setupSMARTEventListeners() {
+    // Connect button
+    const connectBtn = $('#smartConnectBtn');
+    if (connectBtn) {
+      connectBtn.addEventListener('click', handleSMARTConnect);
+    }
+
+    // Sync practitioner button
+    const syncBtn = $('#smartSyncPractitionerBtn');
+    if (syncBtn) {
+      syncBtn.addEventListener('click', handleSyncPractitioner);
+    }
+
+    // Submit to EHR button
+    const submitBtn = $('#submitToEHR');
+    if (submitBtn) {
+      submitBtn.addEventListener('click', handleSubmitToEHR);
+    }
+  }
+
+  /**
+   * Handle SMART connect button click
+   */
+  async function handleSMARTConnect() {
+    if (!window.SMARTAuth) {
+      showToast('SMART on FHIR module not available', 'error');
+      return;
+    }
+
+    const context = window.SMARTAuth.getContext();
+
+    if (context.isAuthenticated) {
+      // Already connected - offer to disconnect
+      showConfirmToast(
+        'Disconnect from EHR?',
+        () => {
+          window.SMARTAuth.logout();
+          smartState.isConnected = false;
+          smartState.practitioner = null;
+          smartState.patient = null;
+          updateSMARTUI(false);
+          showToast('Disconnected from EHR', 'info');
+        },
+        () => {}
+      );
+    } else {
+      // Start authorization flow
+      showToast('Connecting to EHR...', 'info');
+      try {
+        await window.SMARTAuth.authorize();
+        // Note: Page will redirect for OAuth flow
+      } catch (error) {
+        showToast('Failed to start EHR connection', 'error');
+        console.error('[SMART] Authorization failed:', error);
+      }
+    }
+  }
+
+  /**
+   * Handle successful SMART connection
+   */
+  async function handleSMARTConnected() {
+    smartState.isConnected = true;
+    updateSMARTUI(true);
+
+    const context = window.SMARTAuth.getContext();
+
+    // Show patient context if available
+    if (context.patientId) {
+      $('#smartContextInfo')?.removeAttribute('hidden');
+    }
+
+    // Automatically try to load practitioner info
+    await handleSyncPractitioner();
+  }
+
+  /**
+   * Handle sync practitioner button click
+   */
+  async function handleSyncPractitioner() {
+    if (!window.SMARTAuth || !smartState.isConnected) {
+      showToast('Not connected to EHR', 'error');
+      return;
+    }
+
+    const syncBtn = $('#smartSyncPractitionerBtn');
+    if (syncBtn) {
+      syncBtn.disabled = true;
+      syncBtn.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation: spin 1s linear infinite">
+          <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+        </svg>
+        Loading...
+      `;
+    }
+
+    try {
+      const practitionerInfo = await window.SMARTAuth.loadPractitionerInfo();
+      smartState.practitioner = practitionerInfo;
+
+      // Populate form fields
+      if (practitionerInfo.name) {
+        const docNameEl = $('#docName');
+        if (docNameEl && !docNameEl.value) {
+          docNameEl.value = practitionerInfo.name;
+        }
+      }
+
+      if (practitionerInfo.prcNumber) {
+        const prcEl = $('#prc');
+        if (prcEl && !prcEl.value) {
+          prcEl.value = practitionerInfo.prcNumber;
+        }
+      }
+
+      showToast(`Loaded practitioner: ${practitionerInfo.name}`, 'success');
+    } catch (error) {
+      console.error('[SMART] Failed to load practitioner:', error);
+      showToast('Could not load practitioner from EHR', 'error');
+    } finally {
+      if (syncBtn) {
+        syncBtn.disabled = false;
+        syncBtn.innerHTML = `
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          Load from EHR
+        `;
+      }
+    }
+  }
+
+  /**
+   * Handle submit prescription to EHR
+   */
+  async function handleSubmitToEHR() {
+    if (!window.SMARTAuth || !smartState.isConnected) {
+      showToast('Please connect to EHR first', 'error');
+      return;
+    }
+
+    const context = window.SMARTAuth.getContext();
+    if (!context.patientId) {
+      showToast('No patient context available', 'error');
+      return;
+    }
+
+    // Get prescription items
+    const items = Array.from($('#rxItems').children)
+      .filter((child) => child.classList.contains('rx-item'))
+      .map((div) => collectItem(div));
+
+    if (items.length === 0) {
+      showToast('No medications to submit', 'error');
+      return;
+    }
+
+    // Confirm submission
+    showConfirmToast(
+      `Submit ${items.length} medication(s) to EHR?`,
+      async () => {
+        const submitBtn = $('#submitToEHR');
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = `
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation: spin 1s linear infinite">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M12 6v6l4 2"/>
+            </svg>
+            <span class="btn-text">Submitting...</span>
+          `;
+        }
+
+        try {
+          // Submit as Bundle transaction
+          const result = await window.SMARTAuth.submitPrescriptionBundle(items);
+
+          // Count successful entries
+          const successful = result.entry?.filter(e =>
+            e.response?.status?.startsWith('2')
+          ).length || 0;
+
+          if (successful === items.length) {
+            showToast(`Successfully submitted ${successful} medication(s) to EHR`, 'success');
+          } else if (successful > 0) {
+            showToast(`Submitted ${successful} of ${items.length} medications`, 'info');
+          } else {
+            showToast('Failed to submit medications', 'error');
+          }
+        } catch (error) {
+          console.error('[SMART] Submit failed:', error);
+          showToast('Failed to submit to EHR: ' + error.message, 'error');
+        } finally {
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = `
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                <polyline points="12 8 12 12 15 15"/>
+              </svg>
+              <span class="btn-text">Submit to EHR</span>
+            `;
+          }
+        }
+      },
+      () => {}
+    );
+  }
+
+  /**
+   * Update SMART UI based on connection state
+   */
+  function updateSMARTUI(isConnected) {
+    const badge = $('#smartStatusBadge');
+    const connectBtn = $('#smartConnectBtn');
+    const connectText = $('#smartConnectText');
+    const syncBtn = $('#smartSyncPractitionerBtn');
+    const submitBtn = $('#submitToEHR');
+
+    if (badge) {
+      if (isConnected) {
+        badge.className = 'status-badge smart-connected';
+        badge.textContent = 'EHR Connected';
+        badge.title = 'SMART on FHIR: Connected';
+      } else {
+        badge.className = 'status-badge smart-disconnected';
+        badge.textContent = 'EHR';
+        badge.title = 'SMART on FHIR: Disconnected';
+      }
+    }
+
+    if (connectBtn && connectText) {
+      if (isConnected) {
+        connectText.textContent = 'Disconnect';
+        connectBtn.title = 'Disconnect from EHR';
+      } else {
+        connectText.textContent = 'Connect EHR';
+        connectBtn.title = 'Connect to EHR via SMART on FHIR';
+      }
+    }
+
+    if (syncBtn) {
+      syncBtn.hidden = !isConnected;
+    }
+
+    if (submitBtn) {
+      submitBtn.hidden = !isConnected;
+    }
+  }
+
+  // Add CSS animation for loading spinner
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  `;
+  document.head.appendChild(style);
+
+  // ==================== Override init to include SMART ====================
+
+  const originalInit = init;
+  init = async function() {
+    await originalInit();
+    await initSMARTIntegration();
+  };
+
 })();
