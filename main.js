@@ -2436,7 +2436,8 @@
     patient: null,
     isLoading: false,
     manualPatient: null, // Stores manually entered patient details
-    patientCheckTimeout: null // Debounce timeout for patient existence check
+    patientCheckTimeout: null, // Debounce timeout for patient existence check
+    newPatientPending: null // Stores new patient data to be created on submit
   };
 
   /**
@@ -2705,7 +2706,7 @@
    */
   async function confirmAndSubmitToEHR() {
     // Get prescription items
-    const items = Array.from($('#rxItems').children)
+    const items = Array.from($('#rxItem s').children)
       .filter((child) => child.classList.contains('rx-item'))
       .map((div) => collectItem(div));
 
@@ -2734,6 +2735,37 @@
         }
 
         try {
+          // If there's a pending new patient, create them first
+          if (smartState.newPatientPending) {
+            showToast('Creating new patient...', 'info');
+
+            const pending = smartState.newPatientPending;
+            const ptSex = $('#ptSex')?.value?.toLowerCase() || '';
+
+            // Build the Patient resource
+            const newPatient = {
+              resourceType: 'Patient',
+              name: [{
+                use: 'official',
+                family: pending.familyName,
+                given: [pending.givenName]
+              }],
+              ...(ptSex && ['male', 'female', 'other', 'unknown'].includes(ptSex) && { gender: ptSex })
+            };
+
+            // Create the patient in EHR
+            const created = await window.SMARTAuth.createResource(newPatient);
+
+            // Update SMART context with new patient
+            window.SMARTAuth.setPatient(created.id);
+            smartState.patient = { id: created.id, name: pending.fullName };
+            smartState.newPatientPending = null;
+
+            hidePatientManualStatus();
+            updateSMARTUI(true);
+            showToast('Patient created successfully', 'success');
+          }
+
           // Submit as Bundle transaction
           const result = await window.SMARTAuth.submitPrescriptionBundle(items);
 
@@ -2820,6 +2852,7 @@
     // Clear SMART state
     smartState.patient = null;
     smartState.manualPatient = null;
+    smartState.newPatientPending = null;
 
     // Clear patient from SMART Auth if connected
     if (window.SMARTAuth) {
@@ -2921,17 +2954,32 @@
   }
 
   /**
-   * Prompt user to create new patient when no matches found
+   * Mark patient as new (to be created on submit) when no matches found
    */
   function promptCreateNewPatient(patientName) {
+    // Parse name into parts
+    const nameParts = patientName.trim().split(/\s+/);
+    const givenName = nameParts[0] || '';
+    const familyName = nameParts.slice(1).join(' ') || '';
+
+    // Store as pending new patient
+    smartState.newPatientPending = {
+      givenName,
+      familyName,
+      fullName: patientName.trim()
+    };
+
+    // Show status indicator that this is a new patient
     showPatientManualStatus(
-      `"${patientName}" was not found in the EHR.`,
+      `New patient: "${patientName}" will be created when you submit.`,
       [
-        { label: 'Create Patient', action: () => showCreatePatientWithName(patientName), primary: true },
-        { label: 'Search Again', action: () => { $('#ptName')?.focus(); } },
+        { label: 'Edit Details', action: () => { $('#ptName')?.focus(); }, primary: true },
         { label: 'Clear', action: () => handleClearPatient() }
       ]
     );
+
+    // Add visual indicator to the card
+    updateSMARTUI(true);
   }
 
   /**
@@ -2990,6 +3038,7 @@
     window.SMARTAuth.setPatient(patientId);
     smartState.patient = { id: patientId, name: patientName };
     smartState.manualPatient = null;
+    smartState.newPatientPending = null;
 
     // Update form fields
     const ptName = $('#ptName');
@@ -3908,6 +3957,17 @@
             <path d="M20 6L9 17l-5-5"/>
           </svg>
           Linked to EHR
+        </span>
+      `;
+    } else if (smartState.newPatientPending) {
+      // Show new patient indicator
+      statusEl.hidden = false;
+      statusEl.innerHTML = `
+        <span class="ehr-badge new-patient">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+          New Patient (will be created)
         </span>
       `;
     } else {

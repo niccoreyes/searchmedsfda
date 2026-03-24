@@ -1510,6 +1510,28 @@ p {
   padding: var(--space-1) var(--space-2);
 }
 
+/* Patient EHR Status Badge */
+.ehr-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: 0.75rem;
+  padding: var(--space-1) var(--space-2);
+  background: var(--green-100);
+  color: var(--green-700);
+  border-radius: var(--radius-md);
+  font-weight: 500;
+}
+
+.ehr-badge.new-patient {
+  background: var(--blue-100);
+  color: var(--blue-700);
+}
+
+.ehr-badge svg {
+  flex-shrink: 0;
+}
+
 /* Patient Search Input Wrapper */
 .patient-search-container {
   position: relative;

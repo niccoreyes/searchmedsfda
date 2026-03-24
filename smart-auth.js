@@ -24,6 +24,7 @@
       'profile',
       'launch/patient',
       'patient/Patient.read',
+      'patient/Patient.write',
       'patient/Practitioner.read',
       'patient/MedicationRequest.read',
       'patient/MedicationRequest.write',
