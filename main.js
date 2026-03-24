@@ -2482,7 +2482,7 @@
   const smartState = {
     isConnected: false,
     practitioner: null,
-    patient: null,
+    patient: null, // { id, name, originalData }
     isLoading: false,
     manualPatient: null, // Stores manually entered patient details
     patientCheckTimeout: null, // Debounce timeout for patient existence check
@@ -2802,6 +2802,14 @@
 
             const pending = smartState.newPatientPending;
             const ptSex = $('#ptSex')?.value?.toLowerCase() || '';
+            const ptAgeVal = $('#ptAge')?.value?.trim() || '';
+
+            // Derive birthDate from age if available
+            let birthDate = null;
+            if (ptAgeVal) {
+              const parsed = parseAgeString(ptAgeVal);
+              birthDate = deriveBirthDateFromAge(parsed.age, parsed.unit);
+            }
 
             // Build the Patient resource
             const newPatient = {
@@ -2811,20 +2819,36 @@
                 family: pending.familyName,
                 given: [pending.givenName]
               }],
-              ...(ptSex && ['male', 'female', 'other', 'unknown'].includes(ptSex) && { gender: ptSex })
+              ...(ptSex && ['male', 'female', 'other', 'unknown'].includes(ptSex) && { gender: ptSex }),
+              ...(birthDate && { birthDate })
             };
 
             // Create the patient in EHR
             const created = await window.SMARTAuth.createResource(newPatient);
 
-            // Update SMART context with new patient
+            // Update SMART context with new patient (store original data for change tracking)
             window.SMARTAuth.setPatient(created.id);
-            smartState.patient = { id: created.id, name: pending.fullName };
+            smartState.patient = {
+              id: created.id,
+              name: pending.fullName,
+              originalData: {
+                name: newPatient.name,
+                gender: ptSex || '',
+                birthDate: birthDate || ''
+              }
+            };
             smartState.newPatientPending = null;
 
             hidePatientManualStatus();
             updateSMARTUI(true);
             showToast('Patient created successfully', 'success');
+          }
+          // Check if existing patient data has changed and needs update
+          else if (smartState.patient?.id && smartState.patient?.originalData) {
+            const updates = await checkAndUpdatePatientIfChanged();
+            if (updates) {
+              showToast('Patient information updated', 'success');
+            }
           }
 
           // Submit as Bundle transaction
@@ -2860,6 +2884,79 @@
       },
       () => {}
     );
+  }
+
+  /**
+   * Check if patient data has changed and update on FHIR server if needed
+   * @returns {Promise<boolean>} true if patient was updated
+   */
+  async function checkAndUpdatePatientIfChanged() {
+    const patientId = smartState.patient?.id;
+    const originalData = smartState.patient?.originalData;
+    if (!patientId || !originalData) return false;
+
+    // Get current form values
+    const ptName = $('#ptName')?.value?.trim() || '';
+    const ptSex = $('#ptSex')?.value?.toLowerCase() || '';
+    const ptAgeVal = $('#ptAge')?.value?.trim() || '';
+
+    // Parse current name
+    const nameParts = ptName.split(/\s+/);
+    const givenName = nameParts[0] || '';
+    const familyName = nameParts.slice(1).join(' ') || '';
+
+    // Derive birthDate from age if available
+    let birthDate = null;
+    if (ptAgeVal) {
+      const parsed = parseAgeString(ptAgeVal);
+      birthDate = deriveBirthDateFromAge(parsed.age, parsed.unit);
+    }
+
+    // Build current name structure for comparison
+    const currentName = [{
+      use: 'official',
+      family: familyName,
+      given: [givenName]
+    }];
+
+    // Check if anything changed
+    const originalName = originalData.name?.[0];
+    const nameChanged = originalName?.family !== familyName ||
+                        originalName?.given?.[0] !== givenName;
+    const genderChanged = originalData.gender !== ptSex;
+    const birthDateChanged = originalData.birthDate !== birthDate;
+
+    if (!nameChanged && !genderChanged && !birthDateChanged) {
+      return false; // No changes
+    }
+
+    // Build update patch
+    const updates = {
+      resourceType: 'Patient',
+      id: patientId
+    };
+
+    if (nameChanged) {
+      updates.name = currentName;
+    }
+    if (genderChanged && ptSex && ['male', 'female', 'other', 'unknown'].includes(ptSex)) {
+      updates.gender = ptSex;
+    }
+    if (birthDateChanged && birthDate) {
+      updates.birthDate = birthDate;
+    }
+
+    // Update on FHIR server
+    await window.SMARTAuth.updateResource(updates);
+
+    // Update stored original data
+    smartState.patient.originalData = {
+      name: updates.name || originalData.name,
+      gender: updates.gender || originalData.gender,
+      birthDate: updates.birthDate || originalData.birthDate
+    };
+
+    return true;
   }
 
   /**
@@ -2949,8 +3046,8 @@
     if (!window.SMARTAuth || !smartState.isConnected) return;
     if (!patientName || patientName.length < 2) return;
 
-    // Don't check if we already have this patient selected
-    if (smartState.patient && smartState.patient.name === patientName) return;
+    // Don't check if we already have this patient selected (unless there's a pending new patient)
+    if (smartState.patient?.name === patientName && !smartState.newPatientPending) return;
 
     try {
       // Search for exact match
@@ -3095,9 +3192,17 @@
     const patientGender = patient.gender || '';
     const patientBirthDate = patient.birthDate || '';
 
-    // Set patient in SMART state
+    // Set patient in SMART state with original data for change tracking
     window.SMARTAuth.setPatient(patientId);
-    smartState.patient = { id: patientId, name: patientName };
+    smartState.patient = {
+      id: patientId,
+      name: patientName,
+      originalData: {
+        name: patient.name,
+        gender: patientGender,
+        birthDate: patientBirthDate
+      }
+    };
     smartState.manualPatient = null;
     smartState.newPatientPending = null;
 
@@ -3206,7 +3311,15 @@
         const created = await window.SMARTAuth.createResource(newPatient);
 
         window.SMARTAuth.setPatient(created.id);
-        smartState.patient = { id: created.id, name: `${givenName} ${familyName}` };
+        smartState.patient = {
+          id: created.id,
+          name: `${givenName} ${familyName}`,
+          originalData: {
+            name: newPatient.name,
+            gender: gender || '',
+            birthDate: birthDate || ''
+          }
+        };
         smartState.manualPatient = null;
 
         // Update form fields
@@ -3398,9 +3511,18 @@
         const patientGender = item.dataset.patientGender;
         const patientBirthDate = item.dataset.patientBirthdate;
 
-        // Set patient in SMART state
+        // Set patient in SMART state with original data for change tracking
         window.SMARTAuth.setPatient(patientId);
-        smartState.patient = { id: patientId, name: patientName };
+        smartState.patient = {
+          id: patientId,
+          name: patientName,
+          originalData: {
+            name: [{ use: 'official', family: '', given: [patientName] }], // Approximate from display
+            gender: patientGender || '',
+            birthDate: patientBirthDate || ''
+          }
+        };
+        smartState.newPatientPending = null;
 
         // Update form fields
         const ptName = $('#ptName');
@@ -3509,7 +3631,15 @@
         const created = await window.SMARTAuth.createResource(newPatient);
 
         window.SMARTAuth.setPatient(created.id);
-        smartState.patient = { id: created.id, name: `${givenName} ${familyName}` };
+        smartState.patient = {
+          id: created.id,
+          name: `${givenName} ${familyName}`,
+          originalData: {
+            name: newPatient.name,
+            gender: gender || '',
+            birthDate: birthDate || ''
+          }
+        };
 
         // Update form fields
         const ptName = $('#ptName');
@@ -3634,6 +3764,92 @@
   }
 
   /**
+   * Derive birthDate from age information following FHIR guidelines
+   * @param {number} age - Age value
+   * @param {string} unit - 'years', 'months', 'days', or null for years
+   * @returns {string} birthDate in FHIR format (YYYY, YYYY-MM, or YYYY-MM-DD)
+   *
+   * FHIR Guidelines:
+   * - Only year known: YYYY (e.g., "2024")
+   * - Month and year known: YYYY-MM (e.g., "2025-09")
+   * - Full date known: YYYY-MM-DD (e.g., "2026-03-09")
+   */
+  function deriveBirthDateFromAge(age, unit = 'years') {
+    if (age === null || age === undefined || isNaN(age)) return null;
+
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const currentMonth = today.getMonth(); // 0-11
+    const currentDay = today.getDate();
+
+    // Normalize unit
+    const normalizedUnit = unit?.toLowerCase() || 'years';
+
+    if (normalizedUnit === 'years' || (!unit && age >= 1)) {
+      // For ages >= 1 year, return year only
+      const birthYear = currentYear - Math.floor(age);
+      return `${birthYear}`;
+    } else if (normalizedUnit === 'months' || (age < 1 && age >= 0.083)) {
+      // For ages in months (< 1 year), return YYYY-MM
+      const totalMonths = Math.floor(age);
+      let birthYear = currentYear;
+      let birthMonth = currentMonth - totalMonths;
+
+      // Adjust if month goes negative
+      while (birthMonth < 0) {
+        birthYear--;
+        birthMonth += 12;
+      }
+
+      // Month is 0-indexed, add 1 for display, pad with zero
+      const monthStr = String(birthMonth + 1).padStart(2, '0');
+      return `${birthYear}-${monthStr}`;
+    } else if (normalizedUnit === 'days' || age < 0.083) {
+      // For ages in days (< 1 month), return full date YYYY-MM-DD
+      const daysAgo = Math.floor(age);
+      const birthDate = new Date(today);
+      birthDate.setDate(birthDate.getDate() - daysAgo);
+
+      const year = birthDate.getFullYear();
+      const month = String(birthDate.getMonth() + 1).padStart(2, '0');
+      const day = String(birthDate.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    return null;
+  }
+
+  /**
+   * Parse age string to extract numeric value and unit
+   * @param {string} ageStr - Age string (e.g., "2 years", "6 months", "10 days", "25")
+   * @returns {Object} { age: number, unit: string }
+   */
+  function parseAgeString(ageStr) {
+    if (!ageStr) return { age: null, unit: 'years' };
+
+    const str = String(ageStr).toLowerCase().trim();
+
+    // Extract number
+    const match = str.match(/(\d+(?:\.\d+)?)/);
+    if (!match) return { age: null, unit: 'years' };
+
+    const age = parseFloat(match[1]);
+
+    // Determine unit
+    if (str.includes('day')) {
+      return { age, unit: 'days' };
+    } else if (str.includes('month')) {
+      return { age, unit: 'months' };
+    } else if (str.includes('year')) {
+      return { age, unit: 'years' };
+    }
+
+    // Default: if < 1, assume years but could be fractional
+    // If no unit specified and value > 100, assume years
+    return { age, unit: 'years' };
+  }
+
+  /**
    * Format patient name
    */
   function formatPatientName(name) {
@@ -3711,7 +3927,7 @@
       const genderIcon = gender === 'male' ? '♂' : gender === 'female' ? '♀' : '○';
 
       return `
-        <div class="patient-list-item" data-patient-id="${patient.id}">
+        <div class="patient-list-item" data-patient-id="${patient.id}" data-patient-name="${name}" data-patient-gender="${gender}" data-patient-birthdate="${patient.birthDate || ''}">
           <div class="patient-info">
             <div class="patient-name">${name}</div>
             <div class="patient-details">
@@ -3732,10 +3948,21 @@
       btn.addEventListener('click', async (e) => {
         const item = e.target.closest('.patient-list-item');
         const patientId = item.dataset.patientId;
+        const patientName = item.dataset.patientName;
+        const patientGender = item.dataset.patientGender;
+        const patientBirthDate = item.dataset.patientBirthdate;
 
-        // Set the patient ID
+        // Set the patient ID with original data for change tracking
         window.SMARTAuth.setPatient(patientId);
-        smartState.patient = { id: patientId };
+        smartState.patient = {
+          id: patientId,
+          name: patientName,
+          originalData: {
+            name: [{ use: 'official', family: '', given: [patientName] }],
+            gender: patientGender || '',
+            birthDate: patientBirthDate || ''
+          }
+        };
 
         // Update UI to show patient context
         updatePatientContextUI(patientId);
@@ -3836,9 +4063,17 @@
 
         const created = await window.SMARTAuth.createResource(newPatient);
 
-        // Set the new patient ID
+        // Set the new patient ID with original data for change tracking
         window.SMARTAuth.setPatient(created.id);
-        smartState.patient = { id: created.id, name: `${givenName} ${familyName}` };
+        smartState.patient = {
+          id: created.id,
+          name: `${givenName} ${familyName}`,
+          originalData: {
+            name: newPatient.name,
+            gender: gender || '',
+            birthDate: birthDate || ''
+          }
+        };
 
         // Update UI to show patient context
         updatePatientContextUI(created.id);
