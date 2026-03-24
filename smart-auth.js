@@ -500,6 +500,26 @@
   }
 
   /**
+   * Decode JWT payload without verification
+   */
+  function decodeJwtPayload(token) {
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      );
+      return JSON.parse(jsonPayload);
+    } catch (e) {
+      console.error('[SMART] Failed to decode JWT:', e);
+      return null;
+    }
+  }
+
+  /**
    * Get current practitioner
    */
   async function getPractitioner() {
@@ -507,50 +527,50 @@
       return await fetchResource('Practitioner', practitionerId);
     }
 
-    // Try to get current user from Medplum /auth/me endpoint
-    try {
-      const response = await fetch(`${SMART_CONFIG.baseUrl}/auth/me`, {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Accept': 'application/fhir+json'
-        }
-      });
-
-      if (response.ok) {
-        const userData = await response.json();
-        // Medplum returns profile as a reference like "Practitioner/xxx"
-        if (userData.profile && userData.profile.reference) {
-          const ref = userData.profile.reference;
-          if (ref.startsWith('Practitioner/')) {
+    // Try to decode access token JWT to get profile claim
+    if (accessToken) {
+      const payload = decodeJwtPayload(accessToken);
+      if (payload) {
+        console.log('[SMART] Access token payload:', payload);
+        // Medplum puts the profile in the 'profile' claim
+        if (payload.profile) {
+          const ref = payload.profile;
+          if (typeof ref === 'string' && ref.startsWith('Practitioner/')) {
             practitionerId = ref.split('/')[1];
             localStorage.setItem(STORAGE_PRACTITIONER, practitionerId);
+            console.log('[SMART] Found practitioner from access token:', practitionerId);
             return await fetchResource('Practitioner', practitionerId);
           }
         }
       }
-    } catch (error) {
-      console.error('[SMART] Failed to get user from /auth/me:', error);
     }
 
-    // Last resort: try /Practitioner/me endpoint
+    // Search for practitioner by current user's email/sub
     try {
-      const response = await fetch(`${SMART_CONFIG.fhirUrl}/Practitioner/me`, {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Accept': 'application/fhir+json'
-        }
-      });
+      const payload = decodeJwtPayload(accessToken);
+      if (payload && payload.sub) {
+        // Search by identifier
+        const searchUrl = `${SMART_CONFIG.fhirUrl}/Practitioner?identifier=${encodeURIComponent(payload.sub)}`;
+        const response = await fetch(searchUrl, {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Accept': 'application/fhir+json'
+          }
+        });
 
-      if (response.ok) {
-        const practitioner = await response.json();
-        if (practitioner.id) {
-          practitionerId = practitioner.id;
-          localStorage.setItem(STORAGE_PRACTITIONER, practitionerId);
-          return practitioner;
+        if (response.ok) {
+          const bundle = await response.json();
+          if (bundle.entry && bundle.entry.length > 0) {
+            const practitioner = bundle.entry[0].resource;
+            practitionerId = practitioner.id;
+            localStorage.setItem(STORAGE_PRACTITIONER, practitionerId);
+            console.log('[SMART] Found practitioner via search:', practitionerId);
+            return practitioner;
+          }
         }
       }
     } catch (error) {
-      console.error('[SMART] Failed to get Practitioner/me:', error);
+      console.error('[SMART] Failed to search practitioner:', error);
     }
 
     throw new Error('No practitioner context');
