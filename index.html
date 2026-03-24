@@ -286,6 +286,17 @@
         <div class="section-header">
           <h3 class="section-title">Prescriber Information</h3>
           <div class="smart-controls">
+            <select id="providerSelect" class="provider-select" title="Select FHIR Provider">
+              <option value="medplum">Medplum</option>
+              <option value="aidbox">Aidbox</option>
+              <option value="custom">Custom Server...</option>
+            </select>
+            <button id="providerSettingsBtn" type="button" class="btn btn-smart-outline btn-icon" title="Configure Provider">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+              </svg>
+            </button>
             <button id="smartConnectBtn" type="button" class="btn btn-smart-outline" title="Connect to EHR via SMART on FHIR">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
@@ -907,6 +918,67 @@
           <div id="pS2Wrap"></div>
         </div>
         <p class="signature-label" id="signatureLabel">Physician Name / License No.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Provider Settings Modal -->
+  <div id="providerSettingsModal" class="modal" hidden>
+    <div class="modal-overlay"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>FHIR Provider Settings</h3>
+        <button type="button" class="modal-close" id="closeProviderModal" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="provider-info">
+          <div class="provider-icon" id="providerIcon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+              <line x1="8" y1="21" x2="16" y2="21"/>
+              <line x1="12" y1="17" x2="12" y2="21"/>
+            </svg>
+          </div>
+          <div class="provider-details">
+            <h4 id="providerName">Medplum</h4>
+            <p id="providerDescription">Medplum FHIR sandbox</p>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="clientIdInput">Client ID</label>
+          <input type="text" id="clientIdInput" class="form-input" placeholder="Enter your Client ID">
+          <p class="help-text" id="clientIdHelp">Your application's Client ID from the provider's developer console</p>
+        </div>
+
+        <div id="customServerSection" class="custom-server-section" hidden>
+          <div class="form-group">
+            <label for="customBaseUrl">FHIR Base URL</label>
+            <input type="url" id="customBaseUrl" class="form-input" placeholder="https://your-server.com/fhir">
+            <p class="help-text">The base URL of your FHIR server (e.g., https://aidbox.fhirlab.net/fhir)</p>
+          </div>
+          <div class="form-group">
+            <label for="customAuthUrl">Authorization URL (optional)</label>
+            <input type="url" id="customAuthUrl" class="form-input" placeholder="https://your-server.com/oauth2/authorize">
+            <p class="help-text">Will be auto-discovered if not provided</p>
+          </div>
+          <div class="form-group">
+            <label for="customTokenUrl">Token URL (optional)</label>
+            <input type="url" id="customTokenUrl" class="form-input" placeholder="https://your-server.com/oauth2/token">
+            <p class="help-text">Will be auto-discovered if not provided</p>
+          </div>
+        </div>
+
+        <div class="provider-setup-guide" id="providerSetupGuide">
+          <h5>Setup Instructions</h5>
+          <div class="setup-steps" id="setupSteps">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="testConnectionBtn" class="btn btn-secondary">Test Connection</button>
+        <button type="button" id="saveProviderBtn" class="btn btn-primary">Save Settings</button>
       </div>
     </div>
   </div>

@@ -1,46 +1,92 @@
 /**
  * SMART on FHIR Authentication Module for Rx Builder
- * Integrates with Medplum for EHR connectivity
+ * Multi-provider support: Medplum, Aidbox, and custom FHIR servers
  */
 
 (function () {
   'use strict';
 
-  // Medplum SMART Configuration
-  const SMART_CONFIG = {
-    // Medplum sandbox server
-    baseUrl: 'https://api.medplum.com',
-    fhirUrl: 'https://api.medplum.com/fhir/R4',
-    authorizeUrl: 'https://api.medplum.com/oauth2/authorize',
-    tokenUrl: 'https://api.medplum.com/oauth2/token',
-    // Client configuration - auto-detected based on hostname
-    // Dev environment: 217f9e4b-4980-470c-9b09-c1bab39154db
-    // Prod environment: configure via localStorage 'smart_client_id'
-    clientId: '', // Auto-set in initSMART() based on hostname or localStorage
-    redirectUri: '', // Auto-detected from current URL
-    scopes: [
-      'openid',
-      'fhirUser',
-      'profile',
-      'launch/patient',
-      'patient/Patient.read',
-      'patient/Patient.write',
-      'patient/Practitioner.read',
-      'patient/MedicationRequest.read',
-      'patient/MedicationRequest.write',
-      'patient/Medication.read'
-    ]
+  // ============ Provider Registry ============
+  const PROVIDERS = {
+    medplum: {
+      key: 'medplum',
+      name: 'Medplum',
+      baseUrl: 'https://api.medplum.com',
+      fhirUrl: 'https://api.medplum.com/fhir/R4',
+      authorizeUrl: 'https://api.medplum.com/oauth2/authorize',
+      tokenUrl: 'https://api.medplum.com/oauth2/token',
+      discoveryUrl: null, // Uses static URLs
+      defaultClientId: '', // Set based on hostname in init
+      description: 'Medplum FHIR sandbox'
+    },
+    aidbox: {
+      key: 'aidbox',
+      name: 'Aidbox FHIRLab',
+      baseUrl: 'https://aidbox.fhirlab.net',
+      fhirUrl: 'https://aidbox.fhirlab.net/fhir',
+      authorizeUrl: 'https://aidbox.fhirlab.net/auth/authorize',
+      tokenUrl: 'https://aidbox.fhirlab.net/auth/token',
+      discoveryUrl: 'https://aidbox.fhirlab.net/.well-known/smart-configuration',
+      defaultClientId: '',
+      description: 'Aidbox FHIRLab sandbox'
+    },
+    custom: {
+      key: 'custom',
+      name: 'Custom Server',
+      baseUrl: '',
+      fhirUrl: '',
+      authorizeUrl: '',
+      tokenUrl: '',
+      discoveryUrl: null,
+      defaultClientId: '',
+      description: 'Custom SMART on FHIR server'
+    }
   };
 
-  // Storage keys
+  // ============ Storage Keys ============
+  const STORAGE_PROVIDER = 'smart_provider';
+  const STORAGE_CUSTOM_CONFIG = 'smart_custom_config';
   const STORAGE_TOKEN = 'smart_access_token';
   const STORAGE_REFRESH = 'smart_refresh_token';
   const STORAGE_EXPIRES = 'smart_token_expires';
   const STORAGE_PATIENT = 'smart_patient_id';
   const STORAGE_ENCOUNTER = 'smart_encounter_id';
   const STORAGE_PRACTITIONER = 'smart_practitioner_id';
-  const STORAGE_CLIENT_ID = 'smart_client_id';
   const STORAGE_LAUNCH_CONTEXT = 'smart_launch_context';
+  const STORAGE_CLIENT_ID_LEGACY = 'smart_client_id'; // Legacy for backward compat
+
+  // Get provider-specific client ID key
+  function getClientIdKey(providerKey) {
+    return `smart_clientId_${providerKey}`;
+  }
+
+  // Current provider configuration
+  let currentProvider = null;
+  let SMART_CONFIG = null;
+
+  // Initialize default SMART config (will be updated based on provider)
+  function createSmartConfig(provider) {
+    return {
+      baseUrl: provider.baseUrl,
+      fhirUrl: provider.fhirUrl,
+      authorizeUrl: provider.authorizeUrl,
+      tokenUrl: provider.tokenUrl,
+      clientId: '',
+      redirectUri: window.location.origin + window.location.pathname,
+      scopes: [
+        'openid',
+        'fhirUser',
+        'profile',
+        'launch/patient',
+        'patient/Patient.read',
+        'patient/Patient.write',
+        'patient/Practitioner.read',
+        'patient/MedicationRequest.read',
+        'patient/MedicationRequest.write',
+        'patient/Medication.read'
+      ]
+    };
+  }
 
   // State
   let accessToken = null;
@@ -50,31 +96,103 @@
   let fhirClient = null;
   let isInitialized = false;
 
+  // ============ Provider Management ============
+
+  /**
+   * Get the currently selected provider key
+   */
+  function getCurrentProviderKey() {
+    return localStorage.getItem(STORAGE_PROVIDER) || 'medplum';
+  }
+
+  /**
+   * Set the active provider
+   */
+  async function setProvider(providerKey, customConfig = null) {
+    if (!PROVIDERS[providerKey]) {
+      throw new Error(`Unknown provider: ${providerKey}`);
+    }
+
+    currentProvider = { ...PROVIDERS[providerKey] };
+
+    // For custom provider, merge in custom config
+    if (providerKey === 'custom' && customConfig) {
+      currentProvider.baseUrl = customConfig.baseUrl || '';
+      currentProvider.fhirUrl = customConfig.fhirUrl || '';
+      currentProvider.authorizeUrl = customConfig.authorizeUrl || '';
+      currentProvider.tokenUrl = customConfig.tokenUrl || '';
+      localStorage.setItem(STORAGE_CUSTOM_CONFIG, JSON.stringify(customConfig));
+    }
+
+    // Try SMART discovery for custom servers
+    if (providerKey === 'custom' && currentProvider.baseUrl) {
+      const discovered = await discoverSmartConfig(currentProvider.baseUrl);
+      if (discovered) {
+        currentProvider.authorizeUrl = discovered.authorization_endpoint;
+        currentProvider.tokenUrl = discovered.token_endpoint;
+        currentProvider.fhirUrl = discovered.issuer || currentProvider.baseUrl;
+      }
+    }
+
+    SMART_CONFIG = createSmartConfig(currentProvider);
+    localStorage.setItem(STORAGE_PROVIDER, providerKey);
+
+    // Load saved client ID for this provider
+    const savedClientId = localStorage.getItem(getClientIdKey(providerKey));
+    if (savedClientId) {
+      SMART_CONFIG.clientId = savedClientId;
+    }
+
+    // Legacy: check old storage key for medplum
+    if (!savedClientId && providerKey === 'medplum') {
+      const legacyClientId = localStorage.getItem(STORAGE_CLIENT_ID_LEGACY);
+      if (legacyClientId) {
+        SMART_CONFIG.clientId = legacyClientId;
+        // Migrate to new key
+        localStorage.setItem(getClientIdKey('medplum'), legacyClientId);
+      }
+    }
+
+    // Auto-detect Medplum dev/prod client IDs based on hostname
+    if (providerKey === 'medplum' && !SMART_CONFIG.clientId) {
+      const hostname = window.location.hostname;
+      if (hostname === 'devrxbuilder.vercel.app') {
+        SMART_CONFIG.clientId = '217f9e4b-4980-470c-9b09-c1bab39154db';
+      }
+    }
+
+    return currentProvider;
+  }
+
+  /**
+   * Get list of available providers
+   */
+  function getAvailableProviders() {
+    return Object.values(PROVIDERS).map(p => ({
+      key: p.key,
+      name: p.name,
+      description: p.description,
+      baseUrl: p.baseUrl
+    }));
+  }
+
+  /**
+   * Save client ID for the current provider
+   */
+  function saveClientId(clientId) {
+    if (!currentProvider) return;
+    SMART_CONFIG.clientId = clientId;
+    localStorage.setItem(getClientIdKey(currentProvider.key), clientId);
+  }
+
   /**
    * Initialize SMART on FHIR
    * Check for existing session or handle callback from auth
    */
   async function initSMART() {
-    // Set redirect URI to current origin
-    SMART_CONFIG.redirectUri = window.location.origin + window.location.pathname;
-
-    // Auto-detect client ID based on hostname
-    const hostname = window.location.hostname;
-    if (hostname === 'devrxbuilder.vercel.app') {
-      SMART_CONFIG.clientId = '217f9e4b-4980-470c-9b09-c1bab39154db';
-    } else if (hostname === 'rxbuilder.vercel.app') {
-      // Production client ID - set via localStorage or prompt
-      const savedClientId = localStorage.getItem(STORAGE_CLIENT_ID);
-      if (savedClientId) {
-        SMART_CONFIG.clientId = savedClientId;
-      }
-    } else {
-      // Local development or other - use localStorage or prompt
-      const savedClientId = localStorage.getItem(STORAGE_CLIENT_ID);
-      if (savedClientId) {
-        SMART_CONFIG.clientId = savedClientId;
-      }
-    }
+    // Initialize provider first
+    const providerKey = getCurrentProviderKey();
+    await setProvider(providerKey);
 
     // Check if we're handling an OAuth callback
     const urlParams = new URLSearchParams(window.location.search);
@@ -128,13 +246,17 @@
    * Initiate SMART authorization flow
    */
   async function authorize() {
+    if (!currentProvider) {
+      throw new Error('No provider selected. Call setProvider() first.');
+    }
+
     if (!SMART_CONFIG.clientId) {
-      const clientId = prompt('Enter your Medplum Client ID:');
+      const providerName = currentProvider.name;
+      const clientId = prompt(`Enter your ${providerName} Client ID:`);
       if (!clientId) {
         return { success: false, error: 'no_client_id' };
       }
-      SMART_CONFIG.clientId = clientId;
-      localStorage.setItem(STORAGE_CLIENT_ID, clientId);
+      saveClientId(clientId);
     }
 
     // Generate state and PKCE verifier
@@ -954,7 +1076,17 @@
     searchResource,
     createResource,
     updateResource,
-    config: SMART_CONFIG
+    // Provider management
+    setProvider,
+    getAvailableProviders,
+    getCurrentProviderKey,
+    saveClientId,
+    getClientIdKey,
+    discoverSmartConfig,
+    // Direct access to config (read-only recommended)
+    get config() { return SMART_CONFIG; },
+    get provider() { return currentProvider; },
+    get providers() { return PROVIDERS; }
   };
 
 })();

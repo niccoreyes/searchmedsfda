@@ -2597,6 +2597,251 @@
     if (clearPatientBtn) {
       clearPatientBtn.addEventListener('click', handleClearPatient);
     }
+
+    // Provider selector
+    const providerSelect = $('#providerSelect');
+    if (providerSelect) {
+      // Load saved provider
+      const savedProvider = localStorage.getItem('smart_provider') || 'medplum';
+      providerSelect.value = savedProvider;
+
+      providerSelect.addEventListener('change', handleProviderChange);
+    }
+
+    // Provider settings button
+    const providerSettingsBtn = $('#providerSettingsBtn');
+    if (providerSettingsBtn) {
+      providerSettingsBtn.addEventListener('click', openProviderSettings);
+    }
+
+    // Provider modal close button
+    const closeProviderModal = $('#closeProviderModal');
+    if (closeProviderModal) {
+      closeProviderModal.addEventListener('click', closeProviderSettings);
+    }
+
+    // Save provider settings button
+    const saveProviderBtn = $('#saveProviderBtn');
+    if (saveProviderBtn) {
+      saveProviderBtn.addEventListener('click', saveProviderSettings);
+    }
+
+    // Test connection button
+    const testConnectionBtn = $('#testConnectionBtn');
+    if (testConnectionBtn) {
+      testConnectionBtn.addEventListener('click', testProviderConnection);
+    }
+  }
+
+  /**
+   * Handle provider selection change
+   */
+  async function handleProviderChange(event) {
+    const providerKey = event.target.value;
+
+    if (!window.SMARTAuth) {
+      showToast('SMART on FHIR module not available', 'error');
+      return;
+    }
+
+    try {
+      // If connected, disconnect first
+      if (window.SMARTAuth.isAuthenticated()) {
+        window.SMARTAuth.logout();
+        smartState.isConnected = false;
+        smartState.practitioner = null;
+        smartState.patient = null;
+        updateSMARTUI(false);
+        showToast('Disconnected from previous EHR', 'info');
+      }
+
+      // Set the new provider
+      await window.SMARTAuth.setProvider(providerKey);
+      localStorage.setItem('smart_provider', providerKey);
+
+      const providers = window.SMARTAuth.getAvailableProviders();
+      const provider = providers.find(p => p.key === providerKey);
+      showToast(`Switched to ${provider?.name || providerKey}`, 'info');
+
+      // If custom provider, open settings to configure
+      if (providerKey === 'custom') {
+        openProviderSettings();
+      }
+    } catch (error) {
+      console.error('[SMART] Failed to change provider:', error);
+      showToast('Failed to switch provider', 'error');
+    }
+  }
+
+  /**
+   * Open provider settings modal
+   */
+  function openProviderSettings() {
+    const modal = $('#providerSettingsModal');
+    if (!modal || !window.SMARTAuth) return;
+
+    const currentProviderKey = window.SMARTAuth.getCurrentProviderKey();
+    const provider = window.SMARTAuth.provider;
+    const config = window.SMARTAuth.config;
+
+    // Update provider info
+    const providerName = $('#providerName');
+    const providerDescription = $('#providerDescription');
+    if (providerName) providerName.textContent = provider?.name || 'Unknown';
+    if (providerDescription) providerDescription.textContent = provider?.description || '';
+
+    // Load saved client ID
+    const clientIdInput = $('#clientIdInput');
+    const savedClientId = localStorage.getItem(window.SMARTAuth.getClientIdKey(currentProviderKey)) || config?.clientId || '';
+    if (clientIdInput) clientIdInput.value = savedClientId;
+
+    // Show/hide custom server section
+    const customSection = $('#customServerSection');
+    if (customSection) {
+      customSection.hidden = currentProviderKey !== 'custom';
+
+      if (currentProviderKey === 'custom') {
+        // Load custom config if exists
+        const savedCustomConfig = localStorage.getItem('smart_custom_config');
+        const customConfig = savedCustomConfig ? JSON.parse(savedCustomConfig) : {};
+
+        const customBaseUrl = $('#customBaseUrl');
+        const customAuthUrl = $('#customAuthUrl');
+        const customTokenUrl = $('#customTokenUrl');
+
+        if (customBaseUrl) customBaseUrl.value = customConfig.baseUrl || config?.baseUrl || '';
+        if (customAuthUrl) customAuthUrl.value = customConfig.authorizeUrl || config?.authorizeUrl || '';
+        if (customTokenUrl) customTokenUrl.value = customConfig.tokenUrl || config?.tokenUrl || '';
+      }
+    }
+
+    // Update setup guide
+    updateProviderSetupGuide(currentProviderKey);
+
+    // Show modal
+    modal.removeAttribute('hidden');
+  }
+
+  /**
+   * Close provider settings modal
+   */
+  function closeProviderSettings() {
+    const modal = $('#providerSettingsModal');
+    if (modal) {
+      modal.setAttribute('hidden', '');
+    }
+  }
+
+  /**
+   * Save provider settings
+   */
+  async function saveProviderSettings() {
+    if (!window.SMARTAuth) return;
+
+    const currentProviderKey = window.SMARTAuth.getCurrentProviderKey();
+
+    // Save client ID
+    const clientIdInput = $('#clientIdInput');
+    if (clientIdInput && clientIdInput.value.trim()) {
+      window.SMARTAuth.saveClientId(clientIdInput.value.trim());
+    }
+
+    // Save custom server settings if custom provider
+    if (currentProviderKey === 'custom') {
+      const customBaseUrl = $('#customBaseUrl');
+      const customAuthUrl = $('#customAuthUrl');
+      const customTokenUrl = $('#customTokenUrl');
+
+      const customConfig = {
+        baseUrl: customBaseUrl?.value.trim() || '',
+        fhirUrl: customBaseUrl?.value.trim() || '',
+        authorizeUrl: customAuthUrl?.value.trim() || '',
+        tokenUrl: customTokenUrl?.value.trim() || ''
+      };
+
+      localStorage.setItem('smart_custom_config', JSON.stringify(customConfig));
+
+      // Re-initialize provider with new config
+      await window.SMARTAuth.setProvider('custom', customConfig);
+    }
+
+    showToast('Provider settings saved', 'success');
+    closeProviderSettings();
+  }
+
+  /**
+   * Test connection to provider
+   */
+  async function testProviderConnection() {
+    if (!window.SMARTAuth) return;
+
+    showToast('Testing connection...', 'info');
+
+    try {
+      const currentProvider = window.SMARTAuth.provider;
+      const config = window.SMARTAuth.config;
+
+      // Try to fetch the capability statement
+      const response = await fetch(`${config.fhirUrl}/metadata`, {
+        headers: { 'Accept': 'application/fhir+json' }
+      });
+
+      if (response.ok) {
+        const metadata = await response.json();
+        showToast(`Connected to ${metadata.software?.name || 'FHIR server'} v${metadata.software?.version || 'unknown'}`, 'success');
+      } else {
+        showToast(`Connection failed: ${response.status} ${response.statusText}`, 'error');
+      }
+    } catch (error) {
+      console.error('[SMART] Connection test failed:', error);
+      showToast('Connection test failed. Check the FHIR URL and try again.', 'error');
+    }
+  }
+
+  /**
+   * Update provider setup guide content
+   */
+  function updateProviderSetupGuide(providerKey) {
+    const setupSteps = $('#setupSteps');
+    if (!setupSteps) return;
+
+    const guides = {
+      medplum: `
+        <ol>
+          <li>Go to <a href="https://app.medplum.com/signin" target="_blank">Medplum Console</a> and sign in or create an account</li>
+          <li>Navigate to "Project" → "Clients" → "New Client"</li>
+          <li>Enter a name for your application (e.g., "Rx Builder")</li>
+          <li>Set Redirect URI to: <code>${window.location.origin}${window.location.pathname}</code></li>
+          <li>Copy the Client ID and paste it in the field above</li>
+          <li>Click "Save Settings" and then "Connect EHR"</li>
+        </ol>
+      `,
+      aidbox: `
+        <ol>
+          <li>Go to <a href="https://aidbox.fhirlab.net/" target="_blank">Aidbox FHIRLab</a></li>
+          <li>Sign in with your account or register for a new one</li>
+          <li>Navigate to "Clients" and create a new SMART on FHIR client</li>
+          <li>Enter your application's details</li>
+          <li>Set Launch URI to: <code>${window.location.origin}${window.location.pathname}</code></li>
+          <li>Set Redirect URI to: <code>${window.location.origin}${window.location.pathname}</code></li>
+          <li>Copy the Client ID and paste it in the field above</li>
+          <li>Click "Save Settings" and then "Connect EHR"</li>
+        </ol>
+      `,
+      custom: `
+        <ol>
+          <li>Enter your FHIR server's base URL (e.g., <code>https://your-server.com/fhir</code>)</li>
+          <li>The app will attempt to auto-discover OAuth endpoints via <code>/.well-known/smart-configuration</code></li>
+          <li>If auto-discovery fails, manually enter the Authorization and Token URLs</li>
+          <li>Get a Client ID from your FHIR server's admin console</li>
+          <li>Set the redirect URI to: <code>${window.location.origin}${window.location.pathname}</code></li>
+          <li>Copy the Client ID and paste it in the field above</li>
+          <li>Click "Save Settings" and then "Connect EHR"</li>
+        </ol>
+      `
+    };
+
+    setupSteps.innerHTML = guides[providerKey] || guides.custom;
   }
 
   /**
