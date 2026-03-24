@@ -263,6 +263,7 @@
       if (tokenData.patient) {
         patientId = tokenData.patient;
         localStorage.setItem(STORAGE_PATIENT, patientId);
+        console.log('[SMART] Patient from token response:', patientId);
       }
 
       if (tokenData.encounter) {
@@ -277,19 +278,52 @@
       }
 
       // Also check id_token for user info (OpenID Connect)
-      if (tokenData.id_token && !practitionerId) {
+      if (tokenData.id_token) {
         try {
           // Decode JWT payload (base64)
           const payload = JSON.parse(atob(tokenData.id_token.split('.')[1]));
-          if (payload.profile) {
+          console.log('[SMART] ID token payload:', payload);
+
+          // Look for patient in id_token
+          if (payload.patient && !patientId) {
+            patientId = payload.patient;
+            localStorage.setItem(STORAGE_PATIENT, patientId);
+            console.log('[SMART] Patient from id_token:', patientId);
+          }
+
+          // Look for practitioner in id_token
+          if (payload.profile && !practitionerId) {
             const ref = payload.profile;
             if (ref.startsWith('Practitioner/')) {
               practitionerId = ref.split('/')[1];
               localStorage.setItem(STORAGE_PRACTITIONER, practitionerId);
+              console.log('[SMART] Practitioner from id_token:', practitionerId);
             }
           }
         } catch (e) {
           console.error('[SMART] Failed to decode id_token:', e);
+        }
+      }
+
+      // Check access token JWT for patient context (some servers include it there)
+      if (accessToken && !patientId) {
+        try {
+          const payload = decodeJwtPayload(accessToken);
+          if (payload) {
+            console.log('[SMART] Access token payload:', payload);
+            if (payload.patient) {
+              patientId = payload.patient;
+              localStorage.setItem(STORAGE_PATIENT, patientId);
+              console.log('[SMART] Patient from access token:', patientId);
+            }
+            if (payload.launch_patient) {
+              patientId = payload.launch_patient;
+              localStorage.setItem(STORAGE_PATIENT, patientId);
+              console.log('[SMART] Patient from launch_patient claim:', patientId);
+            }
+          }
+        } catch (e) {
+          console.error('[SMART] Failed to decode access token:', e);
         }
       }
 
@@ -874,6 +908,34 @@
 
   // ============ Export Public API ============
 
+  /**
+   * Set patient ID manually (when not provided by EHR launch)
+   */
+  function setPatient(id) {
+    patientId = id;
+    if (id) {
+      localStorage.setItem(STORAGE_PATIENT, id);
+    } else {
+      localStorage.removeItem(STORAGE_PATIENT);
+    }
+  }
+
+  /**
+   * Search for patients by name or identifier
+   */
+  async function searchPatients(searchText) {
+    if (!fhirClient) {
+      throw new Error('FHIR client not initialized');
+    }
+
+    const params = {};
+    if (searchText) {
+      params.name = searchText;
+    }
+
+    return await searchResource('Patient', params);
+  }
+
   window.SMARTAuth = {
     init: initSMART,
     authorize,
@@ -883,6 +945,8 @@
     getPatient,
     getPractitioner,
     loadPractitionerInfo,
+    setPatient,
+    searchPatients,
     createMedicationRequest,
     submitPrescriptionBundle,
     fetchResource,

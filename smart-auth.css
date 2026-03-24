@@ -87,6 +87,25 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.smart-context-info .context-label {
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.smart-context-info .context-value {
+  color: #111827;
+  font-weight: 600;
+  background: #f3f4f6;
+  padding: 0.125rem 0.5rem;
+  border-radius: 0.25rem;
+}
+
+.smart-context-info .context-value.context-missing {
+  color: #dc2626;
+  background: #fef2f2;
 }
 
 .smart-patient-badge {
@@ -111,7 +130,7 @@
 }
 
 /* SMART Modal/Dialog */
-.smart-modal-overlay {
+.smart-modal {
   position: fixed;
   inset: 0;
   background-color: rgba(0, 0, 0, 0.5);
@@ -172,6 +191,24 @@
 
 .smart-modal-body {
   padding: 1.25rem;
+}
+
+.smart-modal-content {
+  background: white;
+  border-radius: 0.75rem;
+  max-width: 480px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  position: relative;
+}
+
+.smart-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
 }
 
 .smart-modal-footer {

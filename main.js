@@ -2540,7 +2540,17 @@
 
     // Show patient context if available
     if (context.patientId) {
-      $('#smartContextInfo')?.removeAttribute('hidden');
+      updatePatientContextUI(context.patientId);
+    } else {
+      console.log('[SMART] No patient context - user can manually select when submitting');
+      const contextInfo = $('#smartContextInfo');
+      if (contextInfo) {
+        contextInfo.removeAttribute('hidden');
+        contextInfo.innerHTML = `
+          <span class="context-label">Patient:</span>
+          <span class="context-value context-missing">Not selected</span>
+        `;
+      }
     }
 
     // Automatically try to load practitioner info
@@ -2615,11 +2625,104 @@
     }
 
     const context = window.SMARTAuth.getContext();
+
+    // If no patient context, prompt user to select/enter one
     if (!context.patientId) {
-      showToast('No patient context available', 'error');
+      showPatientSelectionDialog();
       return;
     }
 
+    await submitPrescriptionToEHR();
+  }
+
+  /**
+   * Show patient selection dialog when no patient context from EHR
+   */
+  function showPatientSelectionDialog() {
+    // Create modal for patient selection
+    const modal = document.createElement('div');
+    modal.className = 'smart-modal';
+    modal.innerHTML = `
+      <div class="smart-modal-content">
+        <div class="smart-modal-header">
+          <h3>Select Patient</h3>
+          <button class="smart-modal-close" aria-label="Close">&times;</button>
+        </div>
+        <div class="smart-modal-body">
+          <p>No patient was selected during EHR login. Please enter a Patient ID or select a patient.</p>
+          <div class="form-group">
+            <label for="patientIdInput">Patient ID</label>
+            <input type="text" id="patientIdInput" class="form-input" placeholder="e.g., 12345">
+            <small class="form-help">Enter the FHIR Patient resource ID</small>
+          </div>
+          <div class="smart-modal-actions">
+            <button id="selectPatientBtn" class="btn btn-primary">Select Patient</button>
+            <button id="cancelPatientBtn" class="btn btn-secondary">Cancel</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Close button
+    modal.querySelector('.smart-modal-close').addEventListener('click', () => {
+      modal.remove();
+    });
+
+    // Cancel button
+    modal.querySelector('#cancelPatientBtn').addEventListener('click', () => {
+      modal.remove();
+    });
+
+    // Select patient button
+    modal.querySelector('#selectPatientBtn').addEventListener('click', async () => {
+      const patientId = $('#patientIdInput').value.trim();
+      if (!patientId) {
+        showToast('Please enter a Patient ID', 'error');
+        return;
+      }
+
+      // Set the patient ID
+      window.SMARTAuth.setPatient(patientId);
+      smartState.patient = { id: patientId };
+
+      // Update UI to show patient context
+      updatePatientContextUI(patientId);
+
+      modal.remove();
+      showToast('Patient selected', 'success');
+
+      // Now proceed with submission
+      await submitPrescriptionToEHR();
+    });
+
+    // Close on backdrop click
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        modal.remove();
+      }
+    });
+  }
+
+  /**
+   * Update UI to show patient context
+   */
+  function updatePatientContextUI(patientId) {
+    const contextInfo = $('#smartContextInfo');
+    if (contextInfo) {
+      contextInfo.removeAttribute('hidden');
+      contextInfo.innerHTML = `
+        <span class="context-label">Patient:</span>
+        <span class="context-value">${patientId}</span>
+      `;
+    }
+  }
+
+  /**
+   * Submit prescription to EHR
+   */
+  async function submitPrescriptionToEHR() {
     // Get prescription items
     const items = Array.from($('#rxItems').children)
       .filter((child) => child.classList.contains('rx-item'))
