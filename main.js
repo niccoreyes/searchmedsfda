@@ -2489,6 +2489,44 @@
     if (submitBtn) {
       submitBtn.addEventListener('click', handleSubmitToEHR);
     }
+
+    // Patient EHR buttons
+    const loadPatientBtn = $('#smartLoadPatientBtn');
+    if (loadPatientBtn) {
+      loadPatientBtn.addEventListener('click', handleLoadPatientFromEHR);
+    }
+
+    const changePatientBtn = $('#smartChangePatientBtn');
+    if (changePatientBtn) {
+      changePatientBtn.addEventListener('click', handleChangePatient);
+    }
+
+    // Patient search input with debounce
+    const ptNameInput = $('#ptName');
+    if (ptNameInput && !ptNameInput._hasSearchListener) {
+      ptNameInput._hasSearchListener = true;
+      ptNameInput.addEventListener('input', debounce(() => {
+        if (smartState.isConnected) {
+          searchPatientsFromEHR(ptNameInput.value.trim());
+        }
+      }, 300));
+
+      // Hide results when clicking outside
+      document.addEventListener('click', (e) => {
+        const results = $('#patientSearchResults');
+        if (results && !ptNameInput.contains(e.target) && !results.contains(e.target)) {
+          results.innerHTML = '';
+          results.classList.remove('active');
+        }
+      });
+
+      // Focus shows recent patients if connected
+      ptNameInput.addEventListener('focus', () => {
+        if (smartState.isConnected && !ptNameInput.value.trim()) {
+          searchPatientsFromEHR('');
+        }
+      });
+    }
   }
 
   /**
@@ -2536,21 +2574,10 @@
     smartState.isConnected = true;
     updateSMARTUI(true);
 
-    const context = window.SMARTAuth.getContext();
-
-    // Show patient context if available
-    if (context.patientId) {
-      updatePatientContextUI(context.patientId);
-    } else {
-      console.log('[SMART] No patient context - user can manually select when submitting');
-      const contextInfo = $('#smartContextInfo');
-      if (contextInfo) {
-        contextInfo.removeAttribute('hidden');
-        contextInfo.innerHTML = `
-          <span class="context-label">Patient:</span>
-          <span class="context-value context-missing">Not selected</span>
-        `;
-      }
+    // Show EHR connected badge
+    const contextInfo = $('#smartContextInfo');
+    if (contextInfo) {
+      contextInfo.removeAttribute('hidden');
     }
 
     // Automatically try to load practitioner info
@@ -2624,15 +2651,369 @@
       return;
     }
 
-    const context = window.SMARTAuth.getContext();
+    // Check if we have a patient selected (either from EHR or manually entered)
+    const hasPatientId = window.SMARTAuth.getContext().patientId;
+    const hasPatientName = $('#ptName')?.value?.trim();
 
-    // If no patient context, prompt user to select/enter one
-    if (!context.patientId) {
-      showPatientSelectionDialog();
+    if (!hasPatientId && !hasPatientName) {
+      showToast('Please enter patient information first', 'error');
+      $('#ptName')?.focus();
       return;
     }
 
-    await submitPrescriptionToEHR();
+    // If connected to EHR but no patient ID linked, ask if they want to search
+    if (!hasPatientId && hasPatientName && smartState.isConnected) {
+      showConfirmToast(
+        'Patient not linked to EHR. Search for patient in EHR?',
+        () => {
+          // User wants to search - trigger patient load
+          handleLoadPatientFromEHR();
+        },
+        () => {
+          // User wants to submit without linking - just confirm submission
+          confirmAndSubmitToEHR();
+        }
+      );
+      return;
+    }
+
+    await confirmAndSubmitToEHR();
+  }
+
+  /**
+   * Confirm and submit prescription to EHR
+   */
+  async function confirmAndSubmitToEHR() {
+    // Get prescription items
+    const items = Array.from($('#rxItems').children)
+      .filter((child) => child.classList.contains('rx-item'))
+      .map((div) => collectItem(div));
+
+    if (items.length === 0) {
+      showToast('No medications to submit', 'error');
+      return;
+    }
+
+    // Get patient info for confirmation message
+    const patientName = $('#ptName')?.value?.trim() || 'Unknown patient';
+
+    // Confirm submission
+    showConfirmToast(
+      `Submit ${items.length} medication(s) for ${patientName}?`,
+      async () => {
+        const submitBtn = $('#submitToEHR');
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = `
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation: spin 1s linear infinite">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M12 6v6l4 2"/>
+            </svg>
+            <span class="btn-text">Submitting...</span>
+          `;
+        }
+
+        try {
+          // Submit as Bundle transaction
+          const result = await window.SMARTAuth.submitPrescriptionBundle(items);
+
+          // Count successful entries
+          const successful = result.entry?.filter(e =>
+            e.response?.status?.startsWith('2')
+          ).length || 0;
+
+          if (successful === items.length) {
+            showToast(`Successfully submitted ${successful} medication(s) to EHR`, 'success');
+          } else if (successful > 0) {
+            showToast(`Submitted ${successful} of ${items.length} medications`, 'info');
+          } else {
+            showToast('Failed to submit medications', 'error');
+          }
+        } catch (error) {
+          console.error('[SMART] Submit failed:', error);
+          showToast('Failed to submit to EHR: ' + error.message, 'error');
+        } finally {
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = `
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                <polyline points="12 8 12 12 15 15"/>
+              </svg>
+              <span class="btn-text">Submit to EHR</span>
+            `;
+          }
+        }
+      },
+      () => {}
+    );
+  }
+
+  /**
+   * Handle load patient from EHR button click
+   */
+  async function handleLoadPatientFromEHR() {
+    if (!window.SMARTAuth || !smartState.isConnected) {
+      showToast('Not connected to EHR', 'error');
+      return;
+    }
+
+    // Focus the patient name input which triggers the search dropdown
+    const ptNameInput = $('#ptName');
+    if (ptNameInput) {
+      ptNameInput.focus();
+      // Trigger initial search
+      searchPatientsFromEHR('');
+    }
+  }
+
+  /**
+   * Handle change patient button click
+   */
+  async function handleChangePatient() {
+    // Clear current patient
+    smartState.patient = null;
+    window.SMARTAuth.setPatient(null);
+
+    // Clear patient form fields
+    const ptName = $('#ptName');
+    const ptAge = $('#ptAge');
+    const ptSex = $('#ptSex');
+    const ptAddr = $('#ptAddr');
+
+    if (ptName) ptName.value = '';
+    if (ptAge) ptAge.value = '';
+    if (ptSex) ptSex.value = '';
+    if (ptAddr) ptAddr.value = '';
+
+    updateSMARTUI(true);
+    showToast('Patient cleared. Enter new patient name to search.', 'info');
+
+    // Focus the name input
+    if (ptName) ptName.focus();
+  }
+
+  /**
+   * Search patients from EHR and display in dropdown
+   */
+  async function searchPatientsFromEHR(searchText) {
+    const resultsContainer = $('#patientSearchResults');
+    if (!resultsContainer) return;
+
+    if (!smartState.isConnected) {
+      resultsContainer.innerHTML = '';
+      resultsContainer.classList.remove('active');
+      return;
+    }
+
+    // Show loading
+    resultsContainer.innerHTML = '<div class="patient-search-loading">Searching...</div>';
+    resultsContainer.classList.add('active');
+
+    try {
+      const result = await window.SMARTAuth.searchPatients(searchText);
+      displayPatientSearchResults(result, searchText);
+    } catch (error) {
+      console.error('[SMART] Patient search failed:', error);
+      resultsContainer.innerHTML = '<div class="patient-search-error">Search failed. Try again.</div>';
+    }
+  }
+
+  /**
+   * Display patient search results in dropdown
+   */
+  function displayPatientSearchResults(bundle, searchText) {
+    const resultsContainer = $('#patientSearchResults');
+    if (!resultsContainer) return;
+
+    const patients = bundle.entry?.map(e => e.resource) || [];
+
+    if (patients.length === 0) {
+      resultsContainer.innerHTML = `
+        <div class="patient-search-empty">
+          <p>No patients found${searchText ? ` for "${searchText}"` : ''}</p>
+          <button id="createPatientFromSearchBtn" class="btn btn-primary btn-sm">Create New Patient</button>
+        </div>
+      `;
+      resultsContainer.querySelector('#createPatientFromSearchBtn')?.addEventListener('click', () => {
+        resultsContainer.innerHTML = '';
+        resultsContainer.classList.remove('active');
+        showCreatePatientDialogInline();
+      });
+      return;
+    }
+
+    const listHtml = patients.map(patient => {
+      const name = formatPatientName(patient.name);
+      const age = calculateAge(patient.birthDate);
+      const ageText = age !== null ? `${age} yrs` : 'Age unknown';
+      const gender = patient.gender || 'unknown';
+      const genderIcon = gender === 'male' ? '♂' : gender === 'female' ? '♀' : '○';
+
+      return `
+        <div class="patient-search-item" data-patient-id="${patient.id}" data-patient-name="${name}" data-patient-gender="${gender}" data-patient-birthdate="${patient.birthDate || ''}">
+          <div class="patient-search-item-info">
+            <div class="patient-search-item-name">${name}</div>
+            <div class="patient-search-item-details">
+              <span class="patient-gender">${genderIcon} ${gender}</span>
+              <span class="patient-age">${ageText}</span>
+              ${patient.birthDate ? `<span class="patient-birthdate">(${patient.birthDate})</span>` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    resultsContainer.innerHTML = `
+      <div class="patient-search-list">
+        ${listHtml}
+        <div class="patient-search-footer">
+          <button id="createPatientFromListBtn" class="btn btn-secondary btn-sm">+ Create New Patient</button>
+        </div>
+      </div>
+    `;
+
+    // Add click handlers for patient items
+    resultsContainer.querySelectorAll('.patient-search-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const patientId = item.dataset.patientId;
+        const patientName = item.dataset.patientName;
+        const patientGender = item.dataset.patientGender;
+        const patientBirthDate = item.dataset.patientBirthdate;
+
+        // Set patient in SMART state
+        window.SMARTAuth.setPatient(patientId);
+        smartState.patient = { id: patientId, name: patientName };
+
+        // Update form fields
+        const ptName = $('#ptName');
+        const ptAge = $('#ptAge');
+        const ptSex = $('#ptSex');
+
+        if (ptName) ptName.value = patientName;
+        if (ptAge && patientBirthDate) ptAge.value = calculateAge(patientBirthDate) || '';
+        if (ptSex && patientGender) {
+          ptSex.value = patientGender.charAt(0).toUpperCase() + patientGender.slice(1);
+        }
+
+        // Hide results
+        resultsContainer.innerHTML = '';
+        resultsContainer.classList.remove('active');
+
+        // Update UI
+        updateSMARTUI(true);
+        showToast(`Patient ${patientName} selected from EHR`, 'success');
+      });
+    });
+
+    // Create patient button
+    resultsContainer.querySelector('#createPatientFromListBtn')?.addEventListener('click', () => {
+      resultsContainer.innerHTML = '';
+      resultsContainer.classList.remove('active');
+      showCreatePatientDialogInline();
+    });
+  }
+
+  /**
+   * Show create patient dialog inline (near the patient field)
+   */
+  function showCreatePatientDialogInline() {
+    const modal = document.createElement('div');
+    modal.className = 'smart-modal';
+    modal.id = 'createPatientModal';
+    modal.innerHTML = `
+      <div class="smart-modal-content">
+        <div class="smart-modal-header">
+          <h3>Create New Patient</h3>
+          <button class="smart-modal-close" aria-label="Close">&times;</button>
+        </div>
+        <div class="smart-modal-body">
+          <div class="form-group">
+            <label for="newPatientFamilyName">Last Name *</label>
+            <input type="text" id="newPatientFamilyName" class="form-input" placeholder="e.g., Doe">
+          </div>
+          <div class="form-group">
+            <label for="newPatientGivenName">First Name *</label>
+            <input type="text" id="newPatientGivenName" class="form-input" placeholder="e.g., John">
+          </div>
+          <div class="form-group">
+            <label for="newPatientBirthDate">Birth Date</label>
+            <input type="date" id="newPatientBirthDate" class="form-input">
+          </div>
+          <div class="form-group">
+            <label for="newPatientGender">Gender</label>
+            <select id="newPatientGender" class="form-input">
+              <option value="">-- Select --</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="other">Other</option>
+              <option value="unknown">Unknown</option>
+            </select>
+          </div>
+          <div class="smart-modal-actions">
+            <button id="savePatientBtn" class="btn btn-primary">Create Patient</button>
+            <button id="cancelCreatePatientBtn" class="btn btn-secondary">Cancel</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    modal.querySelector('.smart-modal-close').addEventListener('click', () => modal.remove());
+    modal.querySelector('#cancelCreatePatientBtn').addEventListener('click', () => modal.remove());
+
+    modal.querySelector('#savePatientBtn').addEventListener('click', async () => {
+      const familyName = $('#newPatientFamilyName').value.trim();
+      const givenName = $('#newPatientGivenName').value.trim();
+      const birthDate = $('#newPatientBirthDate').value;
+      const gender = $('#newPatientGender').value;
+
+      if (!familyName || !givenName) {
+        showToast('Please enter first and last name', 'error');
+        return;
+      }
+
+      try {
+        const newPatient = {
+          resourceType: 'Patient',
+          name: [{
+            use: 'official',
+            family: familyName,
+            given: [givenName]
+          }],
+          ...(birthDate && { birthDate }),
+          ...(gender && { gender })
+        };
+
+        const created = await window.SMARTAuth.createResource(newPatient);
+
+        window.SMARTAuth.setPatient(created.id);
+        smartState.patient = { id: created.id, name: `${givenName} ${familyName}` };
+
+        // Update form fields
+        const ptName = $('#ptName');
+        const ptAge = $('#ptAge');
+        const ptSex = $('#ptSex');
+
+        if (ptName) ptName.value = `${givenName} ${familyName}`;
+        if (ptAge && birthDate) ptAge.value = calculateAge(birthDate) || '';
+        if (ptSex && gender) {
+          ptSex.value = gender.charAt(0).toUpperCase() + gender.slice(1);
+        }
+
+        updateSMARTUI(true);
+        modal.remove();
+        showToast('Patient created and selected', 'success');
+      } catch (error) {
+        console.error('[SMART] Failed to create patient:', error);
+        showToast('Failed to create patient: ' + error.message, 'error');
+      }
+    });
+
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) modal.remove();
+    });
   }
 
   /**
@@ -2964,16 +3345,13 @@
   }
 
   /**
-   * Update UI to show patient context
+   * Update UI to show patient context (without showing ID)
    */
   function updatePatientContextUI(patientId) {
+    // Just show EHR connected badge - patient ID is not displayed
     const contextInfo = $('#smartContextInfo');
     if (contextInfo) {
       contextInfo.removeAttribute('hidden');
-      contextInfo.innerHTML = `
-        <span class="context-label">Patient:</span>
-        <span class="context-value">${patientId}</span>
-      `;
     }
   }
 
@@ -3052,6 +3430,8 @@
     const connectText = $('#smartConnectText');
     const syncBtn = $('#smartSyncPractitionerBtn');
     const submitBtn = $('#submitToEHR');
+    const loadPatientBtn = $('#smartLoadPatientBtn');
+    const changePatientBtn = $('#smartChangePatientBtn');
 
     if (badge) {
       if (isConnected) {
@@ -3081,6 +3461,40 @@
 
     if (submitBtn) {
       submitBtn.hidden = !isConnected;
+    }
+
+    // Patient buttons
+    if (loadPatientBtn) {
+      loadPatientBtn.hidden = !isConnected || smartState.patient;
+    }
+    if (changePatientBtn) {
+      changePatientBtn.hidden = !isConnected || !smartState.patient;
+    }
+
+    // Update patient EHR status indicator
+    updatePatientEhrStatus();
+  }
+
+  /**
+   * Update patient EHR status indicator
+   */
+  function updatePatientEhrStatus() {
+    const statusEl = $('#patientEhrStatus');
+    if (!statusEl) return;
+
+    if (smartState.patient) {
+      statusEl.hidden = false;
+      statusEl.innerHTML = `
+        <span class="ehr-badge">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12">
+            <path d="M20 6L9 17l-5-5"/>
+          </svg>
+          Linked to EHR
+        </span>
+      `;
+    } else {
+      statusEl.hidden = true;
+      statusEl.innerHTML = '';
     }
   }
 

@@ -302,7 +302,7 @@
               Load from EHR
             </button>
             <div id="smartContextInfo" class="smart-context-info" hidden>
-              <span class="smart-patient-badge" title="Patient loaded from EHR">Patient</span>
+              <span class="smart-patient-badge" title="EHR Connected">EHR</span>
             </div>
           </div>
         </div>
@@ -336,11 +336,31 @@
 
       <!-- Patient Info -->
       <div class="rx-section">
-        <h3 class="section-title">Patient Information</h3>
+        <div class="section-header">
+          <h3 class="section-title">Patient Information</h3>
+          <div class="smart-controls">
+            <button id="smartLoadPatientBtn" type="button" class="btn btn-smart-outline" title="Load patient from EHR" hidden>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              Load from EHR
+            </button>
+            <button id="smartChangePatientBtn" type="button" class="btn btn-smart-outline" title="Change patient" hidden>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
+              </svg>
+              Change
+            </button>
+          </div>
+        </div>
         <div class="form-grid">
-          <div class="form-field">
+          <div class="form-field patient-search-field">
             <label>Patient Name</label>
-            <input id="ptName" type="text" placeholder="Full name">
+            <input id="ptName" type="text" placeholder="Full name" autocomplete="off">
+            <div id="patientSearchResults" class="patient-search-results"></div>
+            <div id="patientEhrStatus" class="patient-ehr-status" hidden></div>
           </div>
           <div class="form-field xs">
             <label>Age</label>
