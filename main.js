@@ -2809,25 +2809,15 @@
       medplum: `
         <ol>
           <li>Go to <a href="https://app.medplum.com/signin" target="_blank">Medplum Console</a> and sign in or create an account</li>
-          <li>Navigate to "Project" → "Clients" → "New Client"</li>
+          <li>Navigate to "Resource Type" → "ClientApplication" → "New Client"</li>
           <li>Enter a name for your application (e.g., "Rx Builder")</li>
           <li>Set Redirect URI to: <code>${window.location.origin}${window.location.pathname}</code></li>
-          <li>Copy the Client ID and paste it in the field above</li>
+          <li>Search for the "ClientApplication" resource</li>
+          <li>Copy the Client ID for the generated client and paste it in the field above</li>
           <li>Click "Save Settings" and then "Connect EHR"</li>
         </ol>
       `,
-      aidbox: `
-        <ol>
-          <li>Go to <a href="https://aidbox.fhirlab.net/" target="_blank">Aidbox FHIRLab</a></li>
-          <li>Sign in with your account or register for a new one</li>
-          <li>Navigate to "Clients" and create a new SMART on FHIR client</li>
-          <li>Enter your application's details</li>
-          <li>Set Launch URI to: <code>${window.location.origin}${window.location.pathname}</code></li>
-          <li>Set Redirect URI to: <code>${window.location.origin}${window.location.pathname}</code></li>
-          <li>Copy the Client ID and paste it in the field above</li>
-          <li>Click "Save Settings" and then "Connect EHR"</li>
-        </ol>
-      `,
+      aidbox: generateAidboxGuide(),
       custom: `
         <ol>
           <li>Enter your FHIR server's base URL (e.g., <code>https://your-server.com/fhir</code>)</li>
@@ -2842,6 +2832,216 @@
     };
 
     setupSteps.innerHTML = guides[providerKey] || guides.custom;
+  }
+
+  /**
+   * Generate Aidbox setup guide with collapsible code block
+   */
+  function generateAidboxGuide() {
+    const redirectUri = `${window.location.origin}${window.location.pathname}`;
+    const clientJson = `
+{
+  "resourceType": "Client",
+  "id": "rx-builder-app",
+  "active": true,
+  "type": "smart-app",
+  "grant_types": ["authorization_code"],
+  "auth": {
+    "authorization_code": {
+      "redirect_uri": "${redirectUri}",
+      "pkce": true,
+      "secret_required": false,
+      "refresh_token": true,
+      "token_format": "jwt",
+      "access_token_expiration": 3600
+    }
+  },
+  "smart": {
+    "launch_uri": "${redirectUri}"
+  }
+}`;
+
+    // Clone the template
+    const template = $('#aidboxCodeTemplate');
+    if (!template) {
+      // Fallback if template not found
+      return generateAidboxGuideFallback();
+    }
+
+    const clone = template.content.cloneNode(true);
+    const container = clone.querySelector('.code-block-container');
+    const codeContent = clone.querySelector('#aidboxCodeContent');
+    const btnCopy = clone.querySelector('.btn-copy');
+    const btnToggle = clone.querySelector('.btn-toggle-expand');
+
+    // Set code content
+    if (codeContent) {
+      codeContent.textContent = clientJson;
+    }
+
+    // Add event listeners
+    if (btnCopy) {
+      btnCopy.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(clientJson);
+          btnCopy.classList.add('copied');
+          const span = btnCopy.querySelector('span');
+          if (span) span.textContent = 'Copied!';
+          setTimeout(() => {
+            btnCopy.classList.remove('copied');
+            if (span) span.textContent = 'Copy';
+          }, 2000);
+        } catch (err) {
+          console.error('Failed to copy:', err);
+        }
+      });
+    }
+
+    if (btnToggle && container) {
+      btnToggle.addEventListener('click', () => {
+        container.classList.toggle('expanded');
+      });
+    }
+
+    // Build the guide
+    const ol1 = document.createElement('ol');
+    ol1.innerHTML = `
+      <li>Go to <a href="https://aidbox.fhirlab.net/" target="_blank">Aidbox FHIRLab</a> and sign in or create an account</li>
+      <li>Navigate to <strong>REST Console</strong> (in the left sidebar)</li>
+      <li>Copy and paste the JSON below, then click <strong>Save</strong>:</li>
+    `;
+
+    const codeWrapper = document.createElement('div');
+    codeWrapper.appendChild(clone);
+
+    const ol2 = document.createElement('ol');
+    ol2.start = 4;
+    ol2.innerHTML = `
+      <li>Enter the Client ID <code>rx-builder-app</code> (or your chosen ID) in the field above</li>
+      <li>Click <strong>Save Settings</strong> and then <strong>Connect EHR</strong></li>
+    `;
+
+    const hint = document.createElement('p');
+    hint.className = 'setup-hint';
+    hint.innerHTML = `
+      <strong>Tip:</strong> You can also use the UI: Go to <strong>Client → New</strong> and fill in the same fields.
+      <a href="https://www.health-samurai.io/docs/aidbox/access-control/identity-management/application-client-management" target="_blank">Learn more →</a>
+    `;
+
+    const wrapper = document.createElement('div');
+    wrapper.appendChild(ol1);
+    wrapper.appendChild(codeWrapper);
+    wrapper.appendChild(ol2);
+    wrapper.appendChild(hint);
+
+    return wrapper.innerHTML;
+  }
+
+  /**
+   * Copy Aidbox code to clipboard (global handler for fallback)
+   */
+  window.copyAidboxCode = function(button) {
+    const codeBlock = button.closest('.code-block-container');
+    const code = codeBlock?.querySelector('code');
+    if (code) {
+      navigator.clipboard.writeText(code.textContent).then(() => {
+        button.classList.add('copied');
+        const span = button.querySelector('span');
+        if (span) span.textContent = 'Copied!';
+        setTimeout(() => {
+          button.classList.remove('copied');
+          if (span) span.textContent = 'Copy';
+        }, 2000);
+      });
+    }
+  };
+
+  /**
+   * Toggle code block expand/collapse (global handler for fallback)
+   */
+  window.toggleCodeBlock = function(button) {
+    const container = button.closest('.code-block-container');
+    if (container) {
+      container.classList.toggle('expanded');
+      const expandIcon = button.querySelector('.icon-expand');
+      const collapseIcon = button.querySelector('.icon-collapse');
+      if (container.classList.contains('expanded')) {
+        if (expandIcon) expandIcon.style.display = 'none';
+        if (collapseIcon) collapseIcon.style.display = 'block';
+      } else {
+        if (expandIcon) expandIcon.style.display = 'block';
+        if (collapseIcon) collapseIcon.style.display = 'none';
+      }
+    }
+  };
+
+  /**
+   * Fallback Aidbox guide without template
+   */
+  function generateAidboxGuideFallback() {
+    const redirectUri = `${window.location.origin}${window.location.pathname}`;
+    return `
+      <ol>
+        <li>Go to <a href="https://aidbox.fhirlab.net/" target="_blank">Aidbox FHIRLab</a> and sign in or create an account</li>
+        <li>Navigate to <strong>REST Console</strong> (in the left sidebar)</li>
+        <li>Copy and paste the JSON below, then click <strong>Execute</strong>:</li>
+      </ol>
+      <div class="code-block-container collapsed">
+        <div class="code-block-header">
+          <span class="code-block-title">Client Resource JSON</span>
+          <div class="code-block-actions">
+            <button type="button" class="btn-copy" onclick="copyAidboxCode(this)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              </svg>
+              <span>Copy</span>
+            </button>
+            <button type="button" class="btn-toggle-expand" onclick="toggleCodeBlock(this)">
+              <svg class="icon-expand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+              <svg class="icon-collapse" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" style="display:none">
+                <polyline points="18 15 12 9 6 15"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="code-block-content">
+          <pre><code class="aidbox-json">PUT /Client/rx-builder-app
+content-type: application/json
+
+{
+  "resourceType": "Client",
+  "id": "rx-builder-app",
+  "active": true,
+  "type": "smart-app",
+  "grant_types": ["authorization_code"],
+  "auth": {
+    "authorization_code": {
+      "redirect_uri": "${redirectUri}",
+      "pkce": true,
+      "secret_required": false,
+      "refresh_token": true,
+      "token_format": "jwt",
+      "access_token_expiration": 3600
+    }
+  },
+  "smart": {
+    "launch_uri": "${redirectUri}"
+  }
+}</code></pre>
+        </div>
+      </div>
+      <ol start="4">
+        <li>Enter the Client ID <code>rx-builder-app</code> (or your chosen ID) in the field above</li>
+        <li>Click <strong>Save Settings</strong> and then <strong>Connect EHR</strong></li>
+      </ol>
+      <p class="setup-hint">
+        <strong>Tip:</strong> You can also use the UI: Go to <strong>Client → New</strong> and fill in the same fields.
+        <a href="https://www.health-samurai.io/docs/aidbox/access-control/identity-management/application-client-management" target="_blank">Learn more →</a>
+      </p>
+    `;
   }
 
   /**

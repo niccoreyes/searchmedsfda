@@ -68,36 +68,94 @@ Medplum provides a free sandbox environment perfect for testing.
 
 ## Option 2: Aidbox FHIRLab
 
-Aidbox is another excellent sandbox for FHIR development.
+Aidbox is another excellent sandbox for FHIR development with full SMART on FHIR support.
 
 ### Step-by-Step Setup
 
 1. **Create an Aidbox Account**
    - Go to [https://aidbox.fhirlab.net/](https://aidbox.fhirlab.net/)
    - Click "Sign Up" and create an account
-   - Verify your email
+   - Verify your email address
 
-2. **Create a Client**
+2. **Create a Client Resource**
    - Log in to your Aidbox instance
-   - Navigate to **Clients** in the left sidebar
-   - Click **New Client**
-   - Configure:
-     - **Name**: Rx Builder
-     - **Client Type**: SMART on FHIR App
-     - **Redirect URI**: Your app's URL
-   - Save the client
+   - Navigate to **REST Console** (in the left sidebar)
+   - Copy and paste the following JSON, then click **Execute**:
 
-3. **Get Your Client ID**
-   - Copy the Client ID from the client details page
+   > **Note:** Replace `https://devrxbuilder.vercel.app/` with your actual app URL if different
+
+   ```json
+   PUT /Client/rx-builder-app
+   content-type: application/json
+
+   {
+     "resourceType": "Client",
+     "id": "rx-builder-app",
+     "active": true,
+     "type": "smart-app",
+     "grant_types": ["authorization_code"],
+     "auth": {
+       "authorization_code": {
+         "redirect_uri": "https://devrxbuilder.vercel.app/",
+         "pkce": true,
+         "secret_required": false,
+         "refresh_token": true,
+         "token_format": "jwt",
+         "access_token_expiration": 3600
+       }
+     },
+     "smart": {
+       "launch_uri": "https://devrxbuilder.vercel.app/"
+     }
+   }
+   ```
+
+3. **Verify Client Creation**
+   - After executing, you should see a `201 Created` or `200 OK` response
+   - The Client ID is: **`rx-builder-app`** (or whatever you set as the `id`)
 
 4. **Configure Rx Builder**
+   - Open Rx Builder and go to the **Prescription** tab
    - Select **Aidbox** from the provider dropdown
-   - Click **⚙️ settings**
-   - Paste your Client ID
-   - Save settings
+   - Click the **⚙️ settings** button
+   - Enter your Client ID: `rx-builder-app`
+   - Click **Save Settings**
 
 5. **Connect**
-   - Click **Connect EHR** and authorize
+   - Click **Connect EHR**
+   - You'll be redirected to Aidbox to sign in
+   - Authorize the application
+   - You'll be redirected back to Rx Builder, now connected!
+
+### Alternative: Using Aidbox UI
+
+If you prefer using the UI instead of REST Console:
+
+1. Go to **Client** → **New**
+2. Select resource type: `Client`
+3. Fill in these required fields:
+   - **id**: `rx-builder-app` (your chosen Client ID)
+   - **type**: `smart-app`
+   - **grant_types**: `["authorization_code"]`
+   - **auth.authorization_code.redirect_uri**: `https://devrxbuilder.vercel.app/`
+   - **auth.authorization_code.pkce**: `true`
+   - **auth.authorization_code.secret_required**: `false`
+   - **smart.launch_uri**: `https://devrxbuilder.vercel.app/`
+4. Click **Create**
+
+### Understanding the Client Resource
+
+| Field | Value | Description |
+|-------|-------|-------------|
+| `id` | `rx-builder-app` | Your Client ID (you choose this) |
+| `type` | `smart-app` | Required for SMART on FHIR apps |
+| `grant_types` | `["authorization_code"]` | OAuth2 flow type |
+| `auth.authorization_code.redirect_uri` | Your app URL | Must match exactly |
+| `auth.authorization_code.pkce` | `true` | Required for browser apps |
+| `auth.authorization_code.secret_required` | `false` | No secret for public clients |
+| `smart.launch_uri` | Your app URL | Required for EHR launch |
+
+Sources: [Aidbox SMART App Launch Docs](https://www.health-samurai.io/docs/aidbox/access-control/authorization/smart-on-fhir/smart-client-authorization/smart-app-launch), [Authorization Code Grant Tutorial](https://www.health-samurai.io/docs/aidbox/tutorials/security-access-control-tutorials/authorization-code-grant)
 
 ---
 
