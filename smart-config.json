@@ -1,0 +1,113 @@
+{
+  "providers": {
+    "medplum": {
+      "name": "Medplum",
+      "baseUrl": "https://api.medplum.com",
+      "fhirUrl": "https://api.medplum.com/fhir/R4",
+      "authorizeUrl": "https://api.medplum.com/oauth2/authorize",
+      "tokenUrl": "https://api.medplum.com/oauth2/token",
+      "clientId": "",
+      "scopes": [
+        "openid",
+        "fhirUser",
+        "profile",
+        "launch/patient",
+        "patient/Patient.read",
+        "patient/Patient.write",
+        "patient/Practitioner.read",
+        "patient/MedicationRequest.read",
+        "patient/MedicationRequest.write",
+        "patient/Medication.read"
+      ],
+      "discoveryUrl": "https://api.medplum.com/.well-known/smart-configuration"
+    },
+    "smarthealthit": {
+      "name": "SMART Health IT Sandbox",
+      "baseUrl": "https://launch.smarthealthit.org",
+      "fhirUrl": "",
+      "authorizeUrl": "",
+      "tokenUrl": "",
+      "clientId": "test-client-id",
+      "scopes": [
+        "openid",
+        "fhirUser",
+        "profile",
+        "launch",
+        "launch/patient",
+        "patient/*.read",
+        "patient/*.write",
+        "user/*.read"
+      ],
+      "discoveryUrl": "",
+      "isLauncher": true,
+      "supportsDynamicRegistration": false
+    },
+    "epic": {
+      "name": "Epic Sandbox",
+      "baseUrl": "https://fhir.epic.com/interconnect-fhir-oauth",
+      "fhirUrl": "https://fhir.epic.com/interconnect-fhir-oauth/api/FHIR/R4",
+      "authorizeUrl": "https://fhir.epic.com/interconnect-fhir-oauth/oauth2/authorize",
+      "tokenUrl": "https://fhir.epic.com/interconnect-fhir-oauth/oauth2/token",
+      "clientId": "",
+      "scopes": [
+        "openid",
+        "fhirUser",
+        "profile",
+        "launch",
+        "launch/patient",
+        "patient/*.read",
+        "patient/*.write"
+      ],
+      "discoveryUrl": "https://fhir.epic.com/interconnect-fhir-oauth/api/FHIR/R4/.well-known/smart-configuration"
+    },
+    "cerner": {
+      "name": "Cerner Sandbox",
+      "baseUrl": "https://fhir-ehr.cerner.com/r4/ec2458f2-1e24-41c8-b71b-0e701af7583d",
+      "fhirUrl": "https://fhir-ehr.cerner.com/r4/ec2458f2-1e24-41c8-b71b-0e701af7583d",
+      "authorizeUrl": "https://authorization.cerner.com/tenants/ec2458f2-1e24-41c8-b71b-0e701af7583d/protocols/oauth2/profiles/smart-v1/personas/provider/authorize",
+      "tokenUrl": "https://authorization.cerner.com/tenants/ec2458f2-1e24-41c8-b71b-0e701af7583d/protocols/oauth2/profiles/smart-v1/token",
+      "clientId": "",
+      "scopes": [
+        "openid",
+        "profile",
+        "launch",
+        "launch/patient",
+        "patient/*.read",
+        "user/*.read"
+      ],
+      "discoveryUrl": "https://fhir-ehr.cerner.com/r4/ec2458f2-1e24-41c8-b71b-0e701af7583d/.well-known/smart-configuration"
+    },
+    "hapi": {
+      "name": "HAPI FHIR (Public)",
+      "baseUrl": "https://hapi.fhir.org/baseR4",
+      "fhirUrl": "https://hapi.fhir.org/baseR4",
+      "authorizeUrl": "",
+      "tokenUrl": "",
+      "clientId": "",
+      "scopes": [],
+      "discoveryUrl": "",
+      "isOpen": true,
+      "note": "Open server, no SMART auth required"
+    },
+    "firely": {
+      "name": "Firely Sandbox",
+      "baseUrl": "https://server.fire.ly",
+      "fhirUrl": "https://server.fire.ly",
+      "authorizeUrl": "https://server.fire.ly/oauth2/authorize",
+      "tokenUrl": "https://server.fire.ly/oauth2/token",
+      "clientId": "test-client",
+      "scopes": [
+        "openid",
+        "profile",
+        "launch",
+        "patient/*.read"
+      ],
+      "discoveryUrl": "https://server.fire.ly/.well-known/smart-configuration"
+    }
+  },
+  "settings": {
+    "allowUserConfiguredProviders": true,
+    "promptForClientId": true,
+    "rememberLastProvider": true
+  }
+}
