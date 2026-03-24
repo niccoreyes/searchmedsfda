@@ -138,6 +138,55 @@
     return toast;
   }
 
+  /**
+   * Show a toast with multiple action buttons
+   * @param {string} message - The message to display
+   * @param {Array<{label: string, action: Function, primary?: boolean}>} actions - Array of action buttons
+   * @returns {HTMLElement} The toast element
+   */
+  function showActionToast(message, actions) {
+    const container = $('#toastContainer');
+    if (!container) return;
+
+    // Clear existing toasts
+    container.innerHTML = '';
+
+    const toast = cloneTemplate('tpl-toast');
+    toast.classList.add('confirm');
+    toast.querySelector('.toast-message').textContent = message;
+    toast.querySelector('.toast-icon use').setAttribute('href', TOAST_ICONS.confirm);
+
+    // Replace default actions with custom multi-action buttons
+    const actionsContainer = toast.querySelector('.toast-actions');
+    actionsContainer.hidden = false;
+    actionsContainer.innerHTML = actions.map((action, index) => `
+      <button class="btn ${action.primary ? 'btn-primary' : 'btn-secondary'} btn-sm toast-action" data-action="${index}">
+        ${action.label}
+      </button>
+    `).join('');
+
+    container.appendChild(toast);
+
+    // Wire up buttons
+    actions.forEach((action, index) => {
+      const btn = toast.querySelector(`[data-action="${index}"]`);
+      if (btn) {
+        btn.addEventListener('click', () => {
+          toast.remove();
+          action.action();
+        });
+      }
+    });
+
+    // Trigger animation
+    requestAnimationFrame(() => {
+      toast.style.opacity = '1';
+      toast.style.transform = 'translateY(0)';
+    });
+
+    return toast;
+  }
+
   function showToast(message, type = 'info', duration = 3000) {
     const container = $('#toastContainer');
     if (!container) return;
@@ -2682,18 +2731,30 @@
       return;
     }
 
-    // If connected to EHR but no patient ID linked, ask if they want to search
+    // If connected to EHR but no patient ID linked, show multi-action prompt
     if (!hasPatientId && hasPatientName && smartState.isConnected) {
-      showConfirmToast(
-        'Patient not linked to EHR. Search for patient in EHR?',
-        () => {
-          // User wants to search - trigger patient load
-          handleLoadPatientFromEHR();
-        },
-        () => {
-          // User wants to submit without linking - just confirm submission
-          confirmAndSubmitToEHR();
-        }
+      showActionToast(
+        'Patient not linked to EHR. What would you like to do?',
+        [
+          {
+            label: 'Search EHR',
+            action: () => handleLoadPatientFromEHR(),
+            primary: true
+          },
+          {
+            label: 'Create New Patient',
+            action: () => {
+              // Mark as new patient to be created on submit
+              promptCreateNewPatient(hasPatientName);
+              // Then proceed with submission
+              confirmAndSubmitToEHR();
+            }
+          },
+          {
+            label: 'Cancel',
+            action: () => {}
+          }
+        ]
       );
       return;
     }
@@ -2706,7 +2767,7 @@
    */
   async function confirmAndSubmitToEHR() {
     // Get prescription items
-    const items = Array.from($('#rxItem s').children)
+    const items = Array.from($('#rxItems').children)
       .filter((child) => child.classList.contains('rx-item'))
       .map((div) => collectItem(div));
 
