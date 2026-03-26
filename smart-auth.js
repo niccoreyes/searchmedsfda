@@ -67,6 +67,7 @@
 
   // Initialize default SMART config (will be updated based on provider)
   function createSmartConfig(provider) {
+    const isAidbox = provider?.key === 'aidbox';
     return {
       baseUrl: provider.baseUrl,
       fhirUrl: provider.fhirUrl,
@@ -74,7 +75,20 @@
       tokenUrl: provider.tokenUrl,
       clientId: '',
       redirectUri: window.location.origin + window.location.pathname,
-      scopes: [
+      scopes: isAidbox ? [
+        // Aidbox: use user/* scopes for general search capability
+        'openid',
+        'fhirUser',
+        'profile',
+        'launch/patient',
+        'user/Patient.read',
+        'user/Patient.write',
+        'user/Practitioner.read',
+        'user/MedicationRequest.read',
+        'user/MedicationRequest.write',
+        'user/Medication.read'
+      ] : [
+        // Medplum and others: use patient/* scopes
         'openid',
         'fhirUser',
         'profile',

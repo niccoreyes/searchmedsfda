@@ -2728,17 +2728,26 @@
         const customBaseUrl = $('#customBaseUrl');
         const customAuthUrl = $('#customAuthUrl');
         const customTokenUrl = $('#customTokenUrl');
+        const baseUrlLabel = $('#baseUrlLabel');
+        const baseUrlHelp = $('#baseUrlHelp');
+        const authUrlGroup = $('.custom-auth-url-group');
+        const tokenUrlGroup = $('.custom-token-url-group');
 
         const baseUrl = customConfig.baseUrl || config?.baseUrl || '';
         if (customBaseUrl) customBaseUrl.value = baseUrl;
 
-        // For Aidbox, auto-derive auth URLs if not set
-        if (currentProviderKey === 'aidbox' && baseUrl) {
-          const derivedAuthUrl = `${baseUrl}/auth/authorize`;
-          const derivedTokenUrl = `${baseUrl}/auth/token`;
-          if (customAuthUrl) customAuthUrl.value = customConfig.authorizeUrl || config?.authorizeUrl || derivedAuthUrl;
-          if (customTokenUrl) customTokenUrl.value = customConfig.tokenUrl || config?.tokenUrl || derivedTokenUrl;
+        if (currentProviderKey === 'aidbox') {
+          // Aidbox: only show base URL, auto-derive auth URLs
+          if (baseUrlLabel) baseUrlLabel.textContent = 'Aidbox Base URL';
+          if (baseUrlHelp) baseUrlHelp.textContent = 'Your Aidbox instance URL (e.g., https://your-box.edge.aidbox.app)';
+          if (authUrlGroup) authUrlGroup.hidden = true;
+          if (tokenUrlGroup) tokenUrlGroup.hidden = true;
         } else {
+          // Custom: show all fields
+          if (baseUrlLabel) baseUrlLabel.textContent = 'FHIR Base URL';
+          if (baseUrlHelp) baseUrlHelp.textContent = 'The base URL of your FHIR server';
+          if (authUrlGroup) authUrlGroup.hidden = false;
+          if (tokenUrlGroup) tokenUrlGroup.hidden = false;
           if (customAuthUrl) customAuthUrl.value = customConfig.authorizeUrl || config?.authorizeUrl || '';
           if (customTokenUrl) customTokenUrl.value = customConfig.tokenUrl || config?.tokenUrl || '';
         }
@@ -2919,6 +2928,7 @@
   /**
    * Generate Aidbox Client resource JSON
    * Uses the client ID from the input field, defaulting to 'rx-builder-dev'
+   * Uses user/* scopes to allow general resource searches (not patient-restricted)
    */
   function generateAidboxClientJson() {
     const redirectUri = `${window.location.origin}${window.location.pathname}`;
@@ -2930,21 +2940,28 @@ content-type: application/json
 {
   "resourceType": "Client",
   "id": "${clientId}",
-  "active": true,
   "type": "smart-app",
   "grant_types": ["authorization_code"],
   "auth": {
     "authorization_code": {
       "redirect_uri": "${redirectUri}",
-      "pkce": true,
-      "secret_required": false,
-      "refresh_token": true,
-      "token_format": "jwt",
-      "access_token_expiration": 3600
+      "pkce": true
     }
   },
   "smart": {
-    "launch_uri": "${redirectUri}"
+    "launch_uri": "${redirectUri}",
+    "scopes": [
+      "openid",
+      "fhirUser",
+      "profile",
+      "launch/patient",
+      "user/Patient.read",
+      "user/Patient.write",
+      "user/Practitioner.read",
+      "user/MedicationRequest.read",
+      "user/MedicationRequest.write",
+      "user/Medication.read"
+    ]
   }
 }`;
   }

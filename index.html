@@ -953,19 +953,19 @@
 
         <div id="customServerSection" class="custom-server-section" hidden>
           <div class="form-group">
-            <label for="customBaseUrl">FHIR Base URL</label>
+            <label for="customBaseUrl" id="baseUrlLabel">FHIR Base URL</label>
             <input type="url" id="customBaseUrl" class="form-input" placeholder="https://your-server.com/fhir">
-            <p class="help-text">The base URL of your FHIR server (e.g., https://your-aidbox.edge.aidbox.app or https://aidbox.fhirlab.net)</p>
+            <p class="help-text" id="baseUrlHelp">The base URL of your FHIR server</p>
           </div>
-          <div class="form-group">
-            <label for="customAuthUrl">Authorization URL (optional)</label>
+          <div class="form-group custom-auth-url-group" hidden>
+            <label for="customAuthUrl">Authorization URL</label>
             <input type="url" id="customAuthUrl" class="form-input" placeholder="https://your-server.com/oauth2/authorize">
-            <p class="help-text">Will be auto-discovered if not provided</p>
+            <p class="help-text">OAuth2 authorization endpoint</p>
           </div>
-          <div class="form-group">
-            <label for="customTokenUrl">Token URL (optional)</label>
+          <div class="form-group custom-token-url-group" hidden>
+            <label for="customTokenUrl">Token URL</label>
             <input type="url" id="customTokenUrl" class="form-input" placeholder="https://your-server.com/oauth2/token">
-            <p class="help-text">Will be auto-discovered if not provided</p>
+            <p class="help-text">OAuth2 token endpoint</p>
           </div>
         </div>
 
@@ -990,8 +990,8 @@
 
           <template id="tpl-guide-aidbox">
             <ol>
-              <li>Enter your Aidbox base URL above (e.g., <code>https://your-aidbox.edge.aidbox.app</code> or <code>https://aidbox.fhirlab.net</code>)</li>
-              <li>Go to your Aidbox instance and sign in or create an account</li>
+              <li>Enter your Aidbox base URL above (e.g., <code>https://your-box.edge.aidbox.app</code>)</li>
+              <li>Go to your Aidbox instance and sign in as an admin</li>
               <li>Navigate to <strong>REST Console</strong> (in the left sidebar)</li>
               <li>Copy and paste the JSON below, then click <strong>Save</strong>:</li>
             </ol>
@@ -1021,11 +1021,11 @@
               </div>
             </div>
             <ol start="5">
-              <li>Enter your chosen Client ID (default: <code>rx-builder-dev</code>) in the field above</li>
+              <li>Make sure the Client ID above matches what you created (default: <code>rx-builder-dev</code>)</li>
               <li>Click <strong>Save Settings</strong> and then <strong>Connect EHR</strong></li>
             </ol>
             <p class="setup-hint">
-              <strong>Tip:</strong> You can also use the UI: Go to <strong>Client → New</strong> and fill in the same fields.
+              <strong>Note:</strong> This app uses <code>user/*</code> scopes for general resource access. The user you log in with must have appropriate permissions in Aidbox.
               <a href="https://docs.aidbox.app/modules-1/security-and-access-control/client-management" target="_blank">Learn more →</a>
             </p>
           </template>
