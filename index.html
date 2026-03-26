@@ -882,6 +882,169 @@
     </li>
   </template>
 
+  <!-- Create Patient Modal Template -->
+  <template id="tpl-create-patient-modal">
+    <div class="smart-modal" id="createPatientModal">
+      <div class="smart-modal-content">
+        <div class="smart-modal-header">
+          <h3>Create New Patient</h3>
+          <button class="smart-modal-close" aria-label="Close">&times;</button>
+        </div>
+        <div class="smart-modal-body">
+          <div class="form-group">
+            <label for="newPatientFamilyName">Last Name *</label>
+            <input type="text" id="newPatientFamilyName" class="form-input" placeholder="e.g., Doe" data-field="familyName">
+          </div>
+          <div class="form-group">
+            <label for="newPatientGivenName">First Name *</label>
+            <input type="text" id="newPatientGivenName" class="form-input" placeholder="e.g., John" data-field="givenName">
+          </div>
+          <div class="form-group">
+            <label for="newPatientBirthDate">Birth Date</label>
+            <input type="date" id="newPatientBirthDate" class="form-input" data-field="birthDate">
+          </div>
+          <div class="form-group">
+            <label for="newPatientGender">Gender</label>
+            <select id="newPatientGender" class="form-input" data-field="gender">
+              <option value="">-- Select --</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="other">Other</option>
+              <option value="unknown">Unknown</option>
+            </select>
+          </div>
+          <div class="smart-modal-actions">
+            <button id="savePatientBtn" class="btn btn-primary">Create Patient</button>
+            <button id="cancelCreatePatientBtn" class="btn btn-secondary">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <!-- Patient List Item Template -->
+  <template id="tpl-patient-list-item">
+    <div class="patient-list-item" data-patient-id="" data-patient-name="" data-patient-gender="" data-patient-birthdate="">
+      <div class="patient-info">
+        <div class="patient-name" data-field="name"></div>
+        <div class="patient-details">
+          <span class="patient-gender" data-field="gender"></span>
+          <span class="patient-age" data-field="age"></span>
+          <span class="patient-birthdate" data-field="birthDate"></span>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-sm select-patient-btn">Select</button>
+    </div>
+  </template>
+
+  <!-- Patient Search Result Item Template -->
+  <template id="tpl-patient-search-item">
+    <div class="patient-search-item" data-patient-id="" data-patient-name="" data-patient-gender="" data-patient-birthdate="">
+      <div class="patient-search-info">
+        <div class="patient-search-name" data-field="name"></div>
+        <div class="patient-search-details">
+          <span class="patient-gender" data-field="gender"></span>
+          <span class="patient-age" data-field="age"></span>
+          <span class="patient-birthdate" data-field="birthDate"></span>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <!-- Patient Picker Item Template -->
+  <template id="tpl-patient-picker-item">
+    <div class="patient-picker-item" data-patient-id="">
+      <div class="patient-picker-item-info">
+        <div class="patient-picker-item-name" data-field="name"></div>
+        <div class="patient-picker-item-details">
+          <span class="patient-gender" data-field="gender"></span>
+          <span class="patient-age" data-field="age"></span>
+          <span class="patient-birthdate" data-field="birthDate"></span>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-sm select-patient-btn">Select</button>
+    </div>
+  </template>
+
+  <!-- Patient Picker Modal Template -->
+  <template id="tpl-patient-picker-modal">
+    <div class="smart-modal" id="patientPickerModal">
+      <div class="smart-modal-content">
+        <div class="smart-modal-header">
+          <h3>Select Matching Patient</h3>
+          <button class="smart-modal-close" aria-label="Close">&times;</button>
+        </div>
+        <div class="smart-modal-body">
+          <p class="modal-hint">You entered: <strong data-field="enteredName"></strong></p>
+          <p>Select an existing patient or create a new one:</p>
+          <div class="patient-picker-list" data-field="listContainer">
+          </div>
+          <div class="smart-modal-actions">
+            <button id="createNewFromPickerBtn" class="btn btn-secondary">Create New Patient</button>
+            <button id="cancelPickerBtn" class="btn btn-ghost">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <!-- Patient Search Results Container Template -->
+  <template id="tpl-patient-search-results">
+    <div class="patient-search-results" data-field="resultsContainer">
+    </div>
+    <div class="patient-search-footer">
+      <button id="createPatientFromListBtn" class="btn btn-primary btn-sm">Create New Patient</button>
+    </div>
+  </template>
+
+  <!-- Patient Selection Dialog Template -->
+  <template id="tpl-patient-selection-dialog">
+    <div class="smart-modal" id="patientSelectionModal">
+      <div class="smart-modal-content">
+        <div class="smart-modal-header">
+          <h3>Select Patient</h3>
+          <button class="smart-modal-close" aria-label="Close">&times;</button>
+        </div>
+        <div class="smart-modal-body">
+          <p>Search for an existing patient or create a new one.</p>
+          <div class="patient-search-section">
+            <div class="form-group">
+              <label for="patientSearchInput">Search Patients</label>
+              <div class="search-input-wrapper">
+                <input type="text" id="patientSearchInput" class="form-input" placeholder="Enter name to search...">
+                <button id="searchPatientsBtn" class="btn btn-primary">Search</button>
+              </div>
+            </div>
+          </div>
+          <div id="patientsListContainer" class="patients-list-container">
+          </div>
+          <div class="smart-modal-actions">
+            <button id="createPatientBtn" class="btn btn-secondary">Create New Patient</button>
+            <button id="cancelPatientBtn" class="btn btn-secondary">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <!-- Loading State Template -->
+  <template id="tpl-loading">
+    <div class="loading-state" data-field="message">Loading...</div>
+  </template>
+
+  <!-- Error State Template -->
+  <template id="tpl-error">
+    <div class="error-state" data-field="message">An error occurred.</div>
+  </template>
+
+  <!-- Empty State Template -->
+  <template id="tpl-empty-state">
+    <div class="empty-state">
+      <p data-field="message"></p>
+      <button class="btn btn-primary btn-sm" data-field="actionButton">Create New Patient</button>
+    </div>
+  </template>
+
   <!-- Print Template -->
   <div class="rx-print" id="rxPrint">
     <div class="print-header">

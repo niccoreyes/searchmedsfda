@@ -2869,7 +2869,11 @@
     const template = $(`#${templateId}`);
 
     if (!template) {
-      setupSteps.innerHTML = '<p class="text-muted">Setup instructions not available.</p>';
+      setupSteps.innerHTML = '';
+      const p = document.createElement('p');
+      p.className = 'text-muted';
+      p.textContent = 'Setup instructions not available.';
+      setupSteps.appendChild(p);
       return;
     }
 
@@ -3033,12 +3037,8 @@ content-type: application/json
     const syncBtn = $('#smartSyncPractitionerBtn');
     if (syncBtn) {
       syncBtn.disabled = true;
-      syncBtn.innerHTML = `
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation: spin 1s linear infinite">
-          <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
-        </svg>
-        Loading...
-      `;
+      syncBtn.textContent = 'Loading...';
+      syncBtn.dataset.originalText = syncBtn.dataset.originalText || 'Sync from EHR';
     }
 
     try {
@@ -3067,14 +3067,7 @@ content-type: application/json
     } finally {
       if (syncBtn) {
         syncBtn.disabled = false;
-        syncBtn.innerHTML = `
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-            <polyline points="7 10 12 15 17 10"/>
-            <line x1="12" y1="15" x2="12" y2="3"/>
-          </svg>
-          Load from EHR
-        `;
+        syncBtn.textContent = syncBtn.dataset.originalText || 'Sync from EHR';
       }
     }
   }
@@ -3153,13 +3146,8 @@ content-type: application/json
         const submitBtn = $('#submitToEHR');
         if (submitBtn) {
           submitBtn.disabled = true;
-          submitBtn.innerHTML = `
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation: spin 1s linear infinite">
-              <circle cx="12" cy="12" r="10"/>
-              <path d="M12 6v6l4 2"/>
-            </svg>
-            <span class="btn-text">Submitting...</span>
-          `;
+          submitBtn.dataset.originalText = submitBtn.dataset.originalText || 'Submit to EHR';
+          submitBtn.textContent = 'Submitting...';
         }
 
         try {
@@ -3239,13 +3227,7 @@ content-type: application/json
         } finally {
           if (submitBtn) {
             submitBtn.disabled = false;
-            submitBtn.innerHTML = `
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                <polyline points="12 8 12 12 15 15"/>
-              </svg>
-              <span class="btn-text">Submit to EHR</span>
-            `;
+            submitBtn.textContent = submitBtn.dataset.originalText || 'Submit to EHR';
           }
         }
       },
@@ -3514,29 +3496,30 @@ content-type: application/json
     const statusEl = $('#patientManualStatus');
     if (!statusEl) return;
 
-    const buttonsHtml = actions.map(btn => `
-      <button class="btn ${btn.primary ? 'btn-primary' : 'btn-secondary'} btn-sm" data-action="${actions.indexOf(btn)}">
-        ${btn.label}
-      </button>
-    `).join('');
+    // Build status element programmatically
+    const statusDiv = document.createElement('div');
+    statusDiv.className = 'patient-manual-status unlinked';
 
-    statusEl.innerHTML = `
-      <div class="patient-manual-status unlinked">
-        <span class="status-text">${message}</span>
-        <div class="status-actions">
-          ${buttonsHtml}
-        </div>
-      </div>
-    `;
+    const textSpan = document.createElement('span');
+    textSpan.className = 'status-text';
+    textSpan.textContent = message;
+    statusDiv.appendChild(textSpan);
 
-    statusEl.hidden = false;
+    const actionsDiv = document.createElement('div');
+    actionsDiv.className = 'status-actions';
 
-    // Add click handlers
-    statusEl.querySelectorAll('button[data-action]').forEach((btn, idx) => {
-      btn.addEventListener('click', () => {
-        actions[idx].action();
-      });
+    actions.forEach((action) => {
+      const btn = document.createElement('button');
+      btn.className = `btn ${action.primary ? 'btn-primary' : 'btn-secondary'} btn-sm`;
+      btn.textContent = action.label;
+      btn.addEventListener('click', action.action);
+      actionsDiv.appendChild(btn);
     });
+
+    statusDiv.appendChild(actionsDiv);
+    statusEl.innerHTML = '';
+    statusEl.appendChild(statusDiv);
+    statusEl.hidden = false;
   }
 
   /**
@@ -3603,49 +3586,37 @@ content-type: application/json
   }
 
   /**
+   * Create and show patient creation modal
+   * @param {Object} prefilledData - Optional data to prefill the form {givenName, familyName}
+   * @returns {HTMLElement} The modal element
+   */
+  function createPatientModal(prefilledData = {}) {
+    const modalWrapper = cloneTemplate('tpl-create-patient-modal');
+    const modal = modalWrapper.querySelector('#createPatientModal');
+
+    // Prefill data if provided
+    if (prefilledData.givenName) {
+      modalWrapper.querySelector('[data-field="givenName"]').value = prefilledData.givenName;
+    }
+    if (prefilledData.familyName) {
+      modalWrapper.querySelector('[data-field="familyName"]').value = prefilledData.familyName;
+    }
+
+    document.body.appendChild(modal);
+
+    // Close handlers
+    const closeModal = () => modal.remove();
+    modalWrapper.querySelector('.smart-modal-close').addEventListener('click', closeModal);
+    modalWrapper.querySelector('#cancelCreatePatientBtn').addEventListener('click', closeModal);
+
+    return modal;
+  }
+
+  /**
    * Show create patient dialog with pre-filled data
    */
   function showCreatePatientDialogInlineWithData(givenName, familyName) {
-    const modal = document.createElement('div');
-    modal.className = 'smart-modal';
-    modal.id = 'createPatientModal';
-    modal.innerHTML = `
-      <div class="smart-modal-content">
-        <div class="smart-modal-header">
-          <h3>Create New Patient</h3>
-          <button class="smart-modal-close" aria-label="Close">&times;</button>
-        </div>
-        <div class="smart-modal-body">
-          <p class="modal-hint">Creating patient: <strong>${givenName} ${familyName}</strong></p>
-          <div class="form-group">
-            <label for="newPatientFamilyName">Last Name *</label>
-            <input type="text" id="newPatientFamilyName" class="form-input" placeholder="e.g., Doe" value="${familyName}">
-          </div>
-          <div class="form-group">
-            <label for="newPatientGivenName">First Name *</label>
-            <input type="text" id="newPatientGivenName" class="form-input" placeholder="e.g., John" value="${givenName}">
-          </div>
-          <div class="form-group">
-            <label for="newPatientBirthDate">Birth Date</label>
-            <input type="date" id="newPatientBirthDate" class="form-input">
-          </div>
-          <div class="form-group">
-            <label for="newPatientGender">Gender</label>
-            <select id="newPatientGender" class="form-input">
-              <option value="">-- Select --</option>
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-              <option value="other">Other</option>
-              <option value="unknown">Unknown</option>
-            </select>
-          </div>
-          <div class="smart-modal-actions">
-            <button id="savePatientBtn" class="btn btn-primary">Create Patient</button>
-            <button id="cancelCreatePatientBtn" class="btn btn-secondary">Cancel</button>
-          </div>
-        </div>
-      </div>
-    `;
+    const modal = createPatientModal({ givenName, familyName });
 
     document.body.appendChild(modal);
 
@@ -3719,51 +3690,37 @@ content-type: application/json
    * Show patient picker for selecting from similar matches
    */
   function showPatientPickerForSelection(patients, enteredName) {
-    const modal = document.createElement('div');
-    modal.className = 'smart-modal';
-    modal.id = 'patientPickerModal';
+    const modalWrapper = cloneTemplate('tpl-patient-picker-modal');
+    const modal = modalWrapper.querySelector('#patientPickerModal');
 
-    const listHtml = patients.map(patient => {
+    // Set entered name
+    modalWrapper.querySelector('[data-field="enteredName"]').textContent = enteredName;
+
+    // Build patient list
+    const listContainer = modalWrapper.querySelector('[data-field="listContainer"]');
+    patients.forEach(patient => {
       const name = formatPatientName(patient.name);
       const age = calculateAge(patient.birthDate);
       const ageText = age !== null ? `${age} yrs` : 'Age unknown';
       const gender = patient.gender || 'unknown';
       const genderIcon = gender === 'male' ? '♂' : gender === 'female' ? '♀' : '○';
 
-      return `
-        <div class="patient-picker-item" data-patient-id="${patient.id}">
-          <div class="patient-picker-item-info">
-            <div class="patient-picker-item-name">${name}</div>
-            <div class="patient-picker-item-details">
-              <span class="patient-gender">${genderIcon} ${gender}</span>
-              <span class="patient-age">${ageText}</span>
-              ${patient.birthDate ? `<span class="patient-birthdate">(${patient.birthDate})</span>` : ''}
-            </div>
-          </div>
-          <button class="btn btn-primary btn-sm select-patient-btn">Select</button>
-        </div>
-      `;
-    }).join('');
+      const item = cloneTemplate('tpl-patient-picker-item');
+      item.dataset.patientId = patient.id;
 
-    modal.innerHTML = `
-      <div class="smart-modal-content">
-        <div class="smart-modal-header">
-          <h3>Select Matching Patient</h3>
-          <button class="smart-modal-close" aria-label="Close">&times;</button>
-        </div>
-        <div class="smart-modal-body">
-          <p class="modal-hint">You entered: <strong>${enteredName}</strong></p>
-          <p>Select an existing patient or create a new one:</p>
-          <div class="patient-picker-list">
-            ${listHtml}
-          </div>
-          <div class="smart-modal-actions">
-            <button id="createNewFromPickerBtn" class="btn btn-secondary">Create New Patient</button>
-            <button id="cancelPickerBtn" class="btn btn-ghost">Cancel</button>
-          </div>
-        </div>
-      </div>
-    `;
+      item.querySelector('[data-field="name"]').textContent = name;
+      item.querySelector('[data-field="gender"]').textContent = `${genderIcon} ${gender}`;
+      item.querySelector('[data-field="age"]').textContent = ageText;
+
+      const birthDateEl = item.querySelector('[data-field="birthDate"]');
+      if (patient.birthDate) {
+        birthDateEl.textContent = `(${patient.birthDate})`;
+      } else {
+        birthDateEl.remove();
+      }
+
+      listContainer.appendChild(item);
+    });
 
     document.body.appendChild(modal);
 
@@ -3826,52 +3783,53 @@ content-type: application/json
     const patients = bundle.entry?.map(e => e.resource) || [];
 
     if (patients.length === 0) {
-      resultsContainer.innerHTML = `
-        <div class="patient-search-empty">
-          <p>No patients found${searchText ? ` for "${searchText}"` : ''}</p>
-          <button id="createPatientFromSearchBtn" class="btn btn-primary btn-sm">Create New Patient</button>
-        </div>
-      `;
-      resultsContainer.querySelector('#createPatientFromSearchBtn')?.addEventListener('click', () => {
+      const emptyEl = document.createElement('div');
+      emptyEl.className = 'patient-search-empty';
+      emptyEl.innerHTML = `<p>No patients found${searchText ? ` for "${escapeHTML(searchText)}"` : ''}</p>`;
+
+      const createBtn = document.createElement('button');
+      createBtn.id = 'createPatientFromSearchBtn';
+      createBtn.className = 'btn btn-primary btn-sm';
+      createBtn.textContent = 'Create New Patient';
+      createBtn.addEventListener('click', () => {
         resultsContainer.innerHTML = '';
         resultsContainer.classList.remove('active');
         showCreatePatientDialogInline();
       });
+      emptyEl.appendChild(createBtn);
+
+      resultsContainer.innerHTML = '';
+      resultsContainer.appendChild(emptyEl);
       return;
     }
 
-    const listHtml = patients.map(patient => {
+    const searchList = document.createElement('div');
+    searchList.className = 'patient-search-list';
+
+    patients.forEach(patient => {
       const name = formatPatientName(patient.name);
       const age = calculateAge(patient.birthDate);
       const ageText = age !== null ? `${age} yrs` : 'Age unknown';
       const gender = patient.gender || 'unknown';
       const genderIcon = gender === 'male' ? '♂' : gender === 'female' ? '♀' : '○';
 
-      return `
-        <div class="patient-search-item" data-patient-id="${patient.id}" data-patient-name="${name}" data-patient-gender="${gender}" data-patient-birthdate="${patient.birthDate || ''}">
-          <div class="patient-search-item-info">
-            <div class="patient-search-item-name">${name}</div>
-            <div class="patient-search-item-details">
-              <span class="patient-gender">${genderIcon} ${gender}</span>
-              <span class="patient-age">${ageText}</span>
-              ${patient.birthDate ? `<span class="patient-birthdate">(${patient.birthDate})</span>` : ''}
-            </div>
-          </div>
-        </div>
-      `;
-    }).join('');
+      const item = cloneTemplate('tpl-patient-search-item');
+      item.dataset.patientId = patient.id;
+      item.dataset.patientName = name;
+      item.dataset.patientGender = gender;
+      item.dataset.patientBirthdate = patient.birthDate || '';
 
-    resultsContainer.innerHTML = `
-      <div class="patient-search-list">
-        ${listHtml}
-        <div class="patient-search-footer">
-          <button id="createPatientFromListBtn" class="btn btn-secondary btn-sm">+ Create New Patient</button>
-        </div>
-      </div>
-    `;
+      item.querySelector('[data-field="name"]').textContent = name;
+      item.querySelector('[data-field="gender"]').textContent = `${genderIcon} ${gender}`;
+      item.querySelector('[data-field="age"]').textContent = ageText;
 
-    // Add click handlers for patient items
-    resultsContainer.querySelectorAll('.patient-search-item').forEach(item => {
+      const birthDateEl = item.querySelector('[data-field="birthDate"]');
+      if (patient.birthDate) {
+        birthDateEl.textContent = `(${patient.birthDate})`;
+      } else {
+        birthDateEl.remove();
+      }
+
       item.addEventListener('click', () => {
         const patientId = item.dataset.patientId;
         const patientName = item.dataset.patientName;
@@ -3913,64 +3871,36 @@ content-type: application/json
         updateSMARTUI(true);
         showToast(`Patient ${patientName} selected from EHR`, 'success');
       });
+
+      searchList.appendChild(item);
     });
 
-    // Create patient button
-    resultsContainer.querySelector('#createPatientFromListBtn')?.addEventListener('click', () => {
+    // Add footer with create button
+    const footer = document.createElement('div');
+    footer.className = 'patient-search-footer';
+
+    const createBtn = document.createElement('button');
+    createBtn.id = 'createPatientFromListBtn';
+    createBtn.className = 'btn btn-secondary btn-sm';
+    createBtn.textContent = '+ Create New Patient';
+    createBtn.addEventListener('click', () => {
       resultsContainer.innerHTML = '';
       resultsContainer.classList.remove('active');
       showCreatePatientDialogInline();
     });
+
+    footer.appendChild(createBtn);
+    searchList.appendChild(footer);
+
+    resultsContainer.innerHTML = '';
+    resultsContainer.appendChild(searchList);
   }
 
   /**
    * Show create patient dialog inline (near the patient field)
    */
   function showCreatePatientDialogInline() {
-    const modal = document.createElement('div');
-    modal.className = 'smart-modal';
-    modal.id = 'createPatientModal';
-    modal.innerHTML = `
-      <div class="smart-modal-content">
-        <div class="smart-modal-header">
-          <h3>Create New Patient</h3>
-          <button class="smart-modal-close" aria-label="Close">&times;</button>
-        </div>
-        <div class="smart-modal-body">
-          <div class="form-group">
-            <label for="newPatientFamilyName">Last Name *</label>
-            <input type="text" id="newPatientFamilyName" class="form-input" placeholder="e.g., Doe">
-          </div>
-          <div class="form-group">
-            <label for="newPatientGivenName">First Name *</label>
-            <input type="text" id="newPatientGivenName" class="form-input" placeholder="e.g., John">
-          </div>
-          <div class="form-group">
-            <label for="newPatientBirthDate">Birth Date</label>
-            <input type="date" id="newPatientBirthDate" class="form-input">
-          </div>
-          <div class="form-group">
-            <label for="newPatientGender">Gender</label>
-            <select id="newPatientGender" class="form-input">
-              <option value="">-- Select --</option>
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-              <option value="other">Other</option>
-              <option value="unknown">Unknown</option>
-            </select>
-          </div>
-          <div class="smart-modal-actions">
-            <button id="savePatientBtn" class="btn btn-primary">Create Patient</button>
-            <button id="cancelCreatePatientBtn" class="btn btn-secondary">Cancel</button>
-          </div>
-        </div>
-      </div>
-    `;
-
-    document.body.appendChild(modal);
-
-    modal.querySelector('.smart-modal-close').addEventListener('click', () => modal.remove());
-    modal.querySelector('#cancelCreatePatientBtn').addEventListener('click', () => modal.remove());
+    const modal = createPatientModal();
 
     modal.querySelector('#savePatientBtn').addEventListener('click', async () => {
       const familyName = $('#newPatientFamilyName').value.trim();
@@ -4037,43 +3967,16 @@ content-type: application/json
    * Show patient selection dialog with search and create options
    */
   function showPatientSelectionDialog() {
-    // Create modal for patient selection
-    const modal = document.createElement('div');
-    modal.className = 'smart-modal';
-    modal.id = 'patientPickerModal';
-    modal.innerHTML = `
-      <div class="smart-modal-content">
-        <div class="smart-modal-header">
-          <h3>Select Patient</h3>
-          <button class="smart-modal-close" aria-label="Close">&times;</button>
-        </div>
-        <div class="smart-modal-body">
-          <p>Search for an existing patient or create a new one.</p>
-          <div class="patient-search-section">
-            <div class="form-group">
-              <label for="patientSearchInput">Search Patients</label>
-              <div class="search-input-wrapper">
-                <input type="text" id="patientSearchInput" class="form-input" placeholder="Enter name to search...">
-                <button id="searchPatientsBtn" class="btn btn-primary">Search</button>
-              </div>
-            </div>
-          </div>
-          <div id="patientsListContainer" class="patients-list-container">
-            <div class="patients-loading">Loading patients...</div>
-          </div>
-          <div class="smart-modal-actions">
-            <button id="createPatientBtn" class="btn btn-secondary">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-                <line x1="12" y1="5" x2="12" y2="19"></line>
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-              </svg>
-              Create New Patient
-            </button>
-            <button id="cancelPatientBtn" class="btn btn-secondary">Cancel</button>
-          </div>
-        </div>
-      </div>
-    `;
+    // Create modal from template
+    const modalWrapper = cloneTemplate('tpl-patient-selection-dialog');
+    const modal = modalWrapper.querySelector('#patientSelectionModal');
+
+    // Add loading indicator
+    const listContainer = modal.querySelector('#patientsListContainer');
+    const loadingDiv = document.createElement('div');
+    loadingDiv.className = 'patients-loading';
+    loadingDiv.textContent = 'Loading patients...';
+    listContainer.appendChild(loadingDiv);
 
     document.body.appendChild(modal);
 
@@ -4234,14 +4137,22 @@ content-type: application/json
     const container = $('#patientsListContainer');
     if (!container) return;
 
-    container.innerHTML = '<div class="patients-loading">Loading patients...</div>';
+    container.innerHTML = '';
+    const loadingDiv = document.createElement('div');
+    loadingDiv.className = 'patients-loading';
+    loadingDiv.textContent = 'Loading patients...';
+    container.appendChild(loadingDiv);
 
     try {
       const result = await window.SMARTAuth.searchPatients('');
       displayPatients(result);
     } catch (error) {
       console.error('[SMART] Failed to load patients:', error);
-      container.innerHTML = '<div class="patients-error">Failed to load patients. Please try searching.</div>';
+      container.innerHTML = '';
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'patients-error';
+      errorDiv.textContent = 'Failed to load patients. Please try searching.';
+      container.appendChild(errorDiv);
     }
   }
 
@@ -4253,14 +4164,22 @@ content-type: application/json
     const container = $('#patientsListContainer');
     const searchText = searchInput.value.trim();
 
-    container.innerHTML = '<div class="patients-loading">Searching...</div>';
+    container.innerHTML = '';
+    const searchingDiv = document.createElement('div');
+    searchingDiv.className = 'patients-loading';
+    searchingDiv.textContent = 'Searching...';
+    container.appendChild(searchingDiv);
 
     try {
       const result = await window.SMARTAuth.searchPatients(searchText);
       displayPatients(result);
     } catch (error) {
       console.error('[SMART] Search failed:', error);
-      container.innerHTML = '<div class="patients-error">Search failed. Please try again.</div>';
+      container.innerHTML = '';
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'patients-error';
+      errorDiv.textContent = 'Search failed. Please try again.';
+      container.appendChild(errorDiv);
     }
   }
 
@@ -4274,41 +4193,56 @@ content-type: application/json
     const patients = bundle.entry?.map(e => e.resource) || [];
 
     if (patients.length === 0) {
-      container.innerHTML = `
-        <div class="patients-empty">
-          <p>No patients found.</p>
-          <button id="createPatientFromEmptyBtn" class="btn btn-primary btn-sm">Create New Patient</button>
-        </div>
-      `;
-      container.querySelector('#createPatientFromEmptyBtn')?.addEventListener('click', () => {
+      const emptyState = document.createElement('div');
+      emptyState.className = 'patients-empty';
+      emptyState.innerHTML = '';
+      const p = document.createElement('p');
+      p.textContent = 'No patients found.';
+      emptyState.appendChild(p);
+
+      const createBtn = document.createElement('button');
+      createBtn.id = 'createPatientFromEmptyBtn';
+      createBtn.className = 'btn btn-primary btn-sm';
+      createBtn.textContent = 'Create New Patient';
+      createBtn.addEventListener('click', () => {
         showCreatePatientDialog($('#patientPickerModal'));
       });
+      emptyState.appendChild(createBtn);
+      container.appendChild(emptyState);
       return;
     }
 
-    const listHtml = patients.map(patient => {
+    const patientsList = document.createElement('div');
+    patientsList.className = 'patients-list';
+
+    patients.forEach(patient => {
       const name = formatPatientName(patient.name);
       const age = calculateAge(patient.birthDate);
       const ageText = age !== null ? `${age} yrs` : 'Age unknown';
       const gender = patient.gender || 'unknown';
       const genderIcon = gender === 'male' ? '♂' : gender === 'female' ? '♀' : '○';
 
-      return `
-        <div class="patient-list-item" data-patient-id="${patient.id}" data-patient-name="${name}" data-patient-gender="${gender}" data-patient-birthdate="${patient.birthDate || ''}">
-          <div class="patient-info">
-            <div class="patient-name">${name}</div>
-            <div class="patient-details">
-              <span class="patient-gender">${genderIcon} ${gender}</span>
-              <span class="patient-age">${ageText}</span>
-              ${patient.birthDate ? `<span class="patient-birthdate">(${patient.birthDate})</span>` : ''}
-            </div>
-          </div>
-          <button class="btn btn-primary btn-sm select-patient-btn">Select</button>
-        </div>
-      `;
-    }).join('');
+      const item = cloneTemplate('tpl-patient-list-item');
+      item.dataset.patientId = patient.id;
+      item.dataset.patientName = name;
+      item.dataset.patientGender = gender;
+      item.dataset.patientBirthdate = patient.birthDate || '';
 
-    container.innerHTML = `<div class="patients-list">${listHtml}</div>`;
+      item.querySelector('[data-field="name"]').textContent = name;
+      item.querySelector('[data-field="gender"]').textContent = `${genderIcon} ${gender}`;
+      item.querySelector('[data-field="age"]').textContent = ageText;
+
+      const birthDateEl = item.querySelector('[data-field="birthDate"]');
+      if (patient.birthDate) {
+        birthDateEl.textContent = `(${patient.birthDate})`;
+      } else {
+        birthDateEl.remove();
+      }
+
+      patientsList.appendChild(item);
+    });
+
+    container.appendChild(patientsList);
 
     // Add click handlers for select buttons
     container.querySelectorAll('.select-patient-btn').forEach(btn => {
@@ -4498,13 +4432,8 @@ content-type: application/json
         const submitBtn = $('#submitToEHR');
         if (submitBtn) {
           submitBtn.disabled = true;
-          submitBtn.innerHTML = `
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation: spin 1s linear infinite">
-              <circle cx="12" cy="12" r="10"/>
-              <path d="M12 6v6l4 2"/>
-            </svg>
-            <span class="btn-text">Submitting...</span>
-          `;
+          submitBtn.dataset.originalText = submitBtn.dataset.originalText || 'Submit to EHR';
+          submitBtn.textContent = 'Submitting...';
         }
 
         try {
@@ -4529,13 +4458,7 @@ content-type: application/json
         } finally {
           if (submitBtn) {
             submitBtn.disabled = false;
-            submitBtn.innerHTML = `
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                <polyline points="12 8 12 12 15 15"/>
-              </svg>
-              <span class="btn-text">Submit to EHR</span>
-            `;
+            submitBtn.textContent = submitBtn.dataset.originalText || 'Submit to EHR';
           }
         }
       },
@@ -4614,25 +4537,19 @@ content-type: application/json
 
     if (smartState.patient) {
       statusEl.hidden = false;
-      statusEl.innerHTML = `
-        <span class="ehr-badge">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12">
-            <path d="M20 6L9 17l-5-5"/>
-          </svg>
-          Linked to EHR
-        </span>
-      `;
+      const badge = document.createElement('span');
+      badge.className = 'ehr-badge';
+      badge.textContent = 'Linked to EHR';
+      statusEl.innerHTML = '';
+      statusEl.appendChild(badge);
     } else if (smartState.newPatientPending) {
       // Show new patient indicator
       statusEl.hidden = false;
-      statusEl.innerHTML = `
-        <span class="ehr-badge new-patient">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12">
-            <path d="M12 5v14M5 12h14"/>
-          </svg>
-          New Patient (will be created)
-        </span>
-      `;
+      const badge = document.createElement('span');
+      badge.className = 'ehr-badge new-patient';
+      badge.textContent = 'New Patient (will be created)';
+      statusEl.innerHTML = '';
+      statusEl.appendChild(badge);
     } else {
       statusEl.hidden = true;
       statusEl.innerHTML = '';
