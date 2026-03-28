@@ -625,6 +625,50 @@
           </svg>
           Copy Link
         </button>
+
+        <!-- PWA Install Section -->
+        <div class="share-divider"></div>
+        <div class="share-install">
+          <button id="toggleInstallBtn" class="btn btn-ghost btn-install-toggle">
+            <svg class="install-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+              <rect x="8" y="8" width="8" height="8" rx="1"/>
+            </svg>
+            <span>Install as App</span>
+            <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </button>
+          <div id="installContent" class="install-content" hidden>
+            <!-- Android/Chrome: Native install button -->
+            <button id="installPwaBtn" class="btn btn-secondary btn-install" hidden>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+                <rect x="8" y="8" width="8" height="8" rx="1"/>
+              </svg>
+              Install App
+            </button>
+            <!-- iOS/Safari: Manual instructions -->
+            <div id="iosInstallInstructions" class="install-instructions" hidden>
+              <ol>
+                <li>Tap the <strong>Share</strong> button <svg class="ios-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> in Safari's toolbar</li>
+                <li>Scroll down and tap <strong>Add to Home Screen</strong></li>
+                <li>Tap <strong>Add</strong> to install</li>
+              </ol>
+            </div>
+            <!-- Desktop: Browser instructions -->
+            <div id="desktopInstallInstructions" class="install-instructions" hidden>
+              <p class="install-hint">Install this app from your browser's menu:</p>
+              <ul>
+                <li><strong>Chrome:</strong> Click the install icon <svg class="ios-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="8" width="8" height="8" rx="1"/><path d="M12 2v4M12 18v4"/></svg> in the address bar</li>
+                <li><strong>Edge:</strong> Click the <strong>App available</strong> button in the address bar</li>
+                <li><strong>Other:</strong> Look for "Install" or "Add to desktop" in the browser menu</li>
+              </ul>
+            </div>
+            <!-- Already installed message -->
+            <p id="alreadyInstalled" class="install-hint" hidden>✓ App is already installed</p>
+          </div>
+        </div>
       </div>
     </div>
   </div>

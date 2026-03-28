@@ -2128,12 +2128,16 @@
     const shareModal = $('#shareModal');
     const closeBtn = $('#closeShareModal');
     const copyBtn = $('#copyShareLink');
+    const installBtn = $('#installPwaBtn');
+    const toggleInstallBtn = $('#toggleInstallBtn');
     const backdrop = shareModal?.querySelector('.share-backdrop');
 
     shareBadge?.addEventListener('click', openShareModal);
     closeBtn?.addEventListener('click', closeShareModal);
     backdrop?.addEventListener('click', closeShareModal);
     copyBtn?.addEventListener('click', copyShareLink);
+    installBtn?.addEventListener('click', handleInstallClick);
+    toggleInstallBtn?.addEventListener('click', toggleInstallSection);
 
     // Close on Escape key
     document.addEventListener('keydown', (e) => {
@@ -2158,6 +2162,12 @@
       generateQRCode();
       qrCodeGenerated = true;
     }
+
+    // Reset install section to collapsed state
+    const toggleBtn = $('#toggleInstallBtn');
+    const installContent = $('#installContent');
+    if (toggleBtn) toggleBtn.setAttribute('aria-expanded', 'false');
+    if (installContent) installContent.hidden = true;
   }
 
   /**
@@ -2215,6 +2225,135 @@
         showToast('Failed to copy link', 'error');
       }
       document.body.removeChild(textArea);
+    }
+  }
+
+  // ==================== PWA Install Functionality ====================
+
+  let deferredInstallPrompt = null;
+
+  /**
+   * Listen for the beforeinstallprompt event (Chrome/Edge/Android)
+   */
+  window.addEventListener('beforeinstallprompt', (e) => {
+    // Prevent the mini-infobar from appearing on mobile
+    e.preventDefault();
+    // Store the event for later use
+    deferredInstallPrompt = e;
+  });
+
+  /**
+   * Detect if the app is already installed as PWA
+   */
+  function isAppInstalled() {
+    // Check if running in standalone mode (installed PWA)
+    if (window.matchMedia('(display-mode: standalone)').matches ||
+        window.navigator.standalone === true) {
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Detect if the user is on iOS
+   */
+  function isIOS() {
+    const userAgent = window.navigator.userAgent.toLowerCase();
+    return /iphone|ipad|ipod/.test(userAgent);
+  }
+
+  /**
+   * Detect if the user is on Safari
+   */
+  function isSafari() {
+    const userAgent = window.navigator.userAgent.toLowerCase();
+    const isChrome = /chrome/.test(userAgent);
+    const isSafari = /safari/.test(userAgent);
+    return isSafari && !isChrome;
+  }
+
+  /**
+   * Show the appropriate install UI based on platform
+   */
+  function showInstallUI() {
+    const installBtn = $('#installPwaBtn');
+    const iosInstructions = $('#iosInstallInstructions');
+    const desktopInstructions = $('#desktopInstallInstructions');
+    const alreadyInstalled = $('#alreadyInstalled');
+
+    if (!installBtn || !iosInstructions || !desktopInstructions) return;
+
+    // Hide all first
+    installBtn.hidden = true;
+    iosInstructions.hidden = true;
+    desktopInstructions.hidden = true;
+    if (alreadyInstalled) alreadyInstalled.hidden = true;
+
+    // Check if already installed
+    if (isAppInstalled()) {
+      if (alreadyInstalled) alreadyInstalled.hidden = false;
+      return;
+    }
+
+    // Show appropriate instructions based on platform
+    if (isIOS() || isSafari()) {
+      // iOS/Safari - show manual instructions
+      iosInstructions.hidden = false;
+    } else if (deferredInstallPrompt) {
+      // Android/Chrome with install prompt available
+      installBtn.hidden = false;
+    } else {
+      // Desktop or other - show generic instructions
+      desktopInstructions.hidden = false;
+    }
+  }
+
+  /**
+   * Handle the install button click
+   */
+  async function handleInstallClick() {
+    if (!deferredInstallPrompt) {
+      showToast('Install option not available', 'error');
+      return;
+    }
+
+    // Show the install prompt
+    deferredInstallPrompt.prompt();
+
+    // Wait for the user to respond
+    const { outcome } = await deferredInstallPrompt.userChoice;
+
+    if (outcome === 'accepted') {
+      showToast('App installed successfully!', 'success');
+    }
+
+    // Clear the deferred prompt
+    deferredInstallPrompt = null;
+
+    // Update UI
+    showInstallUI();
+  }
+
+  /**
+   * Toggle the install section visibility
+   */
+  function toggleInstallSection() {
+    const toggleBtn = $('#toggleInstallBtn');
+    const installContent = $('#installContent');
+
+    if (!toggleBtn || !installContent) return;
+
+    const isExpanded = toggleBtn.getAttribute('aria-expanded') === 'true';
+
+    if (isExpanded) {
+      // Collapse
+      installContent.hidden = true;
+      toggleBtn.setAttribute('aria-expanded', 'false');
+    } else {
+      // Expand - first show appropriate content
+      showInstallUI();
+      installContent.hidden = false;
+      toggleBtn.setAttribute('aria-expanded', 'true');
     }
   }
 
