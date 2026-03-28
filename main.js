@@ -2115,6 +2115,109 @@
     }
   }
 
+  // ==================== Share Modal ====================
+
+  const SHARE_URL = 'https://rxbuilder.vercel.app/';
+  let qrCodeGenerated = false;
+
+  /**
+   * Initialize share modal functionality
+   */
+  function initShareModal() {
+    const shareBadge = $('#shareBadge');
+    const shareModal = $('#shareModal');
+    const closeBtn = $('#closeShareModal');
+    const copyBtn = $('#copyShareLink');
+    const backdrop = shareModal?.querySelector('.share-backdrop');
+
+    shareBadge?.addEventListener('click', openShareModal);
+    closeBtn?.addEventListener('click', closeShareModal);
+    backdrop?.addEventListener('click', closeShareModal);
+    copyBtn?.addEventListener('click', copyShareLink);
+
+    // Close on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !shareModal?.hidden) {
+        closeShareModal();
+      }
+    });
+  }
+
+  /**
+   * Open the share modal and generate QR code if needed
+   */
+  function openShareModal() {
+    const shareModal = $('#shareModal');
+    if (!shareModal) return;
+
+    shareModal.hidden = false;
+    document.body.style.overflow = 'hidden'; // Prevent background scrolling
+
+    // Generate QR code on first open
+    if (!qrCodeGenerated) {
+      generateQRCode();
+      qrCodeGenerated = true;
+    }
+  }
+
+  /**
+   * Close the share modal
+   */
+  function closeShareModal() {
+    const shareModal = $('#shareModal');
+    if (!shareModal) return;
+
+    shareModal.hidden = true;
+    document.body.style.overflow = '';
+  }
+
+  /**
+   * Generate a simple QR code using a reliable third-party API
+   */
+  function generateQRCode() {
+    const qrContainer = $('#shareQR');
+    if (!qrContainer) return;
+
+    // Use QRServer API to generate QR code
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(SHARE_URL)}`;
+
+    const img = document.createElement('img');
+    img.src = qrUrl;
+    img.alt = 'QR Code for Rx Builder';
+    img.width = 180;
+    img.height = 180;
+    img.style.display = 'block';
+
+    // Clear placeholder and add image
+    qrContainer.innerHTML = '';
+    qrContainer.appendChild(img);
+  }
+
+  /**
+   * Copy the share link to clipboard
+   */
+  async function copyShareLink() {
+    try {
+      await navigator.clipboard.writeText(SHARE_URL);
+      showToast('Link copied to clipboard!', 'success');
+    } catch (err) {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = SHARE_URL;
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-999999px';
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        showToast('Link copied to clipboard!', 'success');
+      } catch (e) {
+        showToast('Failed to copy link', 'error');
+      }
+      document.body.removeChild(textArea);
+    }
+  }
+
   // ==================== Initialization ====================
 
   async function init() {
@@ -2122,6 +2225,7 @@
     initCSVLoading();
     initSearch();
     initPrescription();
+    initShareModal();
 
     // Load saved data on startup
     const saved = localStorage.getItem('rxBuilderSave_v2');

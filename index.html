@@ -49,6 +49,16 @@
       </div>
       <div class="header-badges">
         <span id="dataSourceBadge" class="status-badge offline">Offline</span>
+        <button id="shareBadge" class="status-badge share-badge" title="Share this app">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+            <circle cx="18" cy="5" r="3"/>
+            <circle cx="6" cy="12" r="3"/>
+            <circle cx="18" cy="19" r="3"/>
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+          </svg>
+          Share
+        </button>
       </div>
     </div>
   </header>
@@ -591,6 +601,33 @@
 
   <!-- Toast Container -->
   <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Share Modal -->
+  <div id="shareModal" class="share-modal" hidden>
+    <div class="share-backdrop"></div>
+    <div class="share-content">
+      <div class="share-header">
+        <h3>Share Rx Builder</h3>
+        <button id="closeShareModal" class="share-close" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="share-body">
+        <p class="share-url">https://rxbuilder.vercel.app/</p>
+        <div id="shareQR" class="share-qr"></div>
+        <button id="copyShareLink" class="btn btn-primary btn-copy">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+          </svg>
+          Copy Link
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- SVG Sprite Definitions -->
   <svg class="svg-defs" hidden>
