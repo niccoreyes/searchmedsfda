@@ -93,6 +93,17 @@ def generate_pkce_challenge():
     return code_verifier, code_challenge
 
 
+def curl_cmd(method, url, headers=None, data=None):
+    """Generate a curl command equivalent for debugging."""
+    cmd = f"curl -X {method} '{url}'"
+    if headers:
+        for key, value in headers.items():
+            cmd += f" \\\n  -H '{key}: {value}'"
+    if data:
+        cmd += f" \\\n  -d '{data}'"
+    return cmd
+
+
 def discover_smart_config(server_url):
     """Perform SMART discovery from the FHIR server."""
     print(f"\n[DISCOVERY] Attempting SMART discovery from {server_url}")
@@ -106,12 +117,13 @@ def discover_smart_config(server_url):
     for path in paths:
         url = server_url.rstrip('/') + path
         print(f"[DISCOVERY] Trying: {url}")
+        print(f"[DISCOVERY] curl: {curl_cmd('GET', url, {'Accept': 'application/json', 'Origin': 'http://localhost:3000/callback'})}")
         try:
             req = urllib.request.Request(
                 url,
                 headers={
                     'Accept': 'application/json',
-                    'Origin': 'http://localhost:3000'
+                    'Origin': 'http://localhost:3000/callback'
                 }
             )
             with urllib.request.urlopen(req, timeout=10) as response:
@@ -131,9 +143,10 @@ def discover_smart_config(server_url):
     return None
 
 
-def test_cors_preflight(token_url, origin="https://devrxbuilder.vercel.app"):
+def test_cors_preflight(token_url, origin="http://localhost:3000/callback"):
     """Test CORS preflight for token endpoint."""
     print(f"\n[CORS TEST] Testing CORS preflight for {token_url}")
+    print(f"[CORS TEST] curl: {curl_cmd('OPTIONS', token_url, {'Origin': origin, 'Access-Control-Request-Method': 'POST', 'Access-Control-Request-Headers': 'Content-Type'})}")
 
     try:
         req = urllib.request.Request(
@@ -160,7 +173,7 @@ def test_cors_preflight(token_url, origin="https://devrxbuilder.vercel.app"):
         return False
 
 
-def test_token_endpoint_direct(token_url, client_id, code_verifier, origin="https://devrxbuilder.vercel.app"):
+def test_token_endpoint_direct(token_url, client_id, code_verifier, origin="http://localhost:3000/callback"):
     """
     Test token endpoint with a fake code to see error response.
     This helps diagnose if CORS is blocking the request.
@@ -174,6 +187,8 @@ def test_token_endpoint_direct(token_url, client_id, code_verifier, origin="http
         'client_id': client_id,
         'code_verifier': code_verifier
     })
+
+    print(f"[TOKEN TEST] curl: {curl_cmd('POST', token_url, {'Content-Type': 'application/x-www-form-urlencoded', 'Origin': origin, 'Accept': 'application/json'}, data)}")
 
     try:
         req = urllib.request.Request(
@@ -260,7 +275,7 @@ def test_token_endpoint_direct(token_url, client_id, code_verifier, origin="http
         return e.code == 400  # 400 is expected for invalid code
 
 
-def exchange_code_for_token(token_url, client_id, code, code_verifier, redirect_uri, origin="https://devrxbuilder.vercel.app"):
+def exchange_code_for_token(token_url, client_id, code, code_verifier, redirect_uri, origin="http://localhost:3000/callback"):
     """Exchange authorization code for access token."""
     print(f"\n[TOKEN EXCHANGE] Exchanging code for token...")
     print(f"[TOKEN EXCHANGE] Token URL: {token_url}")
@@ -276,6 +291,7 @@ def exchange_code_for_token(token_url, client_id, code, code_verifier, redirect_
     })
 
     print(f"[TOKEN EXCHANGE] Request body: {data}")
+    print(f"[TOKEN EXCHANGE] curl: {curl_cmd('POST', token_url, {'Content-Type': 'application/x-www-form-urlencoded', 'Origin': origin, 'Accept': 'application/json'}, data)}")
 
     try:
         req = urllib.request.Request(
@@ -354,7 +370,7 @@ def exchange_code_for_token(token_url, client_id, code, code_verifier, redirect_
         elif not cors_origin:
             print(f"[TOKEN EXCHANGE] ✗ CORS headers missing")
             print(f"[TOKEN EXCHANGE]   Issue: SERVER (Aidbox CORS configuration)")
-            print(f"[TOKEN EXCHANGE]   Fix: Add 'http://localhost:3000' to Aidbox CORS allowlist")
+            print(f"[TOKEN EXCHANGE]   Fix: Add 'http://localhost:3000/callback' to Aidbox CORS allowlist")
         else:
             print(f"[TOKEN EXCHANGE] HTTP {e.code} = {e.reason}")
 
@@ -371,7 +387,7 @@ def run_authorization_flow(server_url, client_id, port=3000):
     """Run the full SMART authorization flow."""
 
     redirect_uri = f"http://localhost:{port}/callback"
-    origin = "https://devrxbuilder.vercel.app/"  # Simulate the deployed app origin
+    origin = "http://localhost:3000/callback/"  # Simulate the deployed app origin
 
     print("=" * 60)
     print(f"SMART on FHIR Test")
