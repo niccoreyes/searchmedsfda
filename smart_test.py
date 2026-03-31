@@ -190,24 +190,72 @@ def test_token_endpoint_direct(token_url, client_id, code_verifier, origin="http
             print(f"[TOKEN TEST] Unexpected success (status {response.status})")
             return True
     except urllib.error.HTTPError as e:
-        print(f"[TOKEN TEST] HTTP Error {e.code}: {e.reason}")
+        print(f"\n[TOKEN TEST] *** FAILED ***")
+        print(f"[TOKEN TEST] HTTP Method: POST")
+        print(f"[TOKEN TEST] URL: {token_url}")
+        print(f"[TOKEN TEST] Status: {e.code} {e.reason}")
         print(f"[TOKEN TEST] Response headers:")
         for header, value in e.headers.items():
             print(f"  {header}: {value}")
 
+        # CORS Analysis
+        print(f"\n[TOKEN TEST] --- CORS Analysis ---")
+        cors_origin = e.headers.get('Access-Control-Allow-Origin')
+        cors_methods = e.headers.get('Access-Control-Allow-Methods')
+        cors_headers = e.headers.get('Access-Control-Allow-Headers')
+
+        if cors_origin:
+            print(f"[TOKEN TEST] ✓ Access-Control-Allow-Origin: {cors_origin}")
+            print(f"[TOKEN TEST]   → Server allows requests from: {cors_origin}")
+            print(f"[TOKEN TEST]   → Our Origin header was: {origin}")
+            if cors_origin != origin and cors_origin != "*":
+                print(f"[TOKEN TEST]   ⚠ ORIGIN MISMATCH!")
+                print(f"[TOKEN TEST]     Server only allows: '{cors_origin}'")
+                print(f"[TOKEN TEST]     We sent: '{origin}'")
+                print(f"[TOKEN TEST]     Issue: SERVER CONFIGURATION (Aidbox Client redirect_uri/launch_uri)")
+        else:
+            print(f"[TOKEN TEST] ✗ Missing 'Access-Control-Allow-Origin' header")
+            print(f"[TOKEN TEST]   → This is a CORS violation")
+            print(f"[TOKEN TEST]   → Browser would block this response")
+            print(f"[TOKEN TEST]   Issue: SERVER (Aidbox CORS not configured)")
+
+        if cors_methods:
+            print(f"[TOKEN TEST] ✓ Access-Control-Allow-Methods: {cors_methods}")
+        else:
+            print(f"[TOKEN TEST] ✗ Missing 'Access-Control-Allow-Methods' header")
+
+        if cors_headers:
+            print(f"[TOKEN TEST] ✓ Access-Control-Allow-Headers: {cors_headers}")
+        else:
+            print(f"[TOKEN TEST] ✗ Missing 'Access-Control-Allow-Headers' header")
+
+        # Determine where the issue is
+        print(f"\n[TOKEN TEST] --- Issue Location ---")
+        if e.code == 400:
+            print(f"[TOKEN TEST] HTTP 400 = Bad Request (expected for invalid code)")
+            print(f"[TOKEN TEST] ✓ Server received and processed the POST request")
+            print(f"[TOKEN TEST] ✓ No CORS issue - browser would allow this response")
+            print(f"[TOKEN TEST] ✗ Token was invalid (expected in test mode)")
+        elif e.code == 401:
+            print(f"[TOKEN TEST] HTTP 401 = Unauthorized")
+            print(f"[TOKEN TEST] ✗ Client authentication failed")
+            print(f"[TOKEN TEST]   Issue: CLIENT (check client_id)")
+        elif e.code == 403:
+            print(f"[TOKEN TEST] HTTP 403 = Forbidden")
+            print(f"[TOKEN TEST] ✗ Server rejected the request")
+        elif not cors_origin:
+            print(f"[TOKEN TEST] ✗ CORS headers missing")
+            print(f"[TOKEN TEST]   Issue: SERVER (Aidbox CORS configuration)")
+            print(f"[TOKEN TEST]   Fix: Add '{origin}' to Aidbox CORS allowlist")
+        else:
+            print(f"[TOKEN TEST] HTTP {e.code} = {e.reason}")
+
         # Try to read response body
         try:
             body = e.read().decode()
-            print(f"[TOKEN TEST] Response body: {body[:500]}")
+            print(f"\n[TOKEN TEST] Response body: {body[:500]}")
         except:
             pass
-
-        # Check for CORS headers
-        cors_origin = e.headers.get('Access-Control-Allow-Origin')
-        if cors_origin:
-            print(f"[TOKEN TEST] CORS is present: Access-Control-Allow-Origin: {cors_origin}")
-        else:
-            print(f"[TOKEN TEST] WARNING: No CORS headers in error response!")
 
         return e.code == 400  # 400 is expected for invalid code
 
@@ -252,21 +300,67 @@ def exchange_code_for_token(token_url, client_id, code, code_verifier, redirect_
             return response_data
 
     except urllib.error.HTTPError as e:
-        print(f"[TOKEN EXCHANGE] FAILED! HTTP Error {e.code}: {e.reason}")
+        print(f"\n[TOKEN EXCHANGE] *** FAILED ***")
+        print(f"[TOKEN EXCHANGE] HTTP Method: POST")
+        print(f"[TOKEN EXCHANGE] URL: {token_url}")
+        print(f"[TOKEN EXCHANGE] Status: {e.code} {e.reason}")
         print(f"[TOKEN EXCHANGE] Response headers:")
         for header, value in e.headers.items():
             print(f"  {header}: {value}")
 
-        # Check specifically for CORS
+        # CORS Analysis
+        print(f"\n[TOKEN EXCHANGE] --- CORS Analysis ---")
         cors_origin = e.headers.get('Access-Control-Allow-Origin')
-        if not cors_origin:
-            print(f"\n[TOKEN EXCHANGE] *** CORS ISSUE DETECTED ***")
-            print(f"[TOKEN EXCHANGE] No 'Access-Control-Allow-Origin' header in response!")
-            print(f"[TOKEN EXCHANGE] This means the browser would block this response.")
+        cors_methods = e.headers.get('Access-Control-Allow-Methods')
+        cors_headers = e.headers.get('Access-Control-Allow-Headers')
+
+        if cors_origin:
+            print(f"[TOKEN EXCHANGE] ✓ Access-Control-Allow-Origin: {cors_origin}")
+            print(f"[TOKEN EXCHANGE]   → Server allows requests from: {cors_origin}")
+            print(f"[TOKEN EXCHANGE]   → Our Origin header was: {origin}")
+            if cors_origin != origin and cors_origin != "*":
+                print(f"[TOKEN EXCHANGE]   ⚠ ORIGIN MISMATCH! Server only allows '{cors_origin}'")
+                print(f"[TOKEN EXCHANGE]     Issue: SERVER CONFIGURATION (Aidbox Client settings)")
+        else:
+            print(f"[TOKEN EXCHANGE] ✗ Missing 'Access-Control-Allow-Origin' header")
+            print(f"[TOKEN EXCHANGE]   → This is a CORS violation")
+            print(f"[TOKEN EXCHANGE]   → Browser would block this response")
+            print(f"[TOKEN EXCHANGE]   Issue: SERVER CONFIGURATION (CORS not enabled on Aidbox)")
+
+        if cors_methods:
+            print(f"[TOKEN EXCHANGE] ✓ Access-Control-Allow-Methods: {cors_methods}")
+        else:
+            print(f"[TOKEN EXCHANGE] ✗ Missing 'Access-Control-Allow-Methods' header")
+
+        if cors_headers:
+            print(f"[TOKEN EXCHANGE] ✓ Access-Control-Allow-Headers: {cors_headers}")
+        else:
+            print(f"[TOKEN EXCHANGE] ✗ Missing 'Access-Control-Allow-Headers' header")
+
+        # Determine where the issue is
+        print(f"\n[TOKEN EXCHANGE] --- Issue Location ---")
+        if e.code == 400:
+            print(f"[TOKEN EXCHANGE] HTTP 400 = Bad Request (expected for invalid code)")
+            print(f"[TOKEN EXCHANGE] ✓ Server received and processed the POST request")
+            print(f"[TOKEN EXCHANGE] ✓ No CORS issue - browser would allow this response")
+            print(f"[TOKEN EXCHANGE] ✗ Token was invalid (expected in test mode)")
+        elif e.code == 401:
+            print(f"[TOKEN EXCHANGE] HTTP 401 = Unauthorized")
+            print(f"[TOKEN EXCHANGE] ✗ Client authentication failed")
+            print(f"[TOKEN EXCHANGE]   Issue: CLIENT (check client_id)")
+        elif e.code == 403:
+            print(f"[TOKEN EXCHANGE] HTTP 403 = Forbidden")
+            print(f"[TOKEN EXCHANGE] ✗ Server rejected the request")
+        elif not cors_origin:
+            print(f"[TOKEN EXCHANGE] ✗ CORS headers missing")
+            print(f"[TOKEN EXCHANGE]   Issue: SERVER (Aidbox CORS configuration)")
+            print(f"[TOKEN EXCHANGE]   Fix: Add 'http://localhost:3000' to Aidbox CORS allowlist")
+        else:
+            print(f"[TOKEN EXCHANGE] HTTP {e.code} = {e.reason}")
 
         try:
             body = e.read().decode()
-            print(f"[TOKEN EXCHANGE] Response body: {body}")
+            print(f"\n[TOKEN EXCHANGE] Response body: {body}")
         except:
             pass
 
