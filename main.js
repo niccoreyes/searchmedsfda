@@ -505,25 +505,33 @@
     if (!badgeEl) return;
 
     const source = state.dataSource;
-    if (source === 'fhir-fresh') {
-      badgeEl.textContent = 'FHIR';
-      badgeEl.className = 'status-badge online';
-    } else if (source === 'fhir') {
-      badgeEl.textContent = 'FHIR';
-      badgeEl.className = 'status-badge online';
-    } else if (source === 'csv-fresh') {
-      badgeEl.textContent = 'CSV';
-      badgeEl.className = 'status-badge offline';
-    } else if (source === 'csv') {
-      badgeEl.textContent = 'CSV';
-      badgeEl.className = 'status-badge offline';
+    let icon, text, className, title;
+    
+    if (source === 'fhir-fresh' || source === 'fhir') {
+      icon = '☁️';
+      text = 'FHIR';
+      className = 'status-badge online';
+      title = 'Connected to FHIR server';
+    } else if (source === 'csv-fresh' || source === 'csv') {
+      icon = '📑';
+      text = 'CSV';
+      className = 'status-badge offline';
+      title = 'Using local CSV data';
     } else if (source === 'cached') {
-      badgeEl.textContent = 'Cache';
-      badgeEl.className = 'status-badge offline';
+      icon = '📑';
+      text = 'Cache';
+      className = 'status-badge offline';
+      title = 'Using cached data';
     } else {
-      badgeEl.textContent = 'Offline';
-      badgeEl.className = 'status-badge offline';
+      icon = '📑';
+      text = 'Offline';
+      className = 'status-badge offline';
+      title = 'Offline - using cached data';
     }
+    
+    badgeEl.innerHTML = `<span class="badge-icon">${icon}</span><span class="badge-text">${text}</span>`;
+    badgeEl.className = className;
+    badgeEl.title = title;
   }
 
   // ==================== FHIR ValueSet Loading ====================
@@ -1566,6 +1574,112 @@
 
     // Clear button
     $('#clearSignature')?.addEventListener('click', clearSignature);
+
+    // Profile system integration
+    initProfileSystem();
+  }
+
+  function initProfileSystem() {
+    // Load saved prescriber data on init
+    loadPrescriberData();
+
+    // Auto-save on typing (30 second interval)
+    const prescriberInputs = $$('#clinic, #clinicAddr, #docName, #prc, #ptr, #s2');
+    prescriberInputs.forEach(input => {
+      input?.addEventListener('input', () => {
+        // Debounced save
+        clearTimeout(input._saveTimeout);
+        input._saveTimeout = setTimeout(savePrescriberData, 1000);
+      });
+    });
+    startAutoSave();
+
+    // Save on Print/Save
+    $('#printRx')?.addEventListener('click', () => {
+      savePrescriberData();
+      printRx();
+    });
+
+    // Save on Copy
+    $('#copyRx')?.addEventListener('click', () => {
+      savePrescriberData();
+      copyRx();
+    });
+
+    // Click status chip to unload physician
+    $('#prescriberStatus')?.addEventListener('click', () => {
+      if (hasPrescriberData()) {
+        showUnloadConfirmationModal();
+      }
+    });
+
+    // Update status when entering RX tab
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'hidden') {
+          updatePrescriberStatus();
+        }
+      });
+    });
+    observer.observe($('#view-rx'), { attributes: true });
+
+    // Initial status update
+    updatePrescriberStatus();
+  }
+
+  function showUnloadConfirmationModal() {
+    const data = getPrescriberFields();
+    const displayName = formatPhysicianName(data.docName) || data.clinic || 'this physician';
+
+    const modalWrapper = cloneTemplate('tpl-modal');
+    const modal = modalWrapper.querySelector('.modal');
+    modal.querySelector('[data-field="title"]').textContent = 'Clear Physician Details';
+
+    // Wire up close button
+    modal.querySelector('.modal-close').addEventListener('click', () => {
+      modalWrapper.remove();
+    });
+
+    const body = modalWrapper.querySelector('.modal-body');
+    body.innerHTML = `<p class="confirm-message">Clear all details for <strong>${escapeHTML(displayName)}</strong>?</p><p class="text-muted">This will remove the physician name, clinic, and all license numbers from the form.</p>`;
+
+    const footer = modalWrapper.querySelector('.modal-footer');
+    footer.innerHTML = '';
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'btn btn-secondary';
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.addEventListener('click', () => modalWrapper.remove());
+
+    const clearBtn = document.createElement('button');
+    clearBtn.className = 'btn btn-danger';
+    clearBtn.textContent = 'Clear';
+    clearBtn.addEventListener('click', () => {
+      // Clear all prescriber fields
+      if ($('#clinic')) $('#clinic').value = '';
+      if ($('#clinicAddr')) $('#clinicAddr').value = '';
+      if ($('#docName')) $('#docName').value = '';
+      if ($('#prc')) $('#prc').value = '';
+      if ($('#ptr')) $('#ptr').value = '';
+      if ($('#s2')) $('#s2').value = '';
+      
+      updateRxPreview();
+      updatePrescriberStatus();
+      modalWrapper.remove();
+      showToast('Physician details cleared', 'success');
+    });
+
+    footer.appendChild(cancelBtn);
+    footer.appendChild(clearBtn);
+
+    // Close on overlay click
+    modalWrapper.addEventListener('click', (e) => {
+      if (e.target === modalWrapper) {
+        modalWrapper.remove();
+      }
+    });
+
+    document.body.appendChild(modalWrapper);
   }
 
   function startDrawing(e) {
@@ -2563,6 +2677,130 @@
       showUploadUI();
     }
   }
+
+  // ==================== Physician Profile System ====================
+
+  const PRESCRIBER_STORAGE_KEY = 'rxLastPrescriber';
+  let autoSaveInterval = null;
+
+  function getPrescriberFields() {
+    return {
+      clinic: $('#clinic')?.value || '',
+      clinicAddr: $('#clinicAddr')?.value || '',
+      docName: $('#docName')?.value || '',
+      prc: $('#prc')?.value || '',
+      ptr: $('#ptr')?.value || '',
+      s2: $('#s2')?.value || ''
+    };
+  }
+
+  function setPrescriberFields(data) {
+    if ($('#clinic')) $('#clinic').value = data.clinic || '';
+    if ($('#clinicAddr')) $('#clinicAddr').value = data.clinicAddr || '';
+    if ($('#docName')) $('#docName').value = data.docName || '';
+    if ($('#prc')) $('#prc').value = data.prc || '';
+    if ($('#ptr')) $('#ptr').value = data.ptr || '';
+    if ($('#s2')) $('#s2').value = data.s2 || '';
+    updateRxPreview();
+    updatePrescriberStatus();
+  }
+
+  function hasPrescriberData() {
+    const data = getPrescriberFields();
+    return Object.values(data).some(v => v && v.trim() !== '');
+  }
+
+  function savePrescriberData() {
+    const data = getPrescriberFields();
+    if (hasPrescriberData()) {
+      localStorage.setItem(PRESCRIBER_STORAGE_KEY, JSON.stringify(data));
+    }
+  }
+
+  function loadPrescriberData() {
+    try {
+      const saved = localStorage.getItem(PRESCRIBER_STORAGE_KEY);
+      if (saved) {
+        const data = JSON.parse(saved);
+        setPrescriberFields(data);
+        return true;
+      }
+    } catch (e) {
+      console.error('Failed to load prescriber data:', e);
+    }
+    return false;
+  }
+
+  function hasMedications() {
+    const items = Array.from($('#rxItems')?.children || [])
+      .filter(child => child.classList.contains('rx-item'));
+    return items.length > 0;
+  }
+
+  function formatPhysicianName(fullName) {
+    if (!fullName || !fullName.trim()) return '';
+    const parts = fullName.trim().split(/\s+/);
+    if (parts.length === 1) return parts[0];
+    const firstName = parts[0];
+    const lastInitial = parts[parts.length - 1].charAt(0).toUpperCase();
+    return `${firstName} ${lastInitial}.`;
+  }
+
+  function updatePrescriberStatus() {
+    const statusEl = $('#prescriberStatus');
+    if (!statusEl) return;
+
+    // Only show in RX tab
+    const rxView = $('#view-rx');
+    if (!rxView || rxView.hidden) {
+      statusEl.hidden = true;
+      return;
+    }
+
+    const data = getPrescriberFields();
+    const hasData = hasPrescriberData();
+
+    if (hasData) {
+      const displayName = formatPhysicianName(data.docName) || data.clinic || 'Profile';
+      // Icon only on mobile, icon + text on desktop
+      statusEl.innerHTML = `<span class="badge-icon">👤</span><span class="badge-text">${escapeHTML(displayName)}</span>`;
+      statusEl.className = 'status-badge prescriber-status loaded clickable';
+      statusEl.style.cursor = 'pointer';
+      statusEl.title = `Click to clear ${escapeHTML(displayName)}`;
+    } else {
+      statusEl.hidden = true;
+      return;
+    }
+    statusEl.hidden = false;
+  }
+
+  function clearRxItems() {
+    const rxItems = $('#rxItems');
+    if (rxItems) {
+      rxItems.innerHTML = '';
+      state.rxItemCount = 0;
+      rxItems.appendChild(cloneTemplate('tpl-empty-rx'));
+      updateRxBadge();
+      updateRxPreview();
+    }
+  }
+
+  // Auto-save functions
+  function startAutoSave() {
+    if (autoSaveInterval) clearInterval(autoSaveInterval);
+    autoSaveInterval = setInterval(() => {
+      savePrescriberData();
+    }, 30000);
+  }
+
+  function stopAutoSave() {
+    if (autoSaveInterval) {
+      clearInterval(autoSaveInterval);
+      autoSaveInterval = null;
+    }
+  }
+
+  // ==================== Original Functions Continue ====================
 
   // Start
   if (document.readyState === 'loading') {
