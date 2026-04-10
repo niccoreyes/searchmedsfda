@@ -1575,9 +1575,6 @@
     // Load saved prescriber data on init
     loadPrescriberData();
 
-    // Load Profile button
-    $('#loadProfileBtn')?.addEventListener('click', showLoadProfileModal);
-
     // Auto-save on typing (30 second interval)
     const prescriberInputs = $$('#clinic, #clinicAddr, #docName, #prc, #ptr, #s2');
     prescriberInputs.forEach(input => {
@@ -1601,6 +1598,13 @@
       copyRx();
     });
 
+    // Click status chip to unload physician
+    $('#prescriberStatus')?.addEventListener('click', () => {
+      if (hasPrescriberData()) {
+        showUnloadConfirmationModal();
+      }
+    });
+
     // Update status when entering RX tab
     const observer = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
@@ -1613,6 +1617,61 @@
 
     // Initial status update
     updatePrescriberStatus();
+  }
+
+  function showUnloadConfirmationModal() {
+    const data = getPrescriberFields();
+    const displayName = formatPhysicianName(data.docName) || data.clinic || 'this physician';
+
+    const modalWrapper = cloneTemplate('tpl-modal');
+    const modal = modalWrapper.querySelector('.modal');
+    modal.querySelector('[data-field="title"]').textContent = 'Clear Physician Details';
+
+    // Wire up close button
+    modal.querySelector('.modal-close').addEventListener('click', () => {
+      modalWrapper.remove();
+    });
+
+    const body = modalWrapper.querySelector('.modal-body');
+    body.innerHTML = `<p class="confirm-message">Clear all details for <strong>${escapeHTML(displayName)}</strong>?</p><p class="text-muted">This will remove the physician name, clinic, and all license numbers from the form.</p>`;
+
+    const footer = modalWrapper.querySelector('.modal-footer');
+    footer.innerHTML = '';
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'btn btn-secondary';
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.addEventListener('click', () => modalWrapper.remove());
+
+    const clearBtn = document.createElement('button');
+    clearBtn.className = 'btn btn-danger';
+    clearBtn.textContent = 'Clear';
+    clearBtn.addEventListener('click', () => {
+      // Clear all prescriber fields
+      if ($('#clinic')) $('#clinic').value = '';
+      if ($('#clinicAddr')) $('#clinicAddr').value = '';
+      if ($('#docName')) $('#docName').value = '';
+      if ($('#prc')) $('#prc').value = '';
+      if ($('#ptr')) $('#ptr').value = '';
+      if ($('#s2')) $('#s2').value = '';
+      
+      updateRxPreview();
+      updatePrescriberStatus();
+      modalWrapper.remove();
+      showToast('Physician details cleared', 'success');
+    });
+
+    footer.appendChild(cancelBtn);
+    footer.appendChild(clearBtn);
+
+    // Close on overlay click
+    modalWrapper.addEventListener('click', (e) => {
+      if (e.target === modalWrapper) {
+        modalWrapper.remove();
+      }
+    });
+
+    document.body.appendChild(modalWrapper);
   }
 
   function startDrawing(e) {
@@ -2670,6 +2729,15 @@
     return items.length > 0;
   }
 
+  function formatPhysicianName(fullName) {
+    if (!fullName || !fullName.trim()) return '';
+    const parts = fullName.trim().split(/\s+/);
+    if (parts.length === 1) return parts[0];
+    const firstName = parts[0];
+    const lastInitial = parts[parts.length - 1].charAt(0).toUpperCase();
+    return `${firstName} ${lastInitial}.`;
+  }
+
   function updatePrescriberStatus() {
     const statusEl = $('#prescriberStatus');
     if (!statusEl) return;
@@ -2685,82 +2753,16 @@
     const hasData = hasPrescriberData();
 
     if (hasData) {
-      const displayName = data.docName || data.clinic || 'Profile';
+      const displayName = formatPhysicianName(data.docName) || data.clinic || 'Profile';
       statusEl.innerHTML = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M20 6L9 17l-5-5"/></svg> ${escapeHTML(displayName)}`;
-      statusEl.className = 'status-badge prescriber-status loaded';
+      statusEl.className = 'status-badge prescriber-status loaded clickable';
+      statusEl.style.cursor = 'pointer';
+      statusEl.title = 'Click to clear physician details';
     } else {
-      statusEl.innerHTML = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> No physician loaded`;
-      statusEl.className = 'status-badge prescriber-status warning';
+      statusEl.hidden = true;
+      return;
     }
     statusEl.hidden = false;
-  }
-
-  function showLoadProfileModal() {
-    const hasMeds = hasMedications();
-
-    if (hasMeds) {
-      showMergeOverwriteModal();
-    } else {
-      if (loadPrescriberData()) {
-        showToast('Physician profile loaded', 'success');
-      } else {
-        showToast('No saved profile found', 'info');
-      }
-    }
-  }
-
-  function showMergeOverwriteModal() {
-    const modalWrapper = cloneTemplate('tpl-modal');
-    const modal = modalWrapper.querySelector('.modal');
-    modal.querySelector('[data-field="title"]').textContent = 'Load Profile';
-
-    // Wire up close button
-    modal.querySelector('.modal-close').addEventListener('click', () => {
-      modalWrapper.remove();
-    });
-
-    const body = modalWrapper.querySelector('.modal-body');
-    body.innerHTML = '<p class="merge-message">You have medications in this prescription. What would you like to do?</p>';
-
-    const footer = modalWrapper.querySelector('.modal-footer');
-    footer.innerHTML = '';
-
-    const keepBtn = document.createElement('button');
-    keepBtn.className = 'btn btn-primary';
-    keepBtn.textContent = 'Keep meds, change doctor';
-    keepBtn.addEventListener('click', () => {
-      loadPrescriberData();
-      modalWrapper.remove();
-      showToast('Physician updated, medications kept', 'success');
-    });
-
-    const startOverBtn = document.createElement('button');
-    startOverBtn.className = 'btn btn-secondary';
-    startOverBtn.textContent = 'Start over';
-    startOverBtn.addEventListener('click', () => {
-      clearRxItems();
-      loadPrescriberData();
-      modalWrapper.remove();
-      showToast('Started fresh with new physician', 'success');
-    });
-
-    const cancelBtn = document.createElement('button');
-    cancelBtn.className = 'btn btn-ghost';
-    cancelBtn.textContent = 'Cancel';
-    cancelBtn.addEventListener('click', () => modalWrapper.remove());
-
-    footer.appendChild(cancelBtn);
-    footer.appendChild(startOverBtn);
-    footer.appendChild(keepBtn);
-
-    // Close on overlay click
-    modalWrapper.addEventListener('click', (e) => {
-      if (e.target === modalWrapper) {
-        modalWrapper.remove();
-      }
-    });
-
-    document.body.appendChild(modalWrapper);
   }
 
   function clearRxItems() {
