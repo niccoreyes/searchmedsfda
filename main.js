@@ -505,25 +505,33 @@
     if (!badgeEl) return;
 
     const source = state.dataSource;
-    if (source === 'fhir-fresh') {
-      badgeEl.textContent = 'FHIR';
-      badgeEl.className = 'status-badge online';
-    } else if (source === 'fhir') {
-      badgeEl.textContent = 'FHIR';
-      badgeEl.className = 'status-badge online';
-    } else if (source === 'csv-fresh') {
-      badgeEl.textContent = 'CSV';
-      badgeEl.className = 'status-badge offline';
-    } else if (source === 'csv') {
-      badgeEl.textContent = 'CSV';
-      badgeEl.className = 'status-badge offline';
+    let icon, text, className, title;
+    
+    if (source === 'fhir-fresh' || source === 'fhir') {
+      icon = '☁️';
+      text = 'FHIR';
+      className = 'status-badge online';
+      title = 'Connected to FHIR server';
+    } else if (source === 'csv-fresh' || source === 'csv') {
+      icon = '📑';
+      text = 'CSV';
+      className = 'status-badge offline';
+      title = 'Using local CSV data';
     } else if (source === 'cached') {
-      badgeEl.textContent = 'Cache';
-      badgeEl.className = 'status-badge offline';
+      icon = '📑';
+      text = 'Cache';
+      className = 'status-badge offline';
+      title = 'Using cached data';
     } else {
-      badgeEl.textContent = 'Offline';
-      badgeEl.className = 'status-badge offline';
+      icon = '📑';
+      text = 'Offline';
+      className = 'status-badge offline';
+      title = 'Offline - using cached data';
     }
+    
+    badgeEl.innerHTML = `<span class="badge-icon">${icon}</span><span class="badge-text">${text}</span>`;
+    badgeEl.className = className;
+    badgeEl.title = title;
   }
 
   // ==================== FHIR ValueSet Loading ====================
@@ -2754,10 +2762,11 @@
 
     if (hasData) {
       const displayName = formatPhysicianName(data.docName) || data.clinic || 'Profile';
-      statusEl.innerHTML = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M20 6L9 17l-5-5"/></svg> ${escapeHTML(displayName)}`;
+      // Icon only on mobile, icon + text on desktop
+      statusEl.innerHTML = `<span class="badge-icon">👤</span><span class="badge-text">${escapeHTML(displayName)}</span>`;
       statusEl.className = 'status-badge prescriber-status loaded clickable';
       statusEl.style.cursor = 'pointer';
-      statusEl.title = 'Click to clear physician details';
+      statusEl.title = `Click to clear ${escapeHTML(displayName)}`;
     } else {
       statusEl.hidden = true;
       return;

@@ -32,6 +32,55 @@
   transition: all 0.2s ease;
 }
 
+/* Responsive Header Badges - Desktop: icon + text, Mobile: icon only */
+.badge-icon {
+  display: inline;
+}
+
+.badge-text {
+  display: inline;
+  margin-left: 4px;
+}
+
+/* Share button always shows text */
+#shareBadge .badge-text,
+#shareBadge .badge-icon {
+  display: inline;
+}
+
+@media (max-width: 480px) {
+  .header-badges {
+    gap: 4px;
+  }
+  
+  .status-badge {
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+  
+  /* Hide text, show only icons on mobile (except Share) */
+  #prescriberStatus .badge-text,
+  #dataSourceBadge .badge-text {
+    display: none;
+  }
+  
+  #prescriberStatus .badge-icon,
+  #dataSourceBadge .badge-icon {
+    display: inline;
+    font-size: 16px;
+  }
+  
+  /* Share keeps its text */
+  #shareBadge {
+    padding: 4px 8px;
+  }
+  
+  #shareBadge svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
 .confirm-message {
   color: var(--text-primary);
   font-size: 1rem;
