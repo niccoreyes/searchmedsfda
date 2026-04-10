@@ -1566,6 +1566,53 @@
 
     // Clear button
     $('#clearSignature')?.addEventListener('click', clearSignature);
+
+    // Profile system integration
+    initProfileSystem();
+  }
+
+  function initProfileSystem() {
+    // Load saved prescriber data on init
+    loadPrescriberData();
+
+    // Load Profile button
+    $('#loadProfileBtn')?.addEventListener('click', showLoadProfileModal);
+
+    // Auto-save on typing (30 second interval)
+    const prescriberInputs = $$('#clinic, #clinicAddr, #docName, #prc, #ptr, #s2');
+    prescriberInputs.forEach(input => {
+      input?.addEventListener('input', () => {
+        // Debounced save
+        clearTimeout(input._saveTimeout);
+        input._saveTimeout = setTimeout(savePrescriberData, 1000);
+      });
+    });
+    startAutoSave();
+
+    // Save on Print/Save
+    $('#printRx')?.addEventListener('click', () => {
+      savePrescriberData();
+      printRx();
+    });
+
+    // Save on Copy
+    $('#copyRx')?.addEventListener('click', () => {
+      savePrescriberData();
+      copyRx();
+    });
+
+    // Update status when entering RX tab
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'hidden') {
+          updatePrescriberStatus();
+        }
+      });
+    });
+    observer.observe($('#view-rx'), { attributes: true });
+
+    // Initial status update
+    updatePrescriberStatus();
   }
 
   function startDrawing(e) {
@@ -2563,6 +2610,186 @@
       showUploadUI();
     }
   }
+
+  // ==================== Physician Profile System ====================
+
+  const PRESCRIBER_STORAGE_KEY = 'rxLastPrescriber';
+  let autoSaveInterval = null;
+
+  function getPrescriberFields() {
+    return {
+      clinic: $('#clinic')?.value || '',
+      clinicAddr: $('#clinicAddr')?.value || '',
+      docName: $('#docName')?.value || '',
+      prc: $('#prc')?.value || '',
+      ptr: $('#ptr')?.value || '',
+      s2: $('#s2')?.value || ''
+    };
+  }
+
+  function setPrescriberFields(data) {
+    if ($('#clinic')) $('#clinic').value = data.clinic || '';
+    if ($('#clinicAddr')) $('#clinicAddr').value = data.clinicAddr || '';
+    if ($('#docName')) $('#docName').value = data.docName || '';
+    if ($('#prc')) $('#prc').value = data.prc || '';
+    if ($('#ptr')) $('#ptr').value = data.ptr || '';
+    if ($('#s2')) $('#s2').value = data.s2 || '';
+    updateRxPreview();
+    updatePrescriberStatus();
+  }
+
+  function hasPrescriberData() {
+    const data = getPrescriberFields();
+    return Object.values(data).some(v => v && v.trim() !== '');
+  }
+
+  function savePrescriberData() {
+    const data = getPrescriberFields();
+    if (hasPrescriberData()) {
+      localStorage.setItem(PRESCRIBER_STORAGE_KEY, JSON.stringify(data));
+    }
+  }
+
+  function loadPrescriberData() {
+    try {
+      const saved = localStorage.getItem(PRESCRIBER_STORAGE_KEY);
+      if (saved) {
+        const data = JSON.parse(saved);
+        setPrescriberFields(data);
+        return true;
+      }
+    } catch (e) {
+      console.error('Failed to load prescriber data:', e);
+    }
+    return false;
+  }
+
+  function hasMedications() {
+    const items = Array.from($('#rxItems')?.children || [])
+      .filter(child => child.classList.contains('rx-item'));
+    return items.length > 0;
+  }
+
+  function updatePrescriberStatus() {
+    const statusEl = $('#prescriberStatus');
+    if (!statusEl) return;
+
+    // Only show in RX tab
+    const rxView = $('#view-rx');
+    if (!rxView || rxView.hidden) {
+      statusEl.hidden = true;
+      return;
+    }
+
+    const data = getPrescriberFields();
+    const hasData = hasPrescriberData();
+
+    if (hasData) {
+      const displayName = data.docName || data.clinic || 'Profile';
+      statusEl.innerHTML = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M20 6L9 17l-5-5"/></svg> ${escapeHTML(displayName)}`;
+      statusEl.className = 'status-badge prescriber-status loaded';
+    } else {
+      statusEl.innerHTML = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> No physician loaded`;
+      statusEl.className = 'status-badge prescriber-status warning';
+    }
+    statusEl.hidden = false;
+  }
+
+  function showLoadProfileModal() {
+    const hasMeds = hasMedications();
+
+    if (hasMeds) {
+      showMergeOverwriteModal();
+    } else {
+      if (loadPrescriberData()) {
+        showToast('Physician profile loaded', 'success');
+      } else {
+        showToast('No saved profile found', 'info');
+      }
+    }
+  }
+
+  function showMergeOverwriteModal() {
+    const modalWrapper = cloneTemplate('tpl-modal');
+    const modal = modalWrapper.querySelector('.modal');
+    modal.querySelector('[data-field="title"]').textContent = 'Load Profile';
+
+    // Wire up close button
+    modal.querySelector('.modal-close').addEventListener('click', () => {
+      modalWrapper.remove();
+    });
+
+    const body = modalWrapper.querySelector('.modal-body');
+    body.innerHTML = '<p class="merge-message">You have medications in this prescription. What would you like to do?</p>';
+
+    const footer = modalWrapper.querySelector('.modal-footer');
+    footer.innerHTML = '';
+
+    const keepBtn = document.createElement('button');
+    keepBtn.className = 'btn btn-primary';
+    keepBtn.textContent = 'Keep meds, change doctor';
+    keepBtn.addEventListener('click', () => {
+      loadPrescriberData();
+      modalWrapper.remove();
+      showToast('Physician updated, medications kept', 'success');
+    });
+
+    const startOverBtn = document.createElement('button');
+    startOverBtn.className = 'btn btn-secondary';
+    startOverBtn.textContent = 'Start over';
+    startOverBtn.addEventListener('click', () => {
+      clearRxItems();
+      loadPrescriberData();
+      modalWrapper.remove();
+      showToast('Started fresh with new physician', 'success');
+    });
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'btn btn-ghost';
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.addEventListener('click', () => modalWrapper.remove());
+
+    footer.appendChild(cancelBtn);
+    footer.appendChild(startOverBtn);
+    footer.appendChild(keepBtn);
+
+    // Close on overlay click
+    modalWrapper.addEventListener('click', (e) => {
+      if (e.target === modalWrapper) {
+        modalWrapper.remove();
+      }
+    });
+
+    document.body.appendChild(modalWrapper);
+  }
+
+  function clearRxItems() {
+    const rxItems = $('#rxItems');
+    if (rxItems) {
+      rxItems.innerHTML = '';
+      state.rxItemCount = 0;
+      rxItems.appendChild(cloneTemplate('tpl-empty-rx'));
+      updateRxBadge();
+      updateRxPreview();
+    }
+  }
+
+  // Auto-save functions
+  function startAutoSave() {
+    if (autoSaveInterval) clearInterval(autoSaveInterval);
+    autoSaveInterval = setInterval(() => {
+      savePrescriberData();
+    }, 30000);
+  }
+
+  function stopAutoSave() {
+    if (autoSaveInterval) {
+      clearInterval(autoSaveInterval);
+      autoSaveInterval = null;
+    }
+  }
+
+  // ==================== Original Functions Continue ====================
 
   // Start
   if (document.readyState === 'loading') {

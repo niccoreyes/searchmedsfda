@@ -48,6 +48,7 @@
         <span class="logo-text">Rx Builder</span>
       </div>
       <div class="header-badges">
+        <span id="prescriberStatus" class="status-badge prescriber-status" hidden></span>
         <span id="dataSourceBadge" class="status-badge offline">Offline</span>
         <button id="shareBadge" class="status-badge share-badge" title="Share this app">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
@@ -432,6 +433,13 @@
 
       <!-- Actions -->
       <div class="rx-actions-bar">
+        <button id="loadProfileBtn" class="btn btn-secondary" title="Load Physician Profile">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+          <span class="btn-text">Load</span>
+        </button>
         <button id="saveLocal" class="btn btn-secondary" title="Save Draft">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
@@ -889,6 +897,24 @@
   <script src="main.js"></script>
 
   <!-- Service Worker Registration -->
+  <!-- Modal Template -->
+  <template id="tpl-modal">
+    <div class="modal-overlay">
+      <div class="modal">
+        <div class="modal-header">
+          <h3 data-field="title">Modal Title</h3>
+          <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <!-- Dynamic content goes here -->
+        </div>
+        <div class="modal-footer">
+          <!-- Dynamic buttons go here -->
+        </div>
+      </div>
+    </div>
+  </template>
+
   <script>
     // Register service worker
     if ('serviceWorker' in navigator) {
