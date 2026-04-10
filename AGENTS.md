@@ -200,6 +200,36 @@ Before submitting changes, verify:
 
 ---
 
+## 8. GitHub Workflow
+
+### Automated Issue Resolution
+
+This project uses the `gh-issues` skill for automated GitHub issue management:
+
+**Process:**
+1. **Issue Created** → You create a GitHub issue with labels (e.g., `bug`, `enhancement`)
+2. **Auto-Fetch** → Run `/gh-issues niccoreyes/searchmedsfda --watch` to poll for issues
+3. **Spawn Agents** → Sub-agents are spawned to fix each issue
+4. **Branch Created** → `fix/issue-{N}` branches are created automatically
+5. **PR Opened** → Pull requests are opened against `main`
+6. **Review Cycle** → You review on GitHub; review comments trigger automated fixes
+
+**Agent Workflow:**
+- **Plan Phase**: Analyze issue → Create implementation plan → Await approval
+- **Build Phase**: Implement fix → Run tests → Commit & push
+
+**Your Role:**
+- Create issues with clear descriptions and labels
+- Review PRs on GitHub
+- Merge when satisfied
+- Never create branches manually — the skill handles it
+
+**Required Setup:**
+- GitHub token configured in OpenClaw
+- Issues must be labeled (e.g., `bug`, `enhancement`) for filtering
+
+---
+
 ## Summary
 
 **Core Principles:**
