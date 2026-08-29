@@ -2937,3 +2937,93 @@ Received SIGINT. Saving state and exiting gracefully...
 [2026-03-22T09:25:09.773Z] 
 Received SIGINT. Saving state and exiting gracefully...
 [2026-03-22T09:25:09.787Z] State saved: 54578 processed, 11 pending
+[2026-08-29T03:27:27.519Z] ============================================================
+[2026-08-29T03:27:27.519Z] FDA Philippines Drug Product Harvester Starting
+[2026-08-29T03:27:27.519Z] ============================================================
+[2026-08-29T03:27:27.527Z] Resumed from save point: 54578 records processed
+[2026-08-29T03:27:27.529Z] State saved: 54578 processed, 11 pending
+[2026-08-29T03:27:27.530Z] Querying: RX (attempt 1)
+[2026-08-29T03:27:46.380Z] Query RX: Found 370 CDRR records, 68 new added
+[2026-08-29T03:27:46.381Z] Query RX: Found 55 cpr_cdrrhr records, 11 new added
+[2026-08-29T03:27:47.884Z] Querying: RY (attempt 1)
+[2026-08-29T03:28:14.547Z] Query RY: Found 1566 CDRR records, 264 new added
+[2026-08-29T03:28:14.549Z] Query RY: Found 927 cpr_cdrrhr records, 137 new added
+[2026-08-29T03:28:16.051Z] Querying: RZ (attempt 1)
+[2026-08-29T03:28:30.633Z] Query RZ: Found 200 CDRR records, 29 new added
+[2026-08-29T03:28:30.635Z] Query RZ: Found 308 cpr_cdrrhr records, 5 new added
+[2026-08-29T03:28:32.137Z] Querying: S (attempt 1)
+[2026-08-29T03:30:05.610Z] Query S: Found 39064 CDRR records, 6887 new added
+[2026-08-29T03:30:05.630Z] Query S: Found 12679 cpr_cdrrhr records, 1800 new added
+[2026-08-29T03:30:07.132Z] Querying: T (attempt 1)
+[2026-08-29T03:32:04.745Z] Query T: Found 39539 CDRR records, 79 new added
+[2026-08-29T03:32:04.764Z] Query T: Found 13386 cpr_cdrrhr records, 271 new added
+[2026-08-29T03:32:06.265Z] Querying: U (attempt 1)
+[2026-08-29T03:32:24.653Z] 
+Received SIGTERM. Saving state and exiting gracefully...
+[2026-08-29T03:32:24.656Z] State saved: 64129 processed, 5 pending
+Restored session: Fri 28 Aug 2026 19:33:15 GMT
+(anon):setopt:7: can't change option: monitor
+
+[[31mERROR[39m]: gitstatus failed to initialize.
+
+
+  Add the following parameter to [4m~/.zshrc[24m for extra diagnostics on error:
+
+    [1mGITSTATUS_LOG_LEVEL=DEBUG[0m
+
+  Restart Zsh to retry gitstatus initialization:
+
+    [32m[4mexec[24m[32m zsh[39m
+$ bun run fda_harvester.ts resume
+[2026-08-29T03:33:18.056Z] ============================================================
+[2026-08-29T03:33:18.056Z] ============================================================
+[2026-08-29T03:33:18.056Z] FDA Philippines Drug Product Harvester Starting
+[2026-08-29T03:33:18.056Z] FDA Philippines Drug Product Harvester Starting
+[2026-08-29T03:33:18.056Z] ============================================================
+[2026-08-29T03:33:18.056Z] ============================================================
+[2026-08-29T03:33:18.066Z] Resumed from save point: 64129 records processed
+[2026-08-29T03:33:18.066Z] Resumed from save point: 64129 records processed
+[2026-08-29T03:33:18.070Z] State saved: 64129 processed, 5 pending
+[2026-08-29T03:33:18.070Z] State saved: 64129 processed, 5 pending
+[2026-08-29T03:33:18.070Z] Querying: V (attempt 1)
+[2026-08-29T03:33:18.070Z] Querying: V (attempt 1)
+[2026-08-29T03:34:50.107Z] Query V: Found 27407 CDRR records, 0 new added
+[2026-08-29T03:34:50.107Z] Query V: Found 27407 CDRR records, 0 new added
+[2026-08-29T03:34:50.113Z] Query V: Found 5742 cpr_cdrrhr records, 16 new added
+[2026-08-29T03:34:50.113Z] Query V: Found 5742 cpr_cdrrhr records, 16 new added
+[2026-08-29T03:34:51.621Z] Querying: W (attempt 1)
+[2026-08-29T03:34:51.621Z] Querying: W (attempt 1)
+[2026-08-29T03:36:20.398Z] Query W: Found 11900 CDRR records, 0 new added
+[2026-08-29T03:36:20.398Z] Query W: Found 11900 CDRR records, 0 new added
+[2026-08-29T03:36:20.401Z] Query W: Found 4127 cpr_cdrrhr records, 7 new added
+[2026-08-29T03:36:20.401Z] Query W: Found 4127 cpr_cdrrhr records, 7 new added
+[2026-08-29T03:36:21.902Z] Querying: X (attempt 1)
+[2026-08-29T03:36:21.902Z] Querying: X (attempt 1)
+[2026-08-29T03:37:37.860Z] Query X: Found 20911 CDRR records, 2 new added
+[2026-08-29T03:37:37.860Z] Query X: Found 20911 CDRR records, 2 new added
+[2026-08-29T03:37:37.862Z] Query X: Found 3139 cpr_cdrrhr records, 2 new added
+[2026-08-29T03:37:37.862Z] Query X: Found 3139 cpr_cdrrhr records, 2 new added
+[2026-08-29T03:37:39.365Z] Querying: Y (attempt 1)
+[2026-08-29T03:37:39.365Z] Querying: Y (attempt 1)
+[2026-08-29T03:39:37.675Z] Query Y: Found 26022 CDRR records, 0 new added
+[2026-08-29T03:39:37.675Z] Query Y: Found 26022 CDRR records, 0 new added
+[2026-08-29T03:39:37.679Z] Query Y: Found 6653 cpr_cdrrhr records, 3 new added
+[2026-08-29T03:39:37.679Z] Query Y: Found 6653 cpr_cdrrhr records, 3 new added
+[2026-08-29T03:39:39.182Z] Querying: Z (attempt 1)
+[2026-08-29T03:39:39.182Z] Querying: Z (attempt 1)
+[2026-08-29T03:40:26.638Z] Query Z: Found 14537 CDRR records, 0 new added
+[2026-08-29T03:40:26.638Z] Query Z: Found 14537 CDRR records, 0 new added
+[2026-08-29T03:40:26.640Z] Query Z: Found 1366 cpr_cdrrhr records, 6 new added
+[2026-08-29T03:40:26.640Z] Query Z: Found 1366 cpr_cdrrhr records, 6 new added
+[2026-08-29T03:40:28.149Z] State saved: 64165 processed, 0 pending
+[2026-08-29T03:40:28.149Z] State saved: 64165 processed, 0 pending
+[2026-08-29T03:40:28.149Z] ============================================================
+[2026-08-29T03:40:28.149Z] ============================================================
+[2026-08-29T03:40:28.149Z] Harvest complete! Total records: 64165
+[2026-08-29T03:40:28.149Z] Harvest complete! Total records: 64165
+[2026-08-29T03:40:28.149Z] CSV file: fda_harvested_products.csv
+[2026-08-29T03:40:28.149Z] CSV file: fda_harvested_products.csv
+[2026-08-29T03:40:28.149Z] State file: fda_harvester_state.json
+[2026-08-29T03:40:28.149Z] State file: fda_harvester_state.json
+[2026-08-29T03:40:28.150Z] ============================================================
+[2026-08-29T03:40:28.150Z] ============================================================
