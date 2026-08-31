@@ -60,3 +60,50 @@ test('loading a patient restores saved medications when the active prescription 
   await expect(page.locator('#rxItems .rx-item').first().locator('.rx-generic')).toHaveValue('Saved Medication');
   await expect(page.locator('#rxItems .rx-item').first().locator('.rx-qty')).toHaveValue('30');
 });
+
+test('image export preserves layout for long medication values', async ({ page }) => {
+  await openPrescription(page);
+
+  await page.locator('#addBlank').click();
+  const item = page.locator('#rxItems .rx-item').first();
+  await item.locator('.rx-generic').fill('Acetaminophen Extended Release Maximum Strength');
+  await item.locator('.rx-brand').fill('Extra Long Brand Name Example');
+  await item.locator('.rx-strength').fill('650 mg extended release');
+  await item.locator('.rx-form').fill('film-coated tablet');
+  await item.locator('.rx-qty').fill('999');
+  await item.locator('.rx-sig').fill('Take one tablet by mouth every six hours as needed for pain');
+
+  await page.evaluate(() => {
+    const browserWindow = globalThis as any;
+    const getStyle = browserWindow.getComputedStyle;
+    browserWindow.htmlToImage = {
+      toPng: async (element: any) => {
+        const style = getStyle(element);
+        const name = element.querySelector('.rx-name') as any;
+        const quantity = element.querySelector('.qty-right') as any;
+        const nameRect = name.getBoundingClientRect();
+        const quantityRect = quantity.getBoundingClientRect();
+        browserWindow.__imageExportMetrics = {
+          fontSize: parseFloat(getStyle(name).fontSize),
+          lineHeight: parseFloat(getStyle(name).lineHeight),
+          nameRight: nameRect.right,
+          quantityLeft: quantityRect.left,
+          clientWidth: element.clientWidth,
+          scrollWidth: element.scrollWidth,
+          captureWidth: parseFloat(style.width),
+          capturePadding: parseFloat(style.paddingLeft),
+        };
+        return 'data:image/png;base64,AA==';
+      },
+    };
+  });
+
+  await page.locator('#saveImageRx').click();
+  await expect(page.locator('#toastContainer')).toContainText('Image saved!');
+
+  const metrics = await page.evaluate(() => (globalThis as any).__imageExportMetrics);
+  expect(metrics.lineHeight).toBeGreaterThanOrEqual(metrics.fontSize * 1.4);
+  expect(metrics.nameRight).toBeLessThanOrEqual(metrics.quantityLeft);
+  expect(metrics.scrollWidth).toBeLessThanOrEqual(metrics.clientWidth);
+  expect(metrics.captureWidth).toBe(800);
+});

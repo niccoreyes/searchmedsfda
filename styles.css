@@ -2187,11 +2187,11 @@ p {
   position: fixed !important;
   top: 0 !important;
   left: 0 !important;
-  padding: 40px;
+  padding: 48px 56px;
   max-width: 800px;
   width: 800px;
   margin: 0;
-  font-size: 12pt;
+  font-size: 13pt;
   line-height: 1.5;
   color: #000;
   background: white;
@@ -2215,6 +2215,8 @@ p {
 .rx-print.capture-mode .print-patient {
   display: flex;
   justify-content: space-between;
+  gap: 32px;
+  align-items: flex-start;
   margin-bottom: 24px;
   padding: 12px 0;
   border-bottom: 1px solid #ccc;
@@ -2222,9 +2224,11 @@ p {
 
 .rx-print.capture-mode .print-col {
   flex: 1;
+  min-width: 0;
 }
 
 .rx-print.capture-mode .print-col.right {
+  flex: 0 0 220px;
   text-align: right;
 }
 
@@ -2240,28 +2244,39 @@ p {
 }
 
 .rx-print.capture-mode li {
-  margin-bottom: 8px;
+  margin-bottom: 16px;
   padding-left: 8px;
-  line-height: 1;
+  line-height: 1.5;
 }
 
 .rx-print.capture-mode .rx-line {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+.rx-print.capture-mode .rx-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .rx-print.capture-mode .qty-right {
+  flex: 0 0 auto;
   margin-left: 16px;
+  white-space: nowrap;
 }
 
 .rx-print.capture-mode .rx-sig {
-  margin-top: 5px;
+  margin-top: 8px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 
 .rx-print.capture-mode .rx-line + .rx-sig {
-  margin-top: 5px;
-  line-height: 1;
+  margin-top: 8px;
+  line-height: 1.5;
 }
 
 .rx-print.capture-mode .print-notes {
@@ -2349,6 +2364,8 @@ p {
   .print-patient {
     display: flex;
     justify-content: space-between;
+    gap: 32px;
+    align-items: flex-start;
     margin-bottom: 24px;
     padding: 12px 0;
     border-bottom: 1px solid #ccc;
@@ -2356,9 +2373,11 @@ p {
 
   .print-col {
     flex: 1;
+    min-width: 0;
   }
 
   .print-col.right {
+    flex: 0 0 220px;
     text-align: right;
   }
 
@@ -2376,31 +2395,37 @@ p {
   .rx-print li {
     margin-bottom: 12px;
     padding-left: 8px;
+    line-height: 1.5;
   }
 
   .rx-print .rx-line {
     display: flex;
     justify-content: space-between;
-    align-items: baseline;
+    align-items: flex-start;
+    gap: 24px;
+  }
+
+  .rx-print .rx-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow-wrap: anywhere;
   }
 
   .rx-print .qty-right {
+    flex: 0 0 auto;
     margin-left: 16px;
+    white-space: nowrap;
   }
 
   .rx-print .rx-sig {
-    margin-top: 5px;
+    margin-top: 8px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
   }
 
   .rx-print .rx-line + .rx-sig {
-    margin-top: 5px;
-    line-height: 1;
-  }
-
-  .rx-print li {
-    margin-bottom: 8px;
-    padding-left: 8px;
-    line-height: 1;
+    margin-top: 8px;
+    line-height: 1.5;
   }
 
   .print-notes {
