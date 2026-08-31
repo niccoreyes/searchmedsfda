@@ -1862,14 +1862,18 @@
       });
 
       const rxItems = $('#rxItems');
-      rxItems.innerHTML = '';
-      state.rxItemCount = 0;
+      const hasExistingItems = rxItems.querySelector('.rx-item') !== null;
+      const items = Array.isArray(data.items) ? data.items : [];
 
-      const items = data.items || [];
-      if (items.length === 0) {
-        rxItems.appendChild(cloneTemplate('tpl-empty-rx'));
-      } else {
-        items.forEach((item) => addRxItem(item));
+      if (!hasExistingItems) {
+        rxItems.innerHTML = '';
+        state.rxItemCount = 0;
+
+        if (items.length === 0) {
+          rxItems.appendChild(cloneTemplate('tpl-empty-rx'));
+        } else {
+          items.forEach((item) => addRxItem(item));
+        }
       }
 
       // Restore signature if present
