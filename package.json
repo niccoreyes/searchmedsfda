@@ -10,7 +10,8 @@
     "harvest:validate": "bun run validate_csv.ts",
     "harvest:stats": "bun run stats.ts",
     "merge-csv": "python merge_csv.py",
-    "generate-fhir-terminology": "bun generate-fhir-terminology.ts --upload"
+    "generate-fhir-terminology": "bun generate-fhir-terminology.ts --upload",
+    "test:e2e": "playwright test"
   },
   "devDependencies": {
     "@types/bun": "latest",
